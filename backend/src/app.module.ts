@@ -1,9 +1,10 @@
-import { Module } from '@nestjs/common';
+import { Module, Global } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { AdminModule } from './admin/admin.module';
 import { PortfolioModule } from './portfolio/portfolio.module';
 import { HealthModule } from './health.module';
+import { UploadModule } from './admin/upload/upload.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { HealthModule } from './health.module';
     AdminModule,
     PortfolioModule,
     HealthModule,
+    UploadModule,
   ],
 })
 export class AppModule {}

@@ -1,9 +1,10 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, RequestMethod } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { DataSource } from 'typeorm';
 const cookieParser = require('cookie-parser');
 import { AppModule } from './app.module';
+import * as path from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -87,6 +88,9 @@ async function bootstrap() {
   SwaggerModule.setup('docs', app, document, {
     customCss: '.swagger-ui .topbar { display: none }',
   });
+
+  // Статические файлы загрузки
+  app.use('/uploads', require('express').static(path.join(__dirname, '..', 'uploads')));
 
   const port = process.env.PORT || 3001;
 
