@@ -1,0 +1,42 @@
+import { motion } from 'framer-motion';
+import { RocketIcon, ProjectIcon } from './SvgIllustrations';
+
+export default function Projects({ projects = [] }) {
+  const defaultProjects = [
+    { title: 'Portfolio Website', description: 'A personal portfolio website built with React and Vite.', technologies: 'React, Vite, CSS', link: '#' },
+    { title: 'E-Commerce App', description: 'Full-stack e-commerce application with payment integration.', technologies: 'React, Node.js, MongoDB, Stripe', link: '#' },
+    { title: 'Task Manager API', description: 'RESTful API for task management with authentication.', technologies: 'Node.js, Express, PostgreSQL, JWT', link: '#' },
+  ];
+
+  const displayProjects = projects.length > 0 ? projects : defaultProjects;
+
+  return (
+    <section id="projects">
+      <h2>Projects</h2>
+      <div className="grid">
+        {displayProjects.map((project, index) => (
+          <motion.div
+            key={project.id || project.title}
+            className="card project-card"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: index * 0.1 }}
+            viewport={{ once: true }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+              <RocketIcon size={56} />
+            </div>
+            <h3>{project.title}</h3>
+            <p>{project.description}</p>
+            <div className="tags">
+              {(typeof project.technologies === 'string' ? project.technologies.split(',') : project.technologies).map((tech) => (
+                <span key={tech.trim()} className="tag">{tech.trim()}</span>
+              ))}
+            </div>
+            {project.link && <a href={project.link} className="btn" style={{ marginTop: '12px', display: 'inline-block' }}>View Project</a>}
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+}

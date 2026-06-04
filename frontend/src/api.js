@@ -1,0 +1,29 @@
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: '/api',
+  withCredentials: true, // Отправляем cookie вместе с запросами
+});
+
+/**
+ * Интерцептор для обработки ошибок.
+ * При 401 ошибке (токен протух или невалиден) — очищаем состояние и редиректим на логин.
+ */
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Токен истёк или невалиден — очищаем cookie и редиректим на логин
+      // Удаляем AccessToken cookie
+      document.cookie = 'AccessToken=; path=/api; max-age=0';
+
+      // Если мы не на странице логина — перенаправляем
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default api;

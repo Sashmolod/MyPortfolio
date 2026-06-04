@@ -1,0 +1,145 @@
+# ============================================
+# Docker Compose конфигурация для Portfolio Project
+# Развертывание: Frontend (Nginx) + Backend (NestJS) + PostgreSQL
+# Оптимизировано для локальной разработки и production через OrbStack
+# ============================================
+
+services:
+  # ==========================================
+  # PostgreSQL - База данных
+  # ==========================================
+  db:
+    image: postgres:16-alpine
+    container_name: portfolio_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-portfolio_db}
+    ports:
+      # Проксируем порт для прямого доступа с хоста (backup/IDE tools)
+      - "5432:5432"
+    volumes:
+      # Именованный volume для сохранения данных между перезапусками
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - portfolio-network
+    # Healthcheck: проверяем, что PostgreSQL принимает соединения
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-portfolio_db}"]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+    # Логи
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+  # ==========================================
+  # Backend - NestJS API
+  # ==========================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+      args:
+        NODE_ENV: production
+    container_name: portfolio_backend
+    restart: unless-stopped
+    # Ждем готовности PostgreSQL перед запуском
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: ${BACKEND_PORT:-3000}
+      # TypeORM использует эти переменные для подключения
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-portfolio_db}
+      # TypeORM также читает DATABASE_URL (приоритет выше)
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-portfolio_db}
+      JWT_SECRET: ${JWT_SECRET:-change-this-to-a-secure-value-in-production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost,http://frontend:80}
+      # Admin User (автоматически создаётся при запуске)
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+    ports:
+      # Проксируем порт для прямого доступа к API (для разработки)
+      - "3000:3000"
+    networks:
+      - portfolio-network
+    # Healthcheck: проверяем, что NestJS отвечает (используем node вместо curl, так как alpine образ не имеет curl)
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+    # Логи
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+  # ==========================================
+  # Frontend - React SPA на Nginx
+  # ==========================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    container_name: portfolio_frontend
+    restart: unless-stopped
+    # Ждем готовности Backend
+    depends_on:
+      - backend
+    ports:
+      # Проксируем порт 80 на хост
+      - "80:80"
+      # Проксируем порт для HTTPS (если нужен)
+      - "443:443"
+    networks:
+      - portfolio-network
+    # Healthcheck: проверяем, что Nginx отвечает (используем 127.0.0.1 вместо localhost из-за Alpine DNS)
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:80/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 15s
+      retries: 3
+    # Логи
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+# ==========================================
+# Сети
+# ==========================================
+networks:
+  portfolio-network:
+    driver: bridge
+    # Internal: true для изоляции от внешнего мира (только если не нужно прямого доступа к DB)
+
+# ==========================================
+# Тома
+# ==========================================
+volumes:
+  postgres_data:
+    driver: local
+    # Можно добавить опции для управления размером
+    # driver_opts:
+    #   type: none
+    #   o: bind
+    #   device: /path/to/postgres/data
