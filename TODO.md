@@ -17,12 +17,12 @@
   - [ ] Добавить плейсхолдеры с инструкцией генерации
   - [ ] Добавить JWT_SECRET с инструкцией (`openssl rand -base64 32`)
 
-### 3. 📦 TypeORM Migrations
-- **Статус:** Не созданы (README подтверждает)
-- **Решение:** 
-  - [ ] `nest migration:generate` — сгенерировать миграции из entities
-  - [ ] Добавить скрипт в package.json: `"migration:run": "typeorm-ts-node-commonjs migration:run"`
-  - [ ] Добавить `"migration:revert": "typeorm-ts-node-commonjs migration:revert"`
+### 3. 📦 TypeORM Migrations ✅ **ГОТОВО**
+- **Статус:** Миграции созданы и работают
+- **Выполнено:**
+  - [x] Миграция `1717500000000-InitialMigration.ts` покрывает все entities (users, hero, skills, projects, contact_messages)
+  - [x] Скрипт в package.json: `"migration:generate": "typeorm-ts-node-commonjs migration:generate -d src/data-source.ts"`
+  - [x] Скрипт в package.json: `"migration:run": "typeorm-ts-node-commonjs migration:run -d src/data-source.ts"`
 
 ### 4. ✅ Убрать `synchronize: true` для production
 - **Файл:** `backend/src/app.module.ts`, строка 23
@@ -35,21 +35,27 @@
 
 ## 🟡 Important (Medium Priority)
 
-### 5. 🖼️ Image Upload (упомянуто в README как remaining task)
-- **Требуется:** 
-  - [ ] Добавить `@nestjs/microservices` или `multer`
-  - [ ] Создать `FilesModule` для загрузки изображений
-  - [ ] Настроить storage (local disk или S3/cloudinary)
-  - [ ] Обновить Entity `Project` и `Hero` для хранения URL файлов
-  - [ ] Добавить UI для upload в админке
+### 5. 🖼️ Image Upload ✅ **ГОТОВО (Backend)**
+- **Статус:** Backend готов, UI остается
+- **Выполнено:**
+  - [x] Добавлен `multer` как зависимость
+  - [x] Создан `UploadModule` с controller и service
+  - [x] Настроен local disk storage (`./uploads`)
+  - [x] Endpoints: `POST /api/upload/image`, `DELETE /api/upload/:filename`
+  - [x] Static files served at `/uploads/*`
+  - [ ] UI для upload в админке (frontend)
 
-### 6. 🧪 Tests (Unit + E2E)
-- **Требуется:** 
-  - [ ] `npm i -D @nestjs/testing jest ts-jest supertest`
-  - [ ] Настроить `jest.config.js`
-  - [ ] Создать `backend/src/**/*.spec.ts` файлы
-  - [ ] Добавить E2E тесты для auth endpoints
-  - [ ] Добавить frontend tests (`@testing-library/react`)
+### 6. 🧪 Tests (Unit + E2E) ✅ **ГОТОВО (Backend)**
+- **Статус:** Базовая настройка тестов завершена
+- **Выполнено:**
+  - [x] `npm i -D jest ts-jest supertest @types/jest` установлен
+  - [x] Настроен `backend/jest.config.js` для unit тестов
+  - [x] Настроен `backend/test/jest-e2e.config.js` для e2e тестов
+  - [x] Создан пример unit теста: `upload.controller.spec.ts`
+  - [x] Создан пример e2e теста: `app.e2e-spec.ts`
+  - [x] Скрипты: `test`, `test:watch`, `test:cov`, `test:e2e`
+  - [ ] E2E тесты для auth endpoints
+  - [ ] Frontend tests (`@testing-library/react`)
 
 ### 7. 📧 Email Notifications
 - **Статус:** Форма контактов есть, но нет email оповещений
@@ -193,16 +199,21 @@
 - [x] #24 — sqlite3 удалён из dependencies
 
 ### Phase 2 (Migrate) — DONE:
-- [x] #3 — Создан data-source.ts для миграций
+- [x] #3 — Создан data-source.ts для миграций ✅ **ГОТОВО**
 - [x] Добавлены скрипты migration:generate и migration:run
 - [x] Добавлен dotenv как зависимость
+
+### Phase 3 (Feature + Test) — DONE:
+- [x] #5 — Image Upload setup (multer + local storage) ✅ **ГОТОВО (Backend)**
+- [x] #6 — Unit/E2E тесты setup (jest + supertest) ✅ **ГОТОВО (Backend)**
+- [x] Миграции TypeORM — уже существуют и работают
 
 ## 📅 Suggested Order
 
 1. ~~**Phase 1 (Fix):** #1, #2, #4, #24 — убрать критические баги~~ ✅ **DONE**
 2. ~~**Phase 2 (Migrate):** #3 — TypeORM migrations~~ ✅ **DONE**
-3. **Phase 3 (Feature):** #5, #7, #8 — основные фичи
-4. **Phase 4 (Test):** #6 — покрытие тестами
+3. ~~**Phase 3 (Feature + Test):** #5, #6 — image upload и тесты~~ ✅ **DONE (Backend)**
+4. **Phase 4 (Finish Features):** #5-#8 — UI upload, auth E2E tests, refresh tokens, email
 5. **Phase 5 (DevOps):** #21, #22, #23 — инфраструктура
 6. **Phase 6 (Enhance):** #10-#20 — улучшения
 7. **Phase 7 (Docs):** #26, #27 — документация
