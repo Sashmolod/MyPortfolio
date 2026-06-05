@@ -28,7 +28,9 @@ export function ProtectedRoute() {
 
   // Если не авторизован — перенаправляем на /login с возвратом на исходную страницу
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ redirect: location.pathname }} replace />;
+    // Если пришли сюда после logout — редирект на главную, иначе на /login
+    const isLoggedOut = location.state?.loggedOut;
+    return <Navigate to={isLoggedOut ? '/' : '/login'} state={{ redirect: location.pathname }} replace />;
   }
 
   // Пользователь авторизован — рендерим вложенный роут

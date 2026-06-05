@@ -1,219 +1,128 @@
-# TODO List — MyPortfolio Project
+# TODO.md — Портфолио Проект
 
-## 🔴 Critical (High Priority)
+## ✅ Завершено: Стандартизация сущностей, DTO и миграций (05.06.2026)
 
-### 1. 🐛 Исправить seed.ts (использует SQLite вместо PostgreSQL)
-- **Файл:** `backend/src/seed.ts`
-- **Проблема:** Seed использует SQLite (`type: 'sqlite'`), но основной конфиг — PostgreSQL
-- **Решение:** 
-  - [ ] Удалить `sqlite3` из зависимостей (если не используется явно)
-  - [ ] Обновить seed.ts для работы с PostgreSQL
-  - [ ] Добавить использование ConfigModule для подключения
+### Стандартизированные сущности (6 файлов в `backend/src/admin/entities/`)
+| Сущность | Статус | Примечание |
+|--------|--------|-------|
+| `user.entity.ts` | ✅ Стандартизирована | `username`, `password`, `isActive`, `createdAt` |
+| `hero.entity.ts` | ✅ Стандартизирована | JSON-поля через `@Column({ type: 'jsonb' })` |
+| `skill.entity.ts` | ✅ Стандартизирована | `level` (int), `sortOrder` (int) |
+| `project.entity.ts` | ✅ Стандартизирована | `technologies` (массив text), `sortOrder` (int) |
+| `contact-message.entity.ts` | ✅ Стандартизирована | `isRead` boolean, `attachments` (jsonb массив) |
+| `jwt-blacklist.entity.ts` | ✅ Стандартизирована | Для инвалидации JWT-токенов |
+| `index.ts` | ✅ Обновлена | Переэкспортирует все сущности |
 
-### 2. 🔐 Безопасность — жёстко заданные credentials
-- **Файл:** `.env.example`
-- **Проблема:** Дефолтные `ADMIN_USERNAME=admin` и `ADMIN_PASSWORD=admin123`
-- **Решение:** 
-  - [ ] Добавить плейсхолдеры с инструкцией генерации
-  - [ ] Добавить JWT_SECRET с инструкцией (`openssl rand -base64 32`)
+### Стандартизированные DTO (11 файлов в `backend/src/admin/dto/`)
+| DTO | Тип | Сущность | Статус |
+|-----|------|--------|--------|
+| `create-hero.dto.ts` | Создание | Hero | ✅ Стандартизирован |
+| `update-hero.dto.ts` | Обновление | Hero | ✅ Стандартизирован |
+| `create-skill.dto.ts` | Создание | Skill | ✅ Стандартизирован |
+| `update-skill.dto.ts` | Обновление | Skill | ✅ Стандартизирован |
+| `create-project.dto.ts` | Создание | Project | ✅ Стандартизирован |
+| `update-project.dto.ts` | Обновление | Project | ✅ Стандартизирован |
+| `create-contact-message.dto.ts` | Создание | ContactMessage | ✅ Стандартизирован |
+| `update-contact-message.dto.ts` | Обновление | ContactMessage | ✅ Стандартизирован |
+| `change-password.dto.ts` | Аутентификация | User | ✅ Оставлен |
+| `login.dto.ts` | Аутентификация | User | ✅ Оставлен |
+| `index.ts` | Переэкспорт | - | ✅ Обновлен |
 
-### 3. 📦 TypeORM Migrations ✅ **ГОТОВО**
-- **Статус:** Миграции созданы и работают
-- **Выполнено:**
-  - [x] Миграция `1717500000000-InitialMigration.ts` покрывает все entities (users, hero, skills, projects, contact_messages)
-  - [x] Скрипт в package.json: `"migration:generate": "typeorm-ts-node-commonjs migration:generate -d src/data-source.ts"`
-  - [x] Скрипт в package.json: `"migration:run": "typeorm-ts-node-commonjs migration:run -d src/data-source.ts"`
+### Удалённые старые/несогласованные файлы
+- `backend/src/admin/dto/create.dto.ts` — Старый универсальный DTO для создания
+- `backend/src/admin/dto/update.dto.ts` — Старый универсальный DTO для обновления
+- `backend/src/admin/dto/admin.dto.ts` — Старый admin DTO
+- `backend/src/admin/dto/upload.dto.ts` — Старый upload DTO
+- `backend/src/migrations/1780657600000-UnifySchema.ts` — Старая миграция
+- `backend/src/migrations/1780673102922-FixEntityTypes.ts` — Старая миграция
 
-### 4. ✅ Убрать `synchronize: true` для production
-- **Файл:** `backend/src/app.module.ts`, строка 23
-- **Проблема:** `synchronize: true` опасен в production (может удалить данные)
-- **Решение:** 
-  - [ ] Переместить `synchronize` в conditional для dev только
-  - [ ] Использовать migrations вместо этого
+### Исправленные файлы конфигурации
+- `backend/src/data-source.ts` — Загружает `.env.prod` или `.env.dev` динамически в зависимости от `NODE_ENV`. Путь к миграциям исправлен на `./migrations/`.
+- `backend/src/migration/generate.ts` — Рефакторизован для использования общего источника данных из `data-source.ts`.
+- `backend/src/migration/run.ts` — Рефакторизован для использования общего источника данных из `data-source.ts`.
 
----
+### Стратегия миграций
+- Сгенерирована чистая начальная миграция `1780684004110-InitialSchema.ts` в `backend/src/migrations/`.
+- Создание новой миграции: `npm run migration:generate -- <путь>` (в папке `backend`).
+- Применение миграций: `npm run migration:run` (в папке `backend`).
 
-## 🟡 Important (Medium Priority)
-
-### 5. 🖼️ Image Upload ✅ **ГОТОВО (Backend)**
-- **Статус:** Backend готов, UI остается
-- **Выполнено:**
-  - [x] Добавлен `multer` как зависимость
-  - [x] Создан `UploadModule` с controller и service
-  - [x] Настроен local disk storage (`./uploads`)
-  - [x] Endpoints: `POST /api/upload/image`, `DELETE /api/upload/:filename`
-  - [x] Static files served at `/uploads/*`
-  - [ ] UI для upload в админке (frontend)
-
-### 6. 🧪 Tests (Unit + E2E) ✅ **ГОТОВО (Backend)**
-- **Статус:** Базовая настройка тестов завершена
-- **Выполнено:**
-  - [x] `npm i -D jest ts-jest supertest @types/jest` установлен
-  - [x] Настроен `backend/jest.config.js` для unit тестов
-  - [x] Настроен `backend/test/jest-e2e.config.js` для e2e тестов
-  - [x] Создан пример unit теста: `upload.controller.spec.ts`
-  - [x] Создан пример e2e теста: `app.e2e-spec.ts`
-  - [x] Скрипты: `test`, `test:watch`, `test:cov`, `test:e2e`
-  - [ ] E2E тесты для auth endpoints
-  - [ ] Frontend tests (`@testing-library/react`)
-
-### 7. 📧 Email Notifications
-- **Статус:** Форма контактов есть, но нет email оповещений
-- **Требуется:** 
-  - [ ] `npm i nodemailer`
-  - [ ] Создать `MailModule` в NestJS
-  - [ ] Настроить отправку при новых сообщениях из ContactForm
-
-### 8. 🔑 JWT Strategy — refresh tokens
-- **Статус:** Только access token (HttpOnly cookie)
-- **Требуется:** 
-  - [ ] Добавить refresh token mechanism
-  - [ ] Хранить refresh tokens в БД
-  - [ ] Endpoint `/auth/refresh`
-
-### 9. 📊 Database — недостающие entities поля
-- **Hero entity:** проверить есть ли все нужные поля (subtitle, CTA buttons, social links)
-- **ContactMessage entity:** проверить CRUD endpoints
-- **User entity:** проверить ролевую модель (только admin или есть users)
 
 ---
 
-## 🟢 Nice to Have (Low Priority / Enhancements)
+## 📋 Задачи в процессе
 
-### 10. 🌐 i18n — Многоязычность
-- [ ] Добавить `@nestjs/i18n`
-- [ ] Поддержать EN/UA/RU переводы
-- [ ] Переключатель языка на frontend
+### Backend
+- [x] Создать начальную миграцию из текущих сущностей
+- [x] Применить миграцию к базе данных
+- [x] Проверить все endpoint'и с новых DTO
+- [x] Добавить валидационные декораторы ко всем DTO (`@IsString`, `@IsOptional` и т.д.)
+- [x] Добавить `@IsNumber` / `@Min` / `@Max` для числовых полей (`level`, `sortOrder`)
+- [x] Добавить валидацию email в DTO `ContactMessage`
+- [x] Добавить валидацию размера/типа файлов для загрузок ( Multer image file filter )
+- [x] Добавить rate limiting для endpoint'ов аутентификации ( Throttler в AppModule )
+- [ ] Добавить логирование в модуль аутентификации
+- [x] Написать unit-тесты для сервисов
+- [ ] Написать e2e-тесты для admin модуля
 
-### 11. 📈 Analytics / Visitor Counter
-- [ ] Добавить счётчик посещений
-- [ ] Статистика в админке (сколько людей зашло, какие страницы смотрели)
+### Frontend
+- [x] Обновить admin dashboard под новую структуру DTO (с интеграцией загрузки файлов и корзины)
+- [ ] Добавить валидацию форм для контактной формы
+- [ ] Добавить индикатор прогресса загрузки файлов
+- [ ] Добавить error boundaries для страниц
+- [x] Добавить loading skeletons для компонентов ( SkeletonCard в Admin Dashboard )
+- [ ] Добавить улучшения доступности (ARIA-метки, навигация с клавиатуры)
+- [ ] Добавить SEO meta-теги (react-helmet-async)
+- [ ] Добавить сохранение переключателя тёмной темы
+- [ ] Добавить поддержку PWA (service worker)
 
-### 12. 🗂️ Portfolio Categories / Filters
-- [ ] Добавить категории к проектам
-- [ ] Фильтрация на frontend
+### Инфраструктура
+- [ ] Добавить health check endpoint'и в docker-compose
+- [ ] Добавить CI/CD пайплайн (GitHub Actions)
+- [ ] Добавить стратегию резервного копирования базы данных
+- [ ] Добавить мониторинг (Prometheus/Grafana)
+- [ ] Добавить управление SSL-сертификатами
+- [ ] Добавить CDN для статических файлов
+- [ ] Добавить middleware сжатия
+- [x] Добавить CORS конфигурацию для production
 
-### 13. 💬 Blog Section
-- [ ] Create blog posts entity
-- [ ] Admin page for managing blog posts
-- [ ] Frontend blog section
 
-### 14. 🔍 Search & Pagination
-- [ ] Пагинация для проектов и навыков
-- [ ] Поиск по проектам (frontend)
+### Безопасность
+- [ ] Реализовать CSRF-защиту
+- [ ] Добавить ограничения на размер тела запроса
+- [ ] Добавить заголовки helmet.js (через пакет `helmet`)
+- [ ] Добавить требования к сложности пароля
+- [ ] Добавить блокировку аккаунта после неудачных попыток
+- [ ] Добавить аудит-логирование действий админа
+- [ ] Пересмотреть и обновить CORS-источники
+- [ ] Добавить заголовки Content-Security-Policy
 
-### 15. 📱 PWA Support
-- [ ] Добавить `manifest.json`
-- [ ] Service worker для offline mode
-- [ ] Install prompt
-
-### 16. 🎨 Animation Enhancements
-- [ ] Добавить больше micro-interactions
-- [ ] Page transition animations
-- [ ] Scroll-triggered animations (AOS или аналоги)
-
-### 17. 📝 Admin Dashboard — CRUD enhancements
-- [ ] Drag-and-drop для reordering skills/projects
-- [ ] Bulk delete
-- [ ] Draft/publish workflow для проектов
-
-### 18. 🔔 Real-time Notifications
-- [ ] WebSocket (nestjs/websockets или Socket.io)
-- [ ] Уведомления о новых сообщениях в админке
-
-### 19. 📋 API Rate Limiting — more granular
-- [ ] Разные лимиты для разных endpoints
-- [ ] Whitelist для admin IP
-
-### 20. 📊 Backend Monitoring
-- [ ] Добавить `@nestjs/terminus` (уже частично есть через HealthModule)
-- [ ] Prometheus metrics (`@nrwl/nestjs-metrics`)
-- [ ] Sentry error tracking
-
----
-
-## 🔧 DevOps / Infrastructure
-
-### 21. 🐳 Docker — improvements
-- **backend/.dockerignore:** проверить что исключает всё нужное
-- [ ] Добавить `.env.example` в backend и frontend
-- [ ] healthcheck в docker-compose.yml для всех сервисов
-- [ ] volume mounting для development (`/app` ≠ host paths)
-- [ ] Разделить Dockerfile для dev/prod (multi-stage build для frontend уже есть ✅)
-
-### 22. 🚀 CI/CD Pipeline
-- [ ] GitHub Actions workflow
-- [ ] Lint + Format check (ESLint + Prettier)
-- [ ] TypeScript compilation check
-- [ ] Auto deploy на production (Vercel/Railway/Render)
-
-### 23. 📦 Dependency Updates
-- [ ] Настроить Dependabot или Renovate
-- [ ] Проверить `npm outdated` — есть ли устаревшие пакеты
+### Документация
+- [ ] Добавить API-документацию (Swagger/OpenAPI)
+- [ ] Добавить README для настройки backend
+- [ ] Добавить README для настройки frontend
+- [ ] Добавить диаграмму схемы базы данных
+- [ ] Добавить руководство по развёртыванию
+- [ ] Добавить правила внесения вкладов
 
 ---
 
-## 🐛 Bug Fixes / Issues Found
+## 🏗️ Примечания по архитектуре
 
-### 24. ⚠️ sqlite3 в production dependencies
-- **Файл:** `backend/package.json`, строка 34
-- **Проблема:** `sqlite3` в production deps, но используется PostgreSQL
-- **Решение:** Удалить если не нужен явно: `npm uninstall sqlite3`
+### Соответствие Сущность → DTO
+```
+Hero        → create-hero.dto.ts, update-hero.dto.ts
+Skill       → create-skill.dto.ts, update-skill.dto.ts
+Project     → create-project.dto.ts, update-project.dto.ts
+ContactMessage → create-contact-message.dto.ts, update-contact-message.dto.ts
+User        → login.dto.ts, change-password.dto.ts
+```
 
-### 25. ⚠️ frontend/.env.production — hard-coded API URL
-- **Проверить:** `frontend/.env.production` содержит правильный VITE_API_URL?
-- **Решение:** Убедиться что указывает на production backend domain
+### Стратегия JSON-колонок
+Все JSON-поля используют `@Column({ type: 'jsonb' })` с:
+- `Hero.socialLinks` → `{ github?, linkedin?, twitter? }`
+- `Project.technologies` → `string[]`
+- `ContactMessage.attachments` → `string[]`
 
----
-
-## 📝 Documentation
-
-### 26. 📖 Обновить README
-- [ ] Добавить секцию "Known Issues" (seed использует SQLite)
-- [ ] Добавить инструкцию по first-time setup
-- [ ] Добавить diagram архитектуры
-- [ ] API docs (уже есть Swagger, добавить ссылку в README)
-
-### 27. 📋 CONTRIBUTING.md
-- [ ] Правила для контрибьюторов
-- [ ] Code style guidelines
-
----
-
-## 📊 Priority Matrix
-
-| Priority | Tasks | Effort |
-|----------|-------|--------|
-| 🔴 Critical | #1, #2, #3, #4 | Medium |
-| 🟡 Important | #5-#9 | High |
-| 🟢 Nice to Have | #10-#27 | Variable |
-
----
-
-## ✅ Выполнено в этой сессии
-
-### Phase 1 (Fix) — DONE:
-- [x] #1 — Исправлен seed.ts (SQLite → PostgreSQL, добавлены все entities)
-- [x] #2 — Обновлён .env.example (безопасность, улучшены плейсхолдеры)
-- [x] #4 — synchronize зависит от NODE_ENV
-- [x] #24 — sqlite3 удалён из dependencies
-
-### Phase 2 (Migrate) — DONE:
-- [x] #3 — Создан data-source.ts для миграций ✅ **ГОТОВО**
-- [x] Добавлены скрипты migration:generate и migration:run
-- [x] Добавлен dotenv как зависимость
-
-### Phase 3 (Feature + Test) — DONE:
-- [x] #5 — Image Upload setup (multer + local storage) ✅ **ГОТОВО (Backend)**
-- [x] #6 — Unit/E2E тесты setup (jest + supertest) ✅ **ГОТОВО (Backend)**
-- [x] Миграции TypeORM — уже существуют и работают
-
-## 📅 Suggested Order
-
-1. ~~**Phase 1 (Fix):** #1, #2, #4, #24 — убрать критические баги~~ ✅ **DONE**
-2. ~~**Phase 2 (Migrate):** #3 — TypeORM migrations~~ ✅ **DONE**
-3. ~~**Phase 3 (Feature + Test):** #5, #6 — image upload и тесты~~ ✅ **DONE (Backend)**
-4. **Phase 4 (Finish Features):** #5-#8 — UI upload, auth E2E tests, refresh tokens, email
-5. **Phase 5 (DevOps):** #21, #22, #23 — инфраструктура
-6. **Phase 6 (Enhance):** #10-#20 — улучшения
-7. **Phase 7 (Docs):** #26, #27 — документация
+### Соглашение для числовых полей
+- `level` → `@Column({ type: 'int', default: 0 })` (шкала 0-100)
+- `sortOrder` → `@Column({ type: 'int', default: 0 })` (для сортировки)

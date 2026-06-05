@@ -2,6 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, RequestMethod } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { DataSource } from 'typeorm';
+import { ThrottlerModule } from '@nestjs/throttler';
+import helmet from 'helmet';
 const cookieParser = require('cookie-parser');
 import { AppModule } from './app.module';
 import * as path from 'path';
@@ -9,9 +11,24 @@ import * as path from 'path';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // ==========================================
+  // Helmet - безопасные HTTP заголовки
+  // ==========================================
+  app.use(helmet());
+
+  // ==========================================
+  // Глобальный rate limiting (добавляется через AppModule)
+  // ==========================================
+
   // Включение CORS для фронтенда
-  // Собираем все возможные источники (dev + Docker + локальный запуск)
-  const origins = [
+  // Читаем из env: ALLOWED_ORIGINS через запятую, или используем дефолт
+  const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+
+  const defaultOrigins = [
+    'http://localhost',
     'http://localhost:5173',
     'http://localhost:5174',
     'http://localhost:5175',
@@ -20,7 +37,17 @@ async function bootstrap() {
     'http://frontend',
     'http://127.0.0.1',
   ];
-  
+
+  // Always include http://localhost and http://127.0.0.1 in allowed origins
+  const corsOrigins = Array.from(
+    new Set([
+      'http://localhost',
+      'http://127.0.0.1',
+      ...(allowedOrigins.length > 0 ? allowedOrigins : defaultOrigins),
+    ]),
+  );
+
+
   app.enableCors({
     origin: (origin, callback) => {
       // Allow requests with no origin (like curl, Postman, mobile apps)
@@ -28,7 +55,7 @@ async function bootstrap() {
         callback(null, true);
         return;
       }
-      if (origins.indexOf(origin) !== -1 || origin.startsWith('http://localhost')) {
+      if (corsOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));
@@ -100,21 +127,20 @@ async function bootstrap() {
 
   // ==========================================
   // Авто-создание первого администратора при запуске
-  // Если в .env заданы ADMIN_USERNAME и ADMIN_PASSWORD — создаётся/обновляется пользователь
   // ==========================================
-  // Получаем DataSource из Dependency Injection NestJS
-  const dataSource = app.get(DataSource);
-  const userRepo = dataSource.getRepository('User');
-  
   const adminUsername = process.env.ADMIN_USERNAME;
   const adminPassword = process.env.ADMIN_PASSWORD;
 
   if (adminUsername && adminPassword) {
     try {
-      const bcrypt = await import('bcrypt');
+      const bcryptjs = require('bcryptjs');
       const saltRounds = 12;
-      const hashedPassword = await bcrypt.hash(adminPassword, saltRounds);
-      
+      const hashedPassword = bcryptjs.hashSync(adminPassword, saltRounds);
+
+      // Получаем DataSource из Dependency Injection
+      const dataSource = app.get(DataSource);
+      const userRepo = dataSource.getRepository('User');
+
       // Проверяем есть ли уже пользователи
       const existingUserCount = await userRepo.count();
       
@@ -149,7 +175,7 @@ async function bootstrap() {
         }
       }
       
-      console.log(`💡 Для входа используйте логин: ${adminUsername} и пароль: ${adminPassword}\n`);
+      console.log(`\n💡 Для входа используйте логин: ${adminUsername}. Пароль задайте в ADMIN_PASSWORD из .env файла.\n`);
     } catch (error: any) {
       console.error(`\n❌ Ошибка при создании администратора:`, error?.message || error);
     }

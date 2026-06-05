@@ -1,41 +1,41 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
+} from 'typeorm';
 
 @Entity('hero')
 export class Hero {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ length: 100 })
+  @Column({ name: 'name', type: 'varchar', length: 100 })
   name: string;
 
-  @Column({ length: 150 })
+  @Column({ name: 'title', type: 'varchar', length: 150 })
   title: string;
 
-  @Column({ type: 'text', default: '' })
+  @Column({ name: 'bio', type: 'text', default: '' })
   bio: string;
 
-  @Column({ length: 255, default: '/favicon.svg' })
+  @Column({ name: 'avatar', type: 'varchar', length: 255, default: '/favicon.svg' })
   avatar: string;
 
-  @Column({ type: 'text', default: '{}' })
-  socialLinks: string; // JSON: { github, linkedin, twitter }
+  @Column({ name: 'social_links_raw', type: 'text', nullable: true })
+  socialLinksRaw: string;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ name: 'social_links', type: 'text', nullable: true })
+  socialLinks: string;
+
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updatedAt: Date;
 
-  // Геттеры/сеттеры для socialLinks
-  getSocialLinks(): Record<string, string> {
-    try {
-      return typeof this.socialLinks === 'string' ? JSON.parse(this.socialLinks) : this.socialLinks;
-    } catch {
-      return {};
-    }
-  }
-
-  setSocialLinks(links: Record<string, string>): void {
-    this.socialLinks = JSON.stringify(links);
-  }
+  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamptz', nullable: true })
+  deletedAt: Date | null;
 }

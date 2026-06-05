@@ -3,6 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UserService } from './user.service';
+import { AuthService } from './auth.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -11,14 +12,27 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private configService: ConfigService,
     private userService: UserService,
+    private authService: AuthService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
-        // Читаем JWT из HttpOnly cookie
+        // Сначала читаем из HttpOnly cookie
         (request: any) => {
           const token = request?.cookies?.AccessToken;
-          this.logger.log(`JWT extracted from cookie: ${token ? 'YES' : 'NO'}`);
+          if (token) {
+            this.logger.log(`JWT extracted from cookie: YES`);
+          }
           return token;
+        },
+        // Затем из Authorization заголовка (Bearer token)
+        (request: any) => {
+          const authHeader = request?.headers?.authorization;
+          if (authHeader && authHeader.startsWith('Bearer ')) {
+            const token = authHeader.substring(7);
+            this.logger.log(`JWT extracted from Authorization header: YES`);
+            return token;
+          }
+          return null;
         },
       ]),
       secretOrKey: configService.get<string>('JWT_SECRET'),
@@ -33,6 +47,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(payload: any) {
     this.logger.log(`Validating payload: ${JSON.stringify(payload)}`);
     
+    // Проверяем токен по чёрному списку (logout)
+    if (payload.jti) {
+      const isBlacklisted = await this.authService.isBlacklisted(payload.jti);
+      if (isBlacklisted) {
+        this.logger.warn(`Попытка использовать отозванный токен (blacklist), jti: ${payload.jti}`);
+        throw new UnauthorizedException('Токен недействителен (вышли из системы)');
+      }
+    }
+
     const user = await this.userService.findById(payload.sub);
 
     if (!user || !user.isActive) {

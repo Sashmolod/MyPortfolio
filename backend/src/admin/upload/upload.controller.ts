@@ -1,18 +1,21 @@
-import { Controller, Post, UseInterceptors, UploadedFile, Delete, HttpCode, HttpStatus, Param } from '@nestjs/common';
+import { Controller, Post, UseInterceptors, UploadedFile, Delete, HttpCode, HttpStatus, Param, UseGuards } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadService } from './upload.service';
-import { ApiConsumes, ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiConsumes, ApiBody, ApiOperation, ApiResponse, ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../jwt-auth.guard';
+import { AuditLogInterceptor } from '../audit-log.interceptor';
 
+@ApiTags('upload')
 @Controller('upload')
+@UseGuards(JwtAuthGuard)
+@UseInterceptors(AuditLogInterceptor)
+@ApiBearerAuth('jwt-in-header')
 export class UploadController {
   constructor(private readonly uploadService: UploadService) {}
 
   @Post('image')
-  @UseInterceptors(FileInterceptor('file', {
-    storage: this.uploadService.getLocalStorageOptions(),
-    fileFilter: this.uploadService.imageFileFilter.bind(this.uploadService),
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-  }))
+  @UseInterceptors(FileInterceptor('file'))
+
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {

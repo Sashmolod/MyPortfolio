@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Skill, Hero, Project, ContactMessage } from '../admin/entities';
@@ -27,9 +27,7 @@ export class PortfolioService {
   // ====== HERO CRUD ======
 
   async getHeroData() {
-    const heroes = await this.heroRepo.find({
-      take: 1,
-    });
+    const heroes = await this.heroRepo.find({ take: 1 });
     const hero = heroes[0];
     if (hero) {
       return {
@@ -38,7 +36,7 @@ export class PortfolioService {
         title: hero.title,
         bio: hero.bio,
         avatar: hero.avatar,
-        socialLinks: hero.getSocialLinks(),
+        socialLinks: hero.socialLinks,
       };
     }
     // Дефолтные данные если нет записи в БД
@@ -51,57 +49,12 @@ export class PortfolioService {
     };
   }
 
-  async createHero(data: Partial<Hero>) {
-    const hero = this.heroRepo.create({
-      ...data,
-      socialLinks: data.socialLinks ? JSON.stringify(data.socialLinks) : '{}',
-    });
-    const saved = await this.heroRepo.save(hero);
-    return {
-      id: saved.id,
-      name: saved.name,
-      title: saved.title,
-      bio: saved.bio,
-      avatar: saved.avatar,
-      socialLinks: saved.getSocialLinks(),
-    };
-  }
-
-  async updateHero(id: number, data: Partial<Hero>) {
-    const hero = await this.heroRepo.findOne({ where: { id } });
-    if (!hero) throw new NotFoundException(`Hero with id ${id} not found`);
-    Object.assign(hero, data);
-    if (data.socialLinks) {
-      hero.socialLinks = JSON.stringify(data.socialLinks);
-    }
-    const saved = await this.heroRepo.save(hero);
-    return {
-      id: saved.id,
-      name: saved.name,
-      title: saved.title,
-      bio: saved.bio,
-      avatar: saved.avatar,
-      socialLinks: saved.getSocialLinks(),
-    };
-  }
-
-  async deleteHero(id: number) {
-    const hero = await this.heroRepo.findOne({ where: { id } });
-    if (!hero) throw new NotFoundException(`Hero with id ${id} not found`);
-    await this.heroRepo.delete(id);
-    return { message: 'Hero data deleted' };
-  }
-
   async getContactInfo() {
     return {
       email: 'john@example.com',
       phone: '+1 234 567 890',
       address: 'Kyiv, Ukraine',
     };
-  }
-
-  async getAllMessages() {
-    return this.messageRepo.find({ order: { createdAt: 'DESC' } });
   }
 
   async createMessage(dto: Partial<ContactMessage>) {

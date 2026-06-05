@@ -1,4 +1,5 @@
 import { useTheme } from '../contexts/ThemeContext';
+import { Link } from 'react-router-dom';
 
 const navItems = ['Home', 'Skills', 'Projects', 'Contact'];
 
@@ -14,13 +15,13 @@ export default function Header() {
             {item}
           </a>
         ))}
-        <a
-          href="#/admin"
+        <Link
+          to="/admin"
           className="btn"
           style={{ marginLeft: '10px', textDecoration: 'none' }}
         >
           🔐 Admin
-        </a>
+        </Link>
         <button
           onClick={toggleTheme}
           style={{

@@ -11,9 +11,22 @@
     "build:frontend": "cd frontend && npm run build",
     "build": "npm run build:backend && npm run build:frontend",
     "seed": "cd backend && npm run seed",
-    "install:all": "cd backend && npm install && cd ../frontend && npm install"
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "docker:dev": "docker compose up --build",
+    "docker:dev:d": "docker compose up -d --build",
+    "docker:dev:logs": "docker compose logs -f",
+    "docker:dev:down": "docker compose down",
+    "docker:prod": "NODE_ENV=production docker compose -f docker-compose.yml up --build",
+    "docker:prod:d": "NODE_ENV=production docker compose -f docker-compose.yml up -d --build",
+    "docker:prod:logs": "docker compose logs -f",
+    "docker:prod:down": "docker compose down",
+    "db:migrate:gen": "cd backend && npm run migration:generate -d src/data-source.ts",
+    "db:migrate:run": "cd backend && npm run migration:run -d src/data-source.ts"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"
+  },
+  "dependencies": {
+    "typeorm": "^1.0.0"
   }
 }

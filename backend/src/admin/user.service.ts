@@ -7,7 +7,7 @@ import { User } from './entities/user.entity';
 export class UserService {
   constructor(
     @InjectRepository(User)
-    public readonly usersRepository: Repository<User>,
+    private readonly usersRepository: Repository<User>,
   ) {}
 
   /**
@@ -15,8 +15,18 @@ export class UserService {
    */
   async findById(id: number): Promise<User | null> {
     return this.usersRepository.findOne({
-      where: { id, isActive: true },
+      where: { id: id as any, isActive: true },
       select: ['id', 'username', 'isActive', 'createdAt'],
+    });
+  }
+
+  /**
+   * Найти пользователя по ID с паролем (для смены пароля)
+   */
+  async findByIdWithPassword(id: number): Promise<User | null> {
+    return this.usersRepository.findOne({
+      where: { id: id as any },
+      select: ['id', 'username', 'password', 'isActive'],
     });
   }
 
@@ -34,7 +44,7 @@ export class UserService {
    * Обновить пользователя по ID (без обновления пароля)
    */
   async update(id: number, partialData: Partial<User>): Promise<User> {
-    await this.usersRepository.update(id, partialData);
+    await this.usersRepository.update(id as any, partialData);
     return this.findById(id);
   }
 

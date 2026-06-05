@@ -10,8 +10,8 @@ WORKDIR /app
 # Копируем package.json и package-lock.json для кэширования зависимостей
 COPY package*.json ./
 
-# Устанавливаем все зависимости
-RUN npm ci
+# Устанавливаем все зависимости (legacy-peer-deps для обхода peer-конфликтов)
+RUN npm install --legacy-peer-deps
 
 # Копируем исходный код
 COPY . .

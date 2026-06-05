@@ -1,0 +1,57 @@
+# Portfolio Project — Cline Rules
+
+## Stack Overview
+- Backend: NestJS 10 (TypeScript), PostgreSQL, TypeORM, JWT auth
+- Frontend: React 18 + Vite, React Router v7, Framer Motion, Axios
+- Infra: Docker Compose, Nginx (frontend), OrbStack
+- Path structure: `backend/` (NestJS) и `frontend/` (React SPA)
+
+## General Rules
+- Всегда уточняй контекст — работаешь с backend или frontend.
+- Не смешивай файлы между `backend/` и `frontend/` без явной причины.
+- Все переменные окружения → через `.env` или `.env.example`. Никогда не хардкодь секреты.
+- При изменении структуры БД → предложи migration, не правь `synchronize: true` в production.
+- Всегда проверяй существующие DTO/entities перед созданием новых.
+- Используй относительные пути (`/api`, `/uploads`) во фронтенде. Перенаправление запросов на бэкенд настраивается через прокси в Vite (DEV) и Nginx (PROD).
+
+## Backend Rules
+- Модули NestJS — feature-based (admin, portfolio, upload, health).
+- Entities хранятся в `backend/src/admin/entities/`. Все сущности должны иметь `@Entity()` декоратор.
+- DTO → `backend/src/admin/dto/`. Используй `class-validator` декораторы для валидации.
+- API prefix: `/api`. Роуты модулей: `/api/admin/*`, `/api/portfolio/*`, `/api/health`.
+- JWT секреты и DB credentials — только через env vars.
+- При создании нового endpoint → guard + DTO + service метод + test spec.
+- Всегда используй `TypeOrmModule.forRootAsync` с внедрением `ConfigService` для конфигурации подключения к БД, избегай прямого чтения `process.env` в модулях.
+- Соблюдай инкапсуляцию сервисов. Не делай TypeORM-репозитории публичными (`public`). Все запросы к БД должны идти через методы сервиса.
+
+## Frontend Rules
+- Components в `frontend/src/components/`, pages в `frontend/src/pages/`.
+- API calls → через настроенный инстанс Axios в `frontend/src/api.js`. Не делай raw fetch в компонентах.
+- Auth context → `frontend/src/contexts/AuthContext.tsx`. Используй `useAuth` хук.
+- Protected routes → через `<ProtectedRoute />` из `frontend/src/components/ProtectedRoute.tsx` (или `AdminRoute.jsx` для админки).
+- Admin dashboard pages → `frontend/src/admin/pages/`.
+- Стили: CSS modules или inline styles. Не добавляй новые UI фреймворки без запроса.
+
+## Docker Rules
+- Оркестрация через `docker-compose.yml` в корне проекта. Сервисы: `db`, `backend`, `frontend`.
+- Для локальной разработки используй `npm run dev` / `nest start --watch` вместо docker.
+- Migrations → `npm run migration:generate -d src/data-source.ts` и `npm run migration:run -d src/data-source.ts`.
+- При изменении `.env` → предупреди пользователя о необходимости перезапуска контейнеров.
+
+## Git Rules
+- Commit messages в формате: `type: description` (feat, fix, refactor, docs, chore).
+- Не коммить `.env` файлы — используй `.env.example`.
+- Перед пушем → убедись что нет uncommitted изменений в `dist/` и `node_modules/`.
+
+## Code Style
+- Backend: TypeScript strict mode. Используй async/await вместо Promise chain.
+- Frontend: JSX/TSX + functional components с hooks. Никаких class components.
+- Имена файлов: PascalCase для компонентов и страниц React (`Hero.jsx`, `AdminDashboard.jsx`), camelCase для файлов бэкенда (`auth.service.ts`).
+- Экспорт только одного default модуля на файл (кроме barrel-файлов экспорта `index.ts`, где используются именованные экспорты).
+- Константы в UPPER_SNAKE_CASE, переменные в camelCase.
+
+## Security
+- Никогда не логируй токены или пароли.
+- JWT secret → минимум 32 символа.
+- CORS → ограничивай origin в production, не используй `*`.
+- Upload файл валидация → проверяй extension и size.

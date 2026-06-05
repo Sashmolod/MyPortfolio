@@ -41,49 +41,49 @@ export function LoginPage() {
       setIsLoading(false);
     }
   };
-
   return (
     <div style={{
       minHeight: '100vh',
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'var(--bg)',
+      backgroundImage: 'var(--bg-grid)',
+      padding: '20px',
     }}>
-      <div style={{
-        background: '#fff',
-        padding: '2.5rem',
-        borderRadius: '12px',
-        boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+      <div className="card" style={{
         width: '100%',
         maxWidth: '400px',
       }}>
         <h1 style={{
+          fontFamily: "'Architects Daughter', cursive",
+          fontWeight: 700,
           textAlign: 'center',
           marginBottom: '0.5rem',
-          fontSize: '1.8rem',
-          color: '#333',
+          fontSize: '2rem',
+          color: 'var(--text)',
         }}>
           Админ-панель
         </h1>
         <p style={{
           textAlign: 'center',
           marginBottom: '2rem',
-          color: '#666',
-          fontSize: '0.95rem',
+          color: 'var(--text-muted)',
+          fontSize: '1rem',
+          fontFamily: "'Architects Daughter', cursive",
         }}>
           Войти в систему
         </p>
 
         {error && (
-          <div style={{
-            background: '#fee',
-            border: '1px solid #fcc',
-            color: '#c00',
-            padding: '0.75rem 1rem',
-            borderRadius: '8px',
+          <div className="input-error" style={{
+            border: 'var(--border-style)',
+            borderRadius: 'var(--sketch-radius-3)',
+            color: 'var(--danger)',
+            padding: '10px 14px',
             marginBottom: '1.5rem',
-            fontSize: '0.9rem',
+            fontSize: '0.95rem',
+            background: 'var(--card-bg)',
           }}>
             {error}
           </div>
@@ -94,8 +94,10 @@ export function LoginPage() {
             <label style={{
               display: 'block',
               marginBottom: '0.5rem',
-              fontWeight: 500,
-              color: '#333',
+              fontWeight: 600,
+              fontSize: '0.95rem',
+              color: 'var(--text)',
+              fontFamily: "'Architects Daughter', cursive",
             }}>
               Логин
             </label>
@@ -105,17 +107,6 @@ export function LoginPage() {
               onChange={(e) => setUsername(e.target.value)}
               required
               autoFocus
-              style={{
-                width: '100%',
-                padding: '0.75rem 1rem',
-                border: '1px solid #ddd',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                outline: 'none',
-                transition: 'border-color 0.2s',
-              }}
-              onFocus={(e) => (e.target.style.borderColor = '#667eea')}
-              onBlur={(e) => (e.target.style.borderColor = '#ddd')}
             />
           </div>
 
@@ -123,8 +114,10 @@ export function LoginPage() {
             <label style={{
               display: 'block',
               marginBottom: '0.5rem',
-              fontWeight: 500,
-              color: '#333',
+              fontWeight: 600,
+              fontSize: '0.95rem',
+              color: 'var(--text)',
+              fontFamily: "'Architects Daughter', cursive",
             }}>
               Пароль
             </label>
@@ -133,34 +126,17 @@ export function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              style={{
-                width: '100%',
-                padding: '0.75rem 1rem',
-                border: '1px solid #ddd',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                outline: 'none',
-                transition: 'border-color 0.2s',
-              }}
-              onFocus={(e) => (e.target.style.borderColor = '#667eea')}
-              onBlur={(e) => (e.target.style.borderColor = '#ddd')}
             />
           </div>
 
           <button
             type="submit"
             disabled={isLoading}
+            className="btn"
             style={{
               width: '100%',
-              padding: '0.85rem',
-              background: isLoading ? '#999' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '1rem',
-              fontWeight: 600,
+              opacity: isLoading ? 0.7 : 1,
               cursor: isLoading ? 'not-allowed' : 'pointer',
-              transition: 'transform 0.15s, box-shadow 0.15s',
             }}
           >
             {isLoading ? 'Вход...' : 'Войти'}

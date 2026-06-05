@@ -1,50 +1,17 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiOkResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Param, ParseIntPipe } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiOkResponse, ApiBody } from '@nestjs/swagger';
 import { PortfolioService } from './portfolio.service';
-import { CreateContactMessageDto } from '../admin/dto/create.dto';
-import { JwtAuthGuard } from '../admin/jwt-auth.guard';
+import { CreateContactMessageDto } from '../admin/dto/create-contact-message.dto';
 
 // Re-export for Swagger schema reference
-export { CreateContactMessageDto } from '../admin/dto/create.dto';
+export { CreateContactMessageDto } from '../admin/dto/create-contact-message.dto';
 
 @ApiTags('portfolio')
 @Controller('portfolio')
 export class PortfolioController {
   constructor(private portfolioService: PortfolioService) {}
 
-  // ====== HERO CRUD ======
-
-  @ApiTags('hero')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Create hero section data' })
-  @ApiBody({ type: Object })
-  @ApiResponse({ status: 201, description: 'Hero data created' })
-  @Post('hero')
-  createHero(@Body() data: Partial<any>) {
-    return this.portfolioService.createHero(data);
-  }
-
-  @ApiTags('hero')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Update hero section data' })
-  @ApiBody({ type: Object })
-  @ApiResponse({ status: 200, description: 'Hero data updated' })
-  @Put('hero/:id')
-  updateHero(@Param('id') id: number, @Body() data: Partial<any>) {
-    return this.portfolioService.updateHero(id, data);
-  }
-
-  @ApiTags('hero')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Delete hero section data' })
-  @ApiResponse({ status: 200, description: 'Hero data deleted' })
-  @Delete('hero/:id')
-  deleteHero(@Param('id') id: number) {
-    return this.portfolioService.deleteHero(id);
-  }
+  // ====== HERO ======
 
   @ApiTags('hero')
   @ApiOperation({ summary: 'Get hero section data (public)' })
@@ -53,6 +20,7 @@ export class PortfolioController {
   getHeroData() {
     return this.portfolioService.getHeroData();
   }
+
 
   // ====== SKILLS ======
 

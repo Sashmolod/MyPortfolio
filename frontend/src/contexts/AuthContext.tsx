@@ -68,6 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setUser(null);
       setIsLoading(false);
+      window.location.replace('/');
     }
   };
 
@@ -89,10 +90,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         isAuthenticated: !!user,
         isLoading,
-       login,
-      logout,
-      changePassword,
-      checkAuth,
+        login,
+        logout,
+        changePassword,
+        checkAuth,
       }}
     >
       {children}

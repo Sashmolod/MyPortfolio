@@ -39,12 +39,27 @@ COPY package*.json ./
 
 # Устанавливаем ТОЛЬКО production-зависимости
 # --omit=dev исключает devDependencies, что значительно уменьшает размер образа
+# ts-node и tsconfig-paths нужны для запуска миграций в production
 RUN npm ci --omit=dev && \
+    npm install ts-node tsconfig-paths --no-save && \
     # Очищаем npm кэш после установки
-    npm cache clean --force
+    npm cache clean --force && \
+    # Устанавливаем postgresql-client для pg_isready в entrypoint
+    apk add --no-cache postgresql-client
 
-# Копируем собранную aplicación из builder этапа
+# Копируем собранная приложение из builder этапа
 COPY --from=builder /app/dist ./dist
+
+# Копируем src/ для миграций (data-source.ts, migration файлы)
+COPY --from=builder /app/src ./src
+
+# Копируем tsconfig и другие конфигурационные файлы
+COPY --from=builder /app/tsconfig*.json ./
+COPY --from=builder /app/nest-cli.json ./
+
+# Копируем entrypoint скрипт
+COPY docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
 
 # Меняем владельца файлов на неис privileged пользователя
 RUN chown -R nodejs:nodejs /app
@@ -59,5 +74,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000/api/portfolio/public', (r) => { r.statusCode === 200 ? process.exit(0) : process.exit(1); }).on('error', () => process.exit(1))"
 
-# Команда запуска приложения в production режиме
-CMD ["node", "dist/main"]
+# Команда запуска через entrypoint (запускает миграции перед стартом)
+ENTRYPOINT ["./docker-entrypoint.sh"]

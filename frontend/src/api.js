@@ -7,18 +7,21 @@ const api = axios.create({
 
 /**
  * Интерцептор для обработки ошибок.
- * При 401 ошибке (токен протух или невалиден) — очищаем состояние и редиректим на логин.
+ * При 401 ошибке (токен протух или невалиден) — очищаем cookie и редиректим на логин.
+ * Примечание: для навигации используется window.location, так как интерцептор axios
+ * не имеет доступа к React Router контексту.
  */
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       // Токен истёк или невалиден — очищаем cookie и редиректим на логин
-      // Удаляем AccessToken cookie
+      // Удаляем AccessToken cookie (path совпадает с тем, как установлен cookie)
       document.cookie = 'AccessToken=; path=/api; max-age=0';
 
       // Если мы не на странице логина — перенаправляем
-      if (window.location.pathname !== '/login') {
+      // Используем window.location для редиректа, так как интерцептор не имеет доступа к React Router
+      if (window.location.pathname !== '/login' && !window.location.pathname.startsWith('/admin')) {
         window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
       }
     }

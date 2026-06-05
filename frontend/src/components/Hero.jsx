@@ -36,10 +36,16 @@ export default function Hero({ data }) {
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.6 }}
-        style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}
+        style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
       >
         <BackgroundParticles count={20} />
-        <DeveloperIllustration />
+        {hero.avatar && hero.avatar !== '/favicon.svg' && hero.avatar !== '/hero.png' ? (
+          <div style={{ width: '280px', height: '280px', borderRadius: 'var(--sketch-radius-1)', overflow: 'hidden', border: 'var(--border-style)', boxShadow: 'var(--shadow)', background: 'var(--card-bg)', transition: 'border-radius 0.3s ease' }}>
+            <img src={hero.avatar} alt={hero.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          </div>
+        ) : (
+          <DeveloperIllustration />
+        )}
       </motion.div>
     </section>
   );

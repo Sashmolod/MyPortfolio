@@ -1,144 +1,226 @@
-# Portfolio Project
+# Portfolio Project — Руководство по запуску
 
-Full-stack portfolio application with admin panel built with React + NestJS.
+## 📁 Структура `.env` файлов
 
-## Tech Stack
+```
+.
+├── .env                    ← корневой (для Docker Compose prod)
+├── .env.example            ← шаблон переменных окружения
+├── backend/
+│   ├── .env.dev            ← локальный бэкенд (OrbStack PostgreSQL)
+│   └── .env.prod           ← бэкенд в Docker сети
+└── frontend/
+    ├── .env.dev            ← настройки для локальной разработки (VITE_API_URL=/api)
+    └── .env.docker         ← настройки для Docker-окружения (VITE_API_URL=/api)
+```
 
-**Backend:**
-- NestJS + TypeScript
-- PostgreSQL + TypeORM
-- Passport.js + JWT authentication
-- @nestjs/throttler (rate limiting)
-- @nestjs/swagger API documentation
+---
 
-**Frontend:**
-- React 18 + Vite
-- React Router DOM v7
-- Framer Motion (animations)
-- Axios (HTTP client)
+## 🚀 Режим 1: DEV (локальная разработка)
 
-**DevOps:**
-- Docker + Docker Compose
-- Nginx (frontend serving)
-
-## Features
-
-### Backend
-- JWT-based authentication with HttpOnly cookies
-- Rate limiting on all endpoints (default: 100/min, short: 3/sec)
-- Stricter rate limiting on auth endpoints (5 attempts/min for login)
-- Swagger API docs at `/api/docs`
-- Health check endpoint at `/health`
-- Full CRUD for skills, projects, hero section, contact messages
-
-### Frontend
-- Dark/Light theme with localStorage persistence
-- Toast notifications (framer-motion animations)
-- Inline form validation with error messages
-- Loading skeletons (shimmer effect)
-- Responsive design
-- SEO optimized (meta tags, Open Graph)
-
-## Getting Started
-
-### Prerequisites
+### Требования
+- **OrbStack** с PostgreSQL (сервис `postgres`)
 - Node.js 18+
-- PostgreSQL 16+
-- Docker & Docker Compose (optional)
+- npm или pnpm
 
-### Local Development
+### Запуск PostgreSQL
+В OrbStack Dashboard → сервис `postgres`:
+- Host: `localhost`
+- Port: `5432`
+- User: имя твоего ОС-юзера (обычно `hot_pepper`)
+- Password: тот, что задал при создании
+- Database: `portfolio_db`
 
+### Запуск Backend
+```bash
+# 1. Убедись что OrbStack PostgreSQL запущен
+# 2. Скопируй .env.dev в .env (если нужно)
+cd backend
+cp .env.dev .env
+
+# 3. Установи зависимости
+npm install
+
+# 4. Запусти миграции (создание таблиц)
+npm run migration:run
+
+# 5. Запусти seed (заполнение данными)
+npm run seed
+
+# 6. Запусти бэкенд в режиме разработки (hot-reload)
+npm run dev
+# или nest start --watch
+```
+
+
+Бэкенд доступен на: `http://localhost:3001`
+
+### Запуск Frontend
+```bash
+cd frontend
+
+# 1. Скопируй .env.dev
+cp .env.dev .env
+
+# 2. Установи зависимости
+npm install
+
+# 3. Запусти Vite Dev Server
+npm run dev
+```
+
+Фронтенд доступен на: `http://localhost:5173` (или 5174, если 5173 занят)
+
+### Админ-панель
+URL: `http://localhost:5173/admin`
+- Login: `admin`
+- Password: `admin123`
+
+---
+
+## 🐳 Режим 2: PROD (Docker Compose — всё в контейнерах)
+
+### Требования
+- Docker Desktop или OrbStack с Docker
+- docker-compose v2+
+
+### Запуск всей инфраструктуры
+```bash
+# 1. Убедись что .env содержит параметры для Docker
+# POSTGRES_USER=postgres
+# POSTGRES_PASSWORD=<твой_пароль>
+# POSTGRES_DB=portfolio_db
+
+# 2. Собрать образы
+docker compose build
+
+# 3. Запустить контейнеры
+docker compose up -d
+
+# Фронтенд: http://localhost
+# Бэкенд API: http://localhost:3000/api
+# База данных: docker-compose service 'db' (порт 5432)
+```
+
+### Остановка
+```bash
+# Остановить контейнеры
+docker compose down
+
+# Остановить + удалить volumes (осторожно! все данные будут удалены)
+docker compose down -v
+```
+
+### Просмотр логов
+```bash
+# Все сервисы
+docker compose logs -f
+
+# Конкретный сервис
+docker compose logs -f backend
+docker compose logs -f db
+docker compose logs -f frontend
+```
+
+### Обновление приложения
+```bash
+# Пересобрать и перезапустить
+docker compose up -d --build
+```
+
+---
+
+## 📋 Сравнение режимов
+
+| Параметр | DEV (локально) | PROD (Docker) |
+|----------|----------------|---------------|
+| API / Загрузки (клиент) | `/api` и `/uploads` (через прокси Vite на порт 3001) | `/api` и `/uploads` (через прокси Nginx на порт 3000) |
+| Frontend URL | `http://localhost:5173` | `http://localhost` (Nginx порт 80) |
+| PostgreSQL | OrbStack (`localhost:5432`) | Docker service `db` (`db:5432`) |
+| Hot-reload | ✅ Да | ❌ Нет (пересборка образа) |
+| Админ-панель | `http://localhost:5173/admin` | `http://localhost/admin` |
+| Бэкенд порт | 3001 | 3000 (внутри контейнера), 3000 (хост) |
+
+---
+
+## 🔧 Полезные команды
+
+### Локальная разработка
 ```bash
 # Backend
-cd backend
-npm install
-cp .env.example .env  # Edit with your config
-npm run dev
+cd backend && npm run dev                            # запустить бэкенд
+cd backend && npm run seed                           # заполнить БД
+cd backend && npm run migration:generate -- <путь>   # создать миграцию (например, npm run migration:generate -- src/migrations/InitialSchema)
+cd backend && npm run migration:run                  # применить миграции
+cd backend && npm run migration:revert               # откатить последнюю миграцию
 
 # Frontend
-cd frontend
-npm install
-npm run dev
+cd frontend && npm run dev                           # запустить фронтенд
+cd frontend && npm run build                         # собрать production-версию
 ```
 
-### Docker Deployment
 
+### Docker
 ```bash
-# Start all services
-docker-compose up -d
-
-# Check health
-docker-compose ps
+docker compose up -d              # запустить
+docker compose down               # остановить
+docker compose ps                 # статус контейнеров
+docker exec -it portfolio_db psql -U postgres -d portfolio_db  # подключиться к БД через Docker
+docker compose logs -f backend    # логи бэкенда
 ```
 
-## API Endpoints
+### PostgreSQL (локально)
+```bash
+# Подключение к OrbStack
+psql -h localhost -U hot_pepper -d portfolio_db
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/auth/login` | Admin login (rate limited) |
-| POST | `/auth/logout` | Admin logout |
-| GET | `/auth/me` | Get current user |
-| POST | `/auth/change-password` | Change password (authenticated) |
-| GET | `/portfolio/hero` | Get hero data |
-| GET | `/portfolio/skills` | Get all skills |
-| GET | `/portfolio/projects` | Get all projects |
-| GET | `/portfolio/messages` | Get contact messages (auth) |
-| POST | `/portfolio/message` | Submit contact form |
-| GET | `/health` | Health check |
-| GET | `/api/docs` | Swagger documentation |
-
-## Environment Variables
-
-```env
-POSTGRES_HOST=db
-POSTGRES_PORT=5432
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=portfolio_db
-JWT_SECRET=your-secret-key
-CORS_ORIGIN=http://localhost:5173
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=admin123
+# Создание базы если не существует
+createdb portfolio_db
 ```
 
-## Task Completion Summary
+---
 
-### ✅ Implemented in this session:
-1. **Rate Limiting** — `@nestjs/throttler` configured with dual thresholds
-   - Default: 100 requests/minute
-   - Short: 3 requests/second
-   - Login: 5 attempts/minute (stricter)
-   - create-first-admin: 3 attempts/5 minutes
+## 🔐 Безопасность
 
-2. **Health Check Endpoint** — `/health` for Docker healthchecks
-   - Simple: returns service status without DB dependency
-   - Detailed: `/health/detail` with memory stats
+**Никогда не коммить файлы `.env`!** Они в `.gitignore`.
 
-3. **Toast Notifications** — Replaced all `alert()` calls
-   - Animated toasts using framer-motion
-   - Types: success, error, warning, info
-   - Available globally via `window.toast()`
+В production измени:
+1. `POSTGRES_PASSWORD` → сильный пароль
+2. `JWT_SECRET` → сгенерируй случайную строку
+3. `ADMIN_PASSWORD` → надёжный пароль админа
 
-4. **Inline Form Validation** — Real-time validation with error display
-   - ContactForm.jsx — full inline validation
-   - AdminDashboard — SkillForm, ProjectForm, password form
-   - Visual feedback with red borders on errors
+Генерация JWT secret:
+```bash
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+```
 
-5. **Loading Skeletons** — Shimmer animation while data loads
-   - SkeletonCard component in AdminDashboard
-   - CSS @keyframes pulse + shimmer animations
+---
 
-6. **SEO Optimization** — Meta tags in index.html
-   - Title, description, keywords
-   - Open Graph (Facebook) tags
-   - Twitter Card tags
-   - Theme color
+## 🐛 Решение проблем
 
-7. **Swagger Documentation** — `@ApiProperty` decorators on all DTOs
-   - LoginDto, ChangePasswordDto already have descriptions
-   - CreateSkillDto, CreateProjectDto, CreateContactMessageDto complete
+### Порт 5432 уже занят
+```bash
+# Проверить что слушает порт
+lsof -i :5432
 
-### ❌ Remaining tasks (not implemented):
-- **Image upload** — Requires multer + storage setup (complex)
-- **Unit/E2E tests** — Requires jest + testing libraries setup
-- **TypeORM migrations** — Requires generating from entities
+# Если конфликт — измени порт в OrbStack (настройки сервиса postgres)
+# и обнови backend/.env.dev: POSTGRES_PORT=<новый_порт>
+```
+
+### Бэкенд не подключается к БД
+```bash
+# Проверь подключение из бэкенда
+docker compose exec backend wget -qO- http://db:5432 || echo "Connection failed"
+
+# Для локального запуска проверь OrbStack
+psql -h localhost -U hot_pepper -d portfolio_db -c "SELECT 1"
+```
+
+### Frontend не видит API
+Убедитесь, что переменная `VITE_API_URL` в файлах `.env.dev` и `.env.docker` настроена на относительный адрес:
+```
+VITE_API_URL=/api
+```
+Перенаправление (проксирование) запросов к API и папке загрузок `/uploads` осуществляется автоматически:
+- В локальной разработке (**DEV**): Vite перенаправляет запросы `/api` и `/uploads` на бэкенд `http://localhost:3001` (настройки в `vite.config.js`).
+- В контейнерах (**PROD**): Nginx проксирует запросы `/api/` и `/uploads/` на бэкенд-контейнер `backend:3000` (настройки в `nginx.conf`).

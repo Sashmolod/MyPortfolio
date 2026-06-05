@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import api from '../../api';
 
 // Confirm dialog component (replacement for window.confirm)
@@ -13,8 +12,9 @@ function ConfirmDialog({ message, onConfirm, onCancel, isOpen }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       style={{
-        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9998,
+        backdropFilter: 'blur(3px)',
       }}
       onClick={onCancel}
     >
@@ -22,16 +22,13 @@ function ConfirmDialog({ message, onConfirm, onCancel, isOpen }) {
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
-        style={{
-          background: 'var(--card-bg)', color: 'var(--text)', padding: '24px',
-          borderRadius: '12px', maxWidth: '400px', width: '90%', boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
-        }}
+        className="modal-sketch"
         onClick={(e) => e.stopPropagation()}
       >
-        <p style={{ marginBottom: '20px', fontSize: '16px' }}>{message}</p>
-        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-          <button className="btn" style={{ background: '#6b7280' }} onClick={onCancel}>Cancel</button>
-          <button className="btn" style={{ background: '#ef4444', color: 'white' }} onClick={onConfirm}>Delete</button>
+        <p style={{ marginBottom: '24px', fontSize: '1.2rem', fontFamily: "'Architects Daughter', cursive", fontWeight: 'bold' }}>{message}</p>
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+          <button className="btn" onClick={onCancel}>Cancel</button>
+          <button className="btn btn-danger" onClick={onConfirm}>Delete</button>
         </div>
       </motion.div>
     </motion.div>
@@ -40,7 +37,7 @@ function ConfirmDialog({ message, onConfirm, onCancel, isOpen }) {
 
 export default function AdminDashboard() {
   const { logout, changePassword } = useAuth();
-  const navigate = useNavigate();
+
   const [activeTab, setActiveTab] = useState('skills');
   const [items, setItems] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -72,16 +69,41 @@ export default function AdminDashboard() {
       } else if (activeTab === 'hero') {
         const res = await api.get('/portfolio/hero');
         let data = res.data;
-        if (data.socialLinks && typeof data.socialLinks === 'string') {
-          data = { ...data, socialLinks: JSON.parse(data.socialLinks) };
+        // Парсим до объекта (защита от двойного кодирования)
+        let sl = data.socialLinks;
+        while (sl && typeof sl === 'string') {
+          try { sl = JSON.parse(sl); } catch { sl = {}; break; }
         }
+        data = { ...data, socialLinks: sl || {} };
         setHeroData(data);
+      } else if (activeTab === 'trash') {
+        const [skillsRes, projectsRes, messagesRes] = await Promise.all([
+          api.get('/admin/skills/deleted'),
+          api.get('/admin/projects/deleted'),
+          api.get('/admin/messages/deleted'),
+        ]);
+        setItems({
+          skills: skillsRes.data,
+          projects: projectsRes.data,
+          messages: messagesRes.data,
+        });
       }
     } catch (err) {
       console.error('Error fetching data:', err);
       window.toast?.('Failed to load data', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRestore = async (id, type) => {
+    try {
+      await api.post(`/admin/${type}/${id}/restore`);
+      window.toast?.('Item restored successfully', 'success');
+      fetchData();
+    } catch (err) {
+      console.error('Error restoring:', err);
+      window.toast?.('Error restoring item: ' + (err.response?.data?.message || err.message), 'error');
     }
   };
 
@@ -109,7 +131,8 @@ export default function AdminDashboard() {
       message: 'Are you sure you want to delete Hero data?',
       onConfirm: async () => {
         try {
-          await api.delete(`/portfolio/hero/${heroData.id}`);
+          await api.delete(`/admin/hero/${heroData.id}`);
+
           window.toast?.('Hero deleted successfully', 'success');
           fetchData();
           setHeroData(null);
@@ -164,10 +187,11 @@ export default function AdminDashboard() {
   const handleSaveHero = async (form) => {
     try {
       if (heroData?.id) {
-        await api.put(`/portfolio/hero/${heroData.id}`, form);
+        await api.put(`/admin/hero/${heroData.id}`, form);
         window.toast?.('Hero updated successfully', 'success');
       } else {
-        await api.post('/portfolio/hero', form);
+        await api.post('/admin/hero', form);
+
         window.toast?.('Hero created successfully', 'success');
       }
       fetchData(); setShowForm(false); setEditingItem(null);
@@ -194,41 +218,7 @@ export default function AdminDashboard() {
     );
   }
 
-  if (activeTab === 'settings') {
-    return (
-      <>
-        <ConfirmDialog {...confirmDialog} onCancel={() => setConfirmDialog(null)} isOpen={!!confirmDialog} />
-        <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-          <h1 style={{ marginBottom: '20px' }}>Admin Dashboard</h1>
-          {passwordSuccess && (
-            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{
-              padding: '12px', background: '#10b981', color: 'white', borderRadius: '6px', marginBottom: '16px'
-            }}>Пароль успешно изменён!</motion.div>
-          )}
-          <div className="card" style={{ maxWidth: '400px', margin: '0 auto' }}>
-            <h3>Change Password</h3>
-            <form onSubmit={(e) => { e.preventDefault(); handlePasswordChange(); }} noValidate>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div>
-                  <input type="password" placeholder="Current password" value={passwordForm.currentPassword}
-                    onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
-                    style={{ width: '100%', padding: '12px', border: `1px solid ${passwordErrors.currentPassword ? '#ef4444' : 'var(--border)'}`, borderRadius: '6px', background: 'var(--input-bg)', color: 'var(--text)', boxSizing: 'border-box' }} />
-                  {passwordErrors.currentPassword && <span style={{ color: '#ef4444', fontSize: '12px' }}>{passwordErrors.currentPassword}</span>}
-                </div>
-                <div>
-                  <input type="password" placeholder="New password (min. 6 characters)" value={passwordForm.newPassword}
-                    onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} minLength={6}
-                    style={{ width: '100%', padding: '12px', border: `1px solid ${passwordErrors.newPassword ? '#ef4444' : 'var(--border)'}`, borderRadius: '6px', background: 'var(--input-bg)', color: 'var(--text)', boxSizing: 'border-box' }} />
-                  {passwordErrors.newPassword && <span style={{ color: '#ef4444', fontSize: '12px' }}>{passwordErrors.newPassword}</span>}
-                </div>
-              </div>
-              <button className="btn" type="submit" style={{ marginTop: '12px', width: '100%' }}>Сменить пароль</button>
-            </form>
-          </div>
-        </div>
-      </>
-    );
-  }
+
 
   const typeLabel = activeTab === 'skills' ? 'skill' : activeTab === 'projects' ? 'project' : '';
 
@@ -236,26 +226,29 @@ export default function AdminDashboard() {
     <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
       <ConfirmDialog {...confirmDialog} onCancel={() => setConfirmDialog(null)} isOpen={!!confirmDialog} />
       
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1 style={{ margin: 0 }}>Admin Dashboard</h1>
-        <button onClick={async () => { await logout(); navigate('/'); }}
-          style={{ padding: '8px 16px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+        <h1 style={{ margin: 0, fontFamily: "'Architects Daughter', cursive", fontWeight: 'bold' }}>Admin Dashboard</h1>
+        <button
+          onClick={() => logout()}
+          className="btn btn-danger"
+        >
           Logout
         </button>
       </div>
 
-      <nav style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
-        {['skills', 'projects', 'hero', 'messages', 'settings'].map((tab) => (
-          <button key={tab} onClick={() => setActiveTab(tab)}
-            style={{ padding: '8px 16px', background: activeTab === tab ? 'var(--primary)' : 'var(--card-bg)',
-              color: activeTab === tab ? 'white' : 'var(--text)', border: '1px solid var(--border)',
-              borderRadius: '6px', cursor: 'pointer' }}>
+      <nav style={{ display: 'flex', gap: '8px', marginBottom: '30px', flexWrap: 'wrap' }}>
+        {['skills', 'projects', 'hero', 'messages', 'trash', 'settings'].map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`btn-tab ${activeTab === tab ? 'active' : ''}`}
+          >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
         ))}
       </nav>
 
-      {activeTab !== 'messages' && activeTab !== 'hero' && (
+      {activeTab !== 'messages' && activeTab !== 'hero' && activeTab !== 'trash' && activeTab !== 'settings' && (
         <button className="btn" onClick={() => setShowForm(true)} style={{ marginBottom: '20px' }}>
           + Add {typeLabel.charAt(0).toUpperCase() + typeLabel.slice(1)}
         </button>
@@ -281,7 +274,7 @@ export default function AdminDashboard() {
                 <p style={{ fontSize: '0.8rem', opacity: 0.6, marginTop: '10px' }}>
                   {new Date(msg.createdAt).toLocaleString()}
                 </p>
-                <button className="btn" style={{ marginTop: '10px', background: '#ef4444', position: 'absolute', top: '16px', right: '16px' }}
+                <button className="btn btn-danger" style={{ position: 'absolute', top: '16px', right: '16px', margin: 0 }}
                   onClick={() => handleDelete(msg.id, 'message')}>Delete</button>
               </motion.div>
             ))}
@@ -302,16 +295,85 @@ export default function AdminDashboard() {
             <p><strong>Avatar:</strong> {heroData.avatar}</p>
             <p><strong>Social Links:</strong></p>
             <ul style={{ paddingLeft: '20px' }}>
-              {Object.entries(heroData.socialLinks || {}).map(([key, value]) =>
+              {Object.entries(typeof heroData.socialLinks === 'object' ? (heroData.socialLinks || {}) : {}).map(([key, value]) =>
                 value ? (<li key={key}><strong>{key}:</strong> <a href={value} target="_blank" rel="noopener noreferrer">{value}</a></li>) : null
               )}
             </ul>
             <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
               <button className="btn" onClick={() => { setEditingItem(heroData); setShowForm(true); }}>Edit</button>
-              <button className="btn" style={{ background: '#ef4444' }} onClick={handleDeleteHero}>Delete</button>
+              <button className="btn btn-danger" onClick={handleDeleteHero}>Delete</button>
             </div>
           </motion.div>
         )
+      ) : activeTab === 'trash' ? (
+        <TrashView items={items} onRestore={handleRestore} />
+      ) : activeTab === 'settings' ? (
+        <div style={{ maxWidth: '420px', margin: '20px auto 0 auto' }}>
+          {passwordSuccess && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="card"
+              style={{
+                border: 'var(--border-style)',
+                borderColor: 'var(--accent)',
+                borderRadius: 'var(--sketch-radius-3)',
+                padding: '12px',
+                color: 'var(--text)',
+                background: 'var(--card-bg)',
+                marginBottom: '20px',
+                textAlign: 'center',
+                fontWeight: 'bold',
+                fontFamily: "'Architects Daughter', cursive",
+              }}
+            >
+              Пароль успешно изменён!
+            </motion.div>
+          )}
+          <div className="card">
+            <h3 style={{ fontFamily: "'Architects Daughter', cursive", marginBottom: '20px', fontWeight: 'bold', fontSize: '1.4rem' }}>
+              Change Password
+            </h3>
+            <form onSubmit={(e) => { e.preventDefault(); handlePasswordChange(); }} noValidate>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div>
+                  <input
+                    type="password"
+                    placeholder="Current password"
+                    value={passwordForm.currentPassword}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                    className={passwordErrors.currentPassword ? 'input-error' : ''}
+                    required
+                  />
+                  {passwordErrors.currentPassword && (
+                    <span style={{ color: 'var(--danger)', fontSize: '12px', display: 'block', marginTop: '-8px', marginBottom: '8px', fontFamily: "'Architects Daughter', cursive" }}>
+                      {passwordErrors.currentPassword}
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <input
+                    type="password"
+                    placeholder="New password (min. 6 characters)"
+                    value={passwordForm.newPassword}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                    className={passwordErrors.newPassword ? 'input-error' : ''}
+                    minLength={6}
+                    required
+                  />
+                  {passwordErrors.newPassword && (
+                    <span style={{ color: 'var(--danger)', fontSize: '12px', display: 'block', marginTop: '-8px', marginBottom: '8px', fontFamily: "'Architects Daughter', cursive" }}>
+                      {passwordErrors.newPassword}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <button className="btn" type="submit" style={{ marginTop: '12px', width: '100%' }}>
+                Сменить пароль
+              </button>
+            </form>
+          </div>
+        </div>
       ) : items.length === 0 ? (
         <p>No items yet. Click the button above to add one.</p>
       ) : (
@@ -339,7 +401,7 @@ export default function AdminDashboard() {
               )}
               <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                 <button className="btn" onClick={() => { setEditingItem(item); setShowForm(true); }}>Edit</button>
-                <button className="btn" style={{ background: '#ef4444' }} onClick={() => handleDelete(item.id, activeTab.slice(0, -1))}>Delete</button>
+                <button className="btn btn-danger" onClick={() => handleDelete(item.id, activeTab.slice(0, -1))}>Delete</button>
               </div>
             </motion.div>
           ))}
@@ -349,8 +411,20 @@ export default function AdminDashboard() {
   );
 }
 
+// Helper to pick only allowed fields from an item
+function pick(obj, keys) {
+  const result = {};
+  for (const k of keys) {
+    if (obj[k] !== undefined) result[k] = obj[k];
+  }
+  return result;
+}
+
 function SkillForm({ item, onSaveData, onCancel }) {
-  const [form, setForm] = useState(item || { name: '', icon: '', description: '', level: 50, sortOrder: 0 });
+  const [form, setForm] = useState(() => {
+    if (item) return pick(item, ['name', 'icon', 'description', 'level', 'sortOrder']);
+    return { name: '', icon: '', description: '', level: 50, sortOrder: 0 };
+  });
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -366,32 +440,71 @@ function SkillForm({ item, onSaveData, onCancel }) {
     e.preventDefault();
     if (!validate()) return;
     setSaving(true);
-    await onSaveData(form);
+    // Ensure only allowed fields are sent
+    await onSaveData(pick(form, ['name', 'icon', 'description', 'level', 'sortOrder']));
     setSaving(false);
   };
 
   return (
-    <motion.div className="card" style={{ marginBottom: '20px', border: '2px solid var(--primary)' }}
+    <motion.div className="card" style={{ marginBottom: '20px' }}
       initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-      <h3>{item ? 'Edit Skill' : 'Add Skill'}</h3>
+      <h3 style={{ fontFamily: "'Architects Daughter', cursive", fontWeight: 'bold', marginBottom: '20px' }}>{item ? 'Edit Skill' : 'Add Skill'}</h3>
       <form onSubmit={handleSubmit} noValidate>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <div>
-            <input placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required
-              style={{ width: '100%', padding: '10px', border: errors.name ? '1px solid #ef4444' : '1px solid var(--border)', borderRadius: '6px', boxSizing: 'border-box' }} />
-            {errors.name && <span style={{ color: '#ef4444', fontSize: '12px' }}>{errors.name}</span>}
+            <input
+              placeholder="Name"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className={errors.name ? 'input-error' : ''}
+              required
+            />
+            {errors.name && <span style={{ color: 'var(--danger)', fontSize: '12px', display: 'block', marginTop: '-8px', marginBottom: '8px', fontFamily: "'Architects Daughter', cursive" }}>{errors.name}</span>}
           </div>
-          <input placeholder="Icon (e.g., react, node)" value={form.icon} onChange={(e) => setForm({ ...form, icon: e.target.value })} />
+          <div>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <input
+                placeholder="Icon key (e.g., react, typescript, docker)"
+                value={form.icon}
+                onChange={(e) => setForm({ ...form, icon: e.target.value.trim().toLowerCase() })}
+                style={{ flex: 1, margin: 0 }}
+              />
+              {form.icon && (
+                <img
+                  src={`https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${form.icon}/${form.icon}-original.svg`}
+                  alt={form.icon}
+                  width={40}
+                  height={40}
+                  style={{ objectFit: 'contain', flexShrink: 0, borderRadius: 'var(--sketch-radius-3)', border: 'var(--border-style)', padding: '4px', background: 'var(--card-bg)' }}
+                  onError={(e) => {
+                    e.target.src = `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${form.icon}/${form.icon}-plain.svg`;
+                  }}
+                />
+              )}
+            </div>
+            <p style={{ fontSize: '11px', opacity: 0.6, margin: '4px 0 0', fontFamily: "'Architects Daughter', cursive", lineHeight: 1.4 }}>
+              Ключи: javascript, typescript, react, nodejs, python, postgresql, mongodb, docker, git, css3, html5, nestjs, redux, graphql, linux, figma, swift, kotlin, rust, go, vuejs, angularjs, nextjs, nuxtjs
+            </p>
+          </div>
           <input placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           <div>
-            <input type="number" placeholder="Level (0-100)" value={form.level} onChange={(e) => setForm({ ...form, level: +e.target.value })} min="0" max="100" style={{ width: '100%', padding: '10px', border: errors.level ? '1px solid #ef4444' : '1px solid var(--border)', borderRadius: '6px', boxSizing: 'border-box' }} />
-            {errors.level && <span style={{ color: '#ef4444', fontSize: '12px' }}>{errors.level}</span>}
+            <input
+              type="number"
+              placeholder="Level (0-100)"
+              value={form.level}
+              onChange={(e) => setForm({ ...form, level: +e.target.value })}
+              min="0"
+              max="100"
+              className={errors.level ? 'input-error' : ''}
+              required
+            />
+            {errors.level && <span style={{ color: 'var(--danger)', fontSize: '12px', display: 'block', marginTop: '-8px', marginBottom: '8px', fontFamily: "'Architects Daughter', cursive" }}>{errors.level}</span>}
           </div>
           <input type="number" placeholder="Sort Order" value={form.sortOrder} onChange={(e) => setForm({ ...form, sortOrder: +e.target.value })} />
         </div>
         <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
           <button className="btn" type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
-          <button className="btn" style={{ background: '#6b7280' }} type="button" onClick={onCancel}>Cancel</button>
+          <button className="btn" type="button" onClick={onCancel}>Cancel</button>
         </div>
       </form>
     </motion.div>
@@ -399,9 +512,13 @@ function SkillForm({ item, onSaveData, onCancel }) {
 }
 
 function ProjectForm({ item, onSaveData, onCancel }) {
-  const [form, setForm] = useState(item || { title: '', description: '', image: '', link: '', technologies: '', sortOrder: 0 });
+  const [form, setForm] = useState(() => {
+    if (item) return pick(item, ['title', 'description', 'image', 'link', 'technologies', 'sortOrder']);
+    return { title: '', description: '', image: '', link: '', technologies: '', sortOrder: 0 };
+  });
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+  const [uploading, setUploading] = useState(false);
 
   const validate = () => {
     const errs = {};
@@ -414,30 +531,76 @@ function ProjectForm({ item, onSaveData, onCancel }) {
     e.preventDefault();
     if (!validate()) return;
     setSaving(true);
-    await onSaveData(form);
+    await onSaveData(pick(form, ['title', 'description', 'image', 'link', 'technologies', 'sortOrder']));
     setSaving(false);
   };
 
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    setUploading(true);
+    try {
+      const res = await api.post('/upload/image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (res.data && res.data.url) {
+        setForm(prev => ({ ...prev, image: res.data.url }));
+        window.toast?.('Image uploaded successfully', 'success');
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+      window.toast?.('Failed to upload image: ' + (err.response?.data?.message || err.message), 'error');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
-    <motion.div className="card" style={{ marginBottom: '20px', border: '2px solid var(--primary)' }}
+    <motion.div className="card" style={{ marginBottom: '20px' }}
       initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-      <h3>{item ? 'Edit Project' : 'Add Project'}</h3>
+      <h3 style={{ fontFamily: "'Architects Daughter', cursive", fontWeight: 'bold', marginBottom: '20px' }}>{item ? 'Edit Project' : 'Add Project'}</h3>
       <form onSubmit={handleSubmit} noValidate>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <div>
-            <input placeholder="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required
-              style={{ width: '100%', padding: '10px', border: errors.title ? '1px solid #ef4444' : '1px solid var(--border)', borderRadius: '6px', boxSizing: 'border-box' }} />
-            {errors.title && <span style={{ color: '#ef4444', fontSize: '12px' }}>{errors.title}</span>}
+            <input
+              placeholder="Title"
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              className={errors.title ? 'input-error' : ''}
+              required
+            />
+            {errors.title && <span style={{ color: 'var(--danger)', fontSize: '12px', display: 'block', marginTop: '-8px', marginBottom: '8px', fontFamily: "'Architects Daughter', cursive" }}>{errors.title}</span>}
           </div>
           <textarea placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-          <input placeholder="Image URL (or leave empty for upload feature)" value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} />
+          
+          <div style={{ border: 'var(--border-style)', borderRadius: 'var(--sketch-radius-3)', padding: '12px', background: 'var(--card-bg)' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontFamily: "'Architects Daughter', cursive" }}>Project Image</label>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '8px' }}>
+              <input placeholder="Image URL" value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} style={{ flex: 1, margin: 0 }} />
+              <div style={{ position: 'relative', flexShrink: 0 }}>
+                <input type="file" accept="image/*" onChange={handleFileUpload} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }} />
+                <button type="button" className="btn" disabled={uploading} style={{ whiteSpace: 'nowrap', margin: 0 }}>
+                  {uploading ? 'Uploading...' : 'Upload Image'}
+                </button>
+              </div>
+            </div>
+            {form.image && (
+              <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <img src={form.image} alt="Preview" style={{ width: '80px', height: '60px', objectFit: 'cover', borderRadius: 'var(--sketch-radius-3)', border: 'var(--border-style)' }} onError={(e) => { e.target.style.display = 'none'; }} />
+                <button type="button" className="btn btn-danger" style={{ padding: '4px 8px', fontSize: '12px', margin: 0 }} onClick={() => setForm({ ...form, image: '' })}>Remove</button>
+              </div>
+            )}
+          </div>
+
           <input placeholder="Link" value={form.link} onChange={(e) => setForm({ ...form, link: e.target.value })} />
           <input placeholder="Technologies (comma separated)" value={form.technologies} onChange={(e) => setForm({ ...form, technologies: e.target.value })} />
           <input type="number" placeholder="Sort Order" value={form.sortOrder} onChange={(e) => setForm({ ...form, sortOrder: +e.target.value })} />
         </div>
         <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
           <button className="btn" type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
-          <button className="btn" style={{ background: '#6b7280' }} type="button" onClick={onCancel}>Cancel</button>
+          <button className="btn" type="button" onClick={onCancel}>Cancel</button>
         </div>
       </form>
     </motion.div>
@@ -445,31 +608,82 @@ function ProjectForm({ item, onSaveData, onCancel }) {
 }
 
 function HeroForm({ heroData, onSaveData, onCancel }) {
-  const [form, setForm] = useState(heroData || { name: '', title: '', bio: '', avatar: '/favicon.svg', socialLinks: { github: '', linkedin: '', twitter: '' } });
+  const [form, setForm] = useState(() => {
+    if (heroData) {
+      // socialLinks уже распарсен в fetchData — всегда объект
+      const sl = heroData.socialLinks;
+      const socialLinks = sl && typeof sl === 'object' ? sl : { github: '', linkedin: '', twitter: '' };
+      return { ...pick(heroData, ['name', 'title', 'bio', 'avatar']), socialLinks };
+    }
+    return { name: '', title: '', bio: '', avatar: '/favicon.svg', socialLinks: { github: '', linkedin: '', twitter: '' } };
+  });
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name.trim()) { window.toast?.('Name is required', 'warning'); return; }
     setSaving(true);
-    await onSaveData(form);
+    const payload = { ...pick(form, ['name', 'title', 'bio', 'avatar']), socialLinks: JSON.stringify(form.socialLinks) };
+    await onSaveData(payload);
     setSaving(false);
   };
 
   const handleSocialChange = (key, value) => setForm({ ...form, socialLinks: { ...form.socialLinks, [key]: value } });
 
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    setUploading(true);
+    try {
+      const res = await api.post('/upload/image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (res.data && res.data.url) {
+        setForm(prev => ({ ...prev, avatar: res.data.url }));
+        window.toast?.('Avatar uploaded successfully', 'success');
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+      window.toast?.('Failed to upload avatar: ' + (err.response?.data?.message || err.message), 'error');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
-    <motion.div className="card" style={{ marginBottom: '20px', border: '2px solid var(--primary)' }}
+    <motion.div className="card" style={{ marginBottom: '20px' }}
       initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-      <h3>{heroData?.id ? 'Edit Hero Section' : 'Create Hero Section'}</h3>
+      <h3 style={{ fontFamily: "'Architects Daughter', cursive", fontWeight: 'bold', marginBottom: '20px' }}>{heroData?.id ? 'Edit Hero Section' : 'Create Hero Section'}</h3>
       <form onSubmit={handleSubmit}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <input placeholder="Name (e.g., John Doe)" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
           <input placeholder="Title (e.g., Full Stack Developer)" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
           <textarea placeholder="Bio" value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} rows="3" />
-          <input placeholder="Avatar URL" value={form.avatar} onChange={(e) => setForm({ ...form, avatar: e.target.value })} />
-          <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid var(--border)' }}>
-            <h4 style={{ margin: '0 0 8px 0' }}>Social Links</h4>
+          
+          <div style={{ border: 'var(--border-style)', borderRadius: 'var(--sketch-radius-3)', padding: '12px', background: 'var(--card-bg)' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontFamily: "'Architects Daughter', cursive" }}>Avatar Image</label>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '8px' }}>
+              <input placeholder="Avatar URL" value={form.avatar} onChange={(e) => setForm({ ...form, avatar: e.target.value })} style={{ flex: 1, margin: 0 }} />
+              <div style={{ position: 'relative', flexShrink: 0 }}>
+                <input type="file" accept="image/*" onChange={handleAvatarUpload} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }} />
+                <button type="button" className="btn" disabled={uploading} style={{ whiteSpace: 'nowrap', margin: 0 }}>
+                  {uploading ? 'Uploading...' : 'Upload Avatar'}
+                </button>
+              </div>
+            </div>
+            {form.avatar && (
+              <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <img src={form.avatar} alt="Preview" style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: 'var(--sketch-radius-3)', border: 'var(--border-style)' }} onError={(e) => { e.target.style.display = 'none'; }} />
+                <button type="button" className="btn btn-danger" style={{ padding: '4px 8px', fontSize: '12px', margin: 0 }} onClick={() => setForm({ ...form, avatar: '' })}>Remove</button>
+              </div>
+            )}
+          </div>
+
+          <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: 'var(--border-style)' }}>
+            <h4 style={{ margin: '0 0 8px 0', fontFamily: "'Architects Daughter', cursive", fontWeight: 'bold' }}>Social Links</h4>
             <input placeholder="GitHub URL" value={form.socialLinks?.github || ''} onChange={(e) => handleSocialChange('github', e.target.value)} />
             <input placeholder="LinkedIn URL" value={form.socialLinks?.linkedin || ''} onChange={(e) => handleSocialChange('linkedin', e.target.value)} />
             <input placeholder="Twitter URL" value={form.socialLinks?.twitter || ''} onChange={(e) => handleSocialChange('twitter', e.target.value)} />
@@ -477,9 +691,76 @@ function HeroForm({ heroData, onSaveData, onCancel }) {
         </div>
         <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
           <button className="btn" type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
-          <button className="btn" style={{ background: '#6b7280' }} type="button" onClick={onCancel}>Cancel</button>
+          <button className="btn" type="button" onClick={onCancel}>Cancel</button>
         </div>
       </form>
     </motion.div>
+  );
+}
+
+function TrashView({ items, onRestore }) {
+  const { skills = [], projects = [], messages = [] } = items || {};
+  const isEmpty = skills.length === 0 && projects.length === 0 && messages.length === 0;
+
+  if (isEmpty) {
+    return (
+      <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
+        <h3>Trash is empty</h3>
+        <p style={{ opacity: 0.6 }}>No soft-deleted items found.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+      {skills.length > 0 && (
+        <div>
+          <h2 style={{ marginBottom: '15px', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>Deleted Skills</h2>
+          <div className="grid">
+            {skills.map(skill => (
+              <motion.div key={skill.id} className="card" style={{ position: 'relative', opacity: 0.8 }} initial={{ opacity: 0 }} animate={{ opacity: 0.8 }}>
+                <h3>{skill.name}</h3>
+                <p>Level: {skill.level}%</p>
+                <p style={{ fontSize: '12px', opacity: 0.5, marginTop: '8px' }}>Deleted: {new Date(skill.deletedAt).toLocaleString()}</p>
+                <button className="btn" style={{ marginTop: '12px', background: '#10b981' }} onClick={() => onRestore(skill.id, 'skill')}>Restore</button>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {projects.length > 0 && (
+        <div>
+          <h2 style={{ marginBottom: '15px', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>Deleted Projects</h2>
+          <div className="grid">
+            {projects.map(project => (
+              <motion.div key={project.id} className="card" style={{ position: 'relative', opacity: 0.8 }} initial={{ opacity: 0 }} animate={{ opacity: 0.8 }}>
+                <h3>{project.title}</h3>
+                <p>{project.description?.slice(0, 100)}...</p>
+                <p style={{ fontSize: '12px', opacity: 0.5, marginTop: '8px' }}>Deleted: {new Date(project.deletedAt).toLocaleString()}</p>
+                <button className="btn" style={{ marginTop: '12px', background: '#10b981' }} onClick={() => onRestore(project.id, 'project')}>Restore</button>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {messages.length > 0 && (
+        <div>
+          <h2 style={{ marginBottom: '15px', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>Deleted Messages</h2>
+          <div className="grid">
+            {messages.map(msg => (
+              <motion.div key={msg.id} className="card" style={{ position: 'relative', opacity: 0.8 }} initial={{ opacity: 0 }} animate={{ opacity: 0.8 }}>
+                <h3>{msg.subject || '(no subject)'}</h3>
+                <p><strong>From:</strong> {msg.name} ({msg.email})</p>
+                <p style={{ marginTop: '8px' }}>{msg.message?.slice(0, 100)}...</p>
+                <p style={{ fontSize: '12px', opacity: 0.5, marginTop: '8px' }}>Deleted: {new Date(msg.deletedAt).toLocaleString()}</p>
+                <button className="btn" style={{ marginTop: '12px', background: '#10b981' }} onClick={() => onRestore(msg.id, 'message')}>Restore</button>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

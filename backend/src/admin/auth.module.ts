@@ -8,16 +8,17 @@ import { AuthService } from './auth.service';
 import { UserService } from './user.service';
 import { JwtStrategy } from './jwt.strategy';
 import { User } from './entities/user.entity';
+import { JwtBlacklist } from './entities/jwt-blacklist.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, JwtBlacklist]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET') || 'secret',
-        signOptions: { expiresIn: '1d' },
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: { expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '1h' },
       }),
       inject: [ConfigService],
     }),

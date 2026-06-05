@@ -23,12 +23,18 @@ export default function Projects({ projects = [] }) {
             transition={{ duration: 0.4, delay: index * 0.1 }}
             viewport={{ once: true }}
           >
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
-              <RocketIcon size={56} />
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem', height: '160px', overflow: 'hidden', borderRadius: 'var(--sketch-radius-3)', border: 'var(--border-style)', background: 'var(--card-bg)' }}>
+              {project.image ? (
+                <img src={project.image} alt={project.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%' }}>
+                  <RocketIcon size={56} />
+                </div>
+              )}
             </div>
             <h3>{project.title}</h3>
-            <p>{project.description}</p>
-            <div className="tags">
+            <p style={{ minHeight: '60px', margin: '0.5rem 0' }}>{project.description}</p>
+            <div className="tags" style={{ marginBottom: 'auto' }}>
               {(typeof project.technologies === 'string' ? project.technologies.split(',') : project.technologies).map((tech) => (
                 <span key={tech.trim()} className="tag">{tech.trim()}</span>
               ))}

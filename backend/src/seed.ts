@@ -4,7 +4,13 @@ import { Hero } from './admin/entities/hero.entity';
 import { Skill } from './admin/entities/skill.entity';
 import { Project } from './admin/entities/project.entity';
 import { ContactMessage } from './admin/entities/contact-message.entity';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+
+const envFile = process.env.NODE_ENV === 'production' ? '../.env.prod' : '../.env.dev';
+dotenv.config({ path: path.resolve(__dirname, envFile) });
+
 
 const SALT_ROUNDS = 10;
 
@@ -30,23 +36,41 @@ async function seed() {
   const contactRepo = dataSource.getRepository(ContactMessage);
 
   // ==================== Seed Users ====================
-  const existingAdmin = await userRepo.findOne({ where: { username: process.env.ADMIN_USERNAME || 'admin' } });
+  const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+  const existingAdmin = await userRepo.findOne({ where: { username: adminUsername } });
   
   if (!existingAdmin) {
-    const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD || 'admin123', SALT_ROUNDS);
-    const admin = userRepo.create({
-      username: process.env.ADMIN_USERNAME || 'admin',
-      password: hashedPassword,
-      isActive: true,
-    });
-    await userRepo.save(admin);
-    console.log('✅ Admin user created:', process.env.ADMIN_USERNAME || 'admin');
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    
+    // Если ADMIN_PASSWORD не установлен — предупреждение и генерация случайного пароля
+    if (!adminPassword || adminPassword.trim() === '') {
+      const randomPassword = Math.random().toString(36).slice(-12);
+      console.warn('⚠️  ADMIN_PASSWORD не установлен. Генерируется случайный пароль:', randomPassword);
+      console.warn('⚠️  Установите ADMIN_PASSWORD в .env файле для production!');
+      const hashedPassword = await bcrypt.hash(randomPassword, SALT_ROUNDS);
+      const admin = userRepo.create({
+        username: adminUsername,
+        password: hashedPassword,
+        isActive: true,
+      });
+      await userRepo.save(admin);
+      console.log('✅ Admin user created with generated password:', adminUsername);
+    } else {
+      const hashedPassword = await bcrypt.hash(adminPassword, SALT_ROUNDS);
+      const admin = userRepo.create({
+        username: adminUsername,
+        password: hashedPassword,
+        isActive: true,
+      });
+      await userRepo.save(admin);
+      console.log('✅ Admin user created:', adminUsername);
+    }
   } else {
     console.log('ℹ️  Admin user already exists');
   }
 
   // ==================== Seed Hero ====================
-  const existingHero = await heroRepo.findOne({});
+  const existingHero = await heroRepo.findOne({ where: { name: 'Your Name' } });
   
   if (!existingHero) {
     const hero = heroRepo.create({

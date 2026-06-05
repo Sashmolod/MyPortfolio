@@ -1,11 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Not, IsNull } from 'typeorm';
+
 import { Skill } from './entities/skill.entity';
 import { Project } from './entities/project.entity';
 import { ContactMessage } from './entities/contact-message.entity';
 import { Hero } from './entities/hero.entity';
-import { CreateSkillDto, CreateProjectDto, CreateContactMessageDto, CreateHeroDto } from './dto/create.dto';
+import { CreateSkillDto } from './dto/create-skill.dto';
+import { CreateProjectDto } from './dto/create-project.dto';
+import { CreateContactMessageDto } from './dto/create-contact-message.dto';
+import { CreateHeroDto } from './dto/create-hero.dto';
+import { UpdateSkillDto } from './dto/update-skill.dto';
+import { UpdateProjectDto } from './dto/update-project.dto';
+import { UpdateHeroDto } from './dto/update-hero.dto';
 
 @Injectable()
 export class AdminService {
@@ -36,14 +43,27 @@ export class AdminService {
     return this.skillRepo.save(skill);
   }
 
-  async updateSkill(id: number, dto: CreateSkillDto) {
+  async updateSkill(id: number, dto: UpdateSkillDto) {
     await this.skillRepo.update(id, dto);
     return this.getSkill(id);
   }
 
   async deleteSkill(id: number) {
-    await this.skillRepo.delete(id);
+    await this.skillRepo.softDelete(id);
     return { deleted: true };
+  }
+
+  async restoreSkill(id: number) {
+    await this.skillRepo.restore(id);
+    return this.getSkill(id);
+  }
+
+  async getDeletedSkills() {
+    return this.skillRepo.find({
+      where: { deletedAt: Not(IsNull()) },
+      withDeleted: true,
+      order: { sortOrder: 'ASC' },
+    });
   }
 
   // Projects CRUD
@@ -62,14 +82,27 @@ export class AdminService {
     return this.projectRepo.save(project);
   }
 
-  async updateProject(id: number, dto: CreateProjectDto) {
+  async updateProject(id: number, dto: UpdateProjectDto) {
     await this.projectRepo.update(id, dto);
     return this.getProject(id);
   }
 
   async deleteProject(id: number) {
-    await this.projectRepo.delete(id);
+    await this.projectRepo.softDelete(id);
     return { deleted: true };
+  }
+
+  async restoreProject(id: number) {
+    await this.projectRepo.restore(id);
+    return this.getProject(id);
+  }
+
+  async getDeletedProjects() {
+    return this.projectRepo.find({
+      where: { deletedAt: Not(IsNull()) },
+      withDeleted: true,
+      order: { sortOrder: 'ASC' },
+    });
   }
 
   // Contact Messages CRUD
@@ -89,8 +122,21 @@ export class AdminService {
   }
 
   async deleteMessage(id: number) {
-    await this.messageRepo.delete(id);
+    await this.messageRepo.softDelete(id);
     return { deleted: true };
+  }
+
+  async restoreMessage(id: number) {
+    await this.messageRepo.restore(id);
+    return this.getMessage(id);
+  }
+
+  async getDeletedMessages() {
+    return this.messageRepo.find({
+      where: { deletedAt: Not(IsNull()) },
+      withDeleted: true,
+      order: { createdAt: 'DESC' },
+    });
   }
 
   // Hero CRUD
@@ -101,36 +147,53 @@ export class AdminService {
   async getHero(id: number) {
     const hero = await this.heroRepo.findOne({ where: { id } });
     if (!hero) throw new Error('Hero not found');
-    return {
-      ...hero,
-      socialLinks: typeof hero.socialLinks === 'string' ? JSON.parse(hero.socialLinks) : hero.socialLinks,
-    };
+    return hero;
   }
 
   async createHero(dto: CreateHeroDto) {
-    const hero = this.heroRepo.create({
-      ...dto,
-      socialLinks: dto.socialLinks ? JSON.stringify(dto.socialLinks) : '{}',
-    });
+    const hero = this.heroRepo.create(dto);
+    // Convert socialLinks object to JSON string if needed
+    if (dto.socialLinks && typeof dto.socialLinks === 'object') {
+      hero.socialLinks = JSON.stringify(dto.socialLinks);
+    }
     return this.heroRepo.save(hero);
   }
 
-  async updateHero(id: number, dto: CreateHeroDto) {
+  async updateHero(id: number, dto: UpdateHeroDto) {
     const hero = await this.heroRepo.findOne({ where: { id } });
-    if (!hero) throw new Error('Hero not found');
+    if (!hero) throw new NotFoundException(`Hero with id ${id} not found`);
+
     Object.assign(hero, dto);
-    if (dto.socialLinks) {
-      hero.socialLinks = JSON.stringify(dto.socialLinks);
+
+    // Нормализуем socialLinks: всегда храним как JSON-строку
+    if (dto.socialLinks !== undefined) {
+      if (typeof dto.socialLinks === 'object') {
+        hero.socialLinks = JSON.stringify(dto.socialLinks);
+      } else if (typeof dto.socialLinks === 'string') {
+        // Валидируем что это корректный JSON, иначе сбрасываем
+        try { JSON.parse(dto.socialLinks); hero.socialLinks = dto.socialLinks; }
+        catch { hero.socialLinks = '{}'; }
+      }
     }
-    const saved = await this.heroRepo.save(hero);
-    return {
-      ...saved,
-      socialLinks: typeof saved.socialLinks === 'string' ? JSON.parse(saved.socialLinks) : saved.socialLinks,
-    };
+
+    return this.heroRepo.save(hero);
   }
 
   async deleteHero(id: number) {
-    await this.heroRepo.delete(id);
+    await this.heroRepo.softDelete(id);
     return { deleted: true };
+  }
+
+  async restoreHero(id: number) {
+    await this.heroRepo.restore(id);
+    return this.getHero(id);
+  }
+
+  async getDeletedHeroes() {
+    return this.heroRepo.find({
+      where: { deletedAt: Not(IsNull()) },
+      withDeleted: true,
+      order: { createdAt: 'DESC' },
+    });
   }
 }

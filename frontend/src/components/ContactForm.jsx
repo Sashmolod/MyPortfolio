@@ -27,10 +27,7 @@ export default function ContactForm() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const newData = { ...formData, [name]: value };
-    setFormData(newData);
-    
-    // Validate on change if there was already an error
+    setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name]) {
       const fieldError = validate(name, value);
       setErrors(prev => ({ ...prev, [name]: fieldError }));
@@ -39,22 +36,17 @@ export default function ContactForm() {
 
   const handleBlur = (e) => {
     const { name, value } = e.target;
-    const fieldError = validate(name, value);
-    setErrors(prev => ({ ...prev, [name]: fieldError }));
+    setErrors(prev => ({ ...prev, [name]: validate(name, value) }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validate all fields
     const newErrors = {};
     for (const field of Object.keys(formData)) {
       const error = validate(field, formData[field]);
       if (error) newErrors[field] = error;
     }
-    
     setErrors(newErrors);
-    
     if (Object.keys(newErrors).length > 0) return;
 
     setIsSubmitting(true);
@@ -70,18 +62,20 @@ export default function ContactForm() {
     }
   };
 
-  const inputStyle = (fieldName) => ({
-    padding: '12px 16px',
-    border: `1px solid ${errors[fieldName] ? '#ef4444' : 'var(--border)'}`,
-    borderRadius: '6px',
-    background: 'var(--input-bg)',
-    color: 'var(--text)',
-    fontSize: '16px',
-    outline: 'none',
-    transition: 'border-color 0.2s',
-    width: '100%',
-    boxSizing: 'border-box',
-  });
+  const errMsg = (field) => errors[field] && (
+    <motion.p
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      style={{
+        color: 'var(--danger)',
+        fontSize: '12px',
+        margin: '2px 0 10px',
+        fontFamily: "'Architects Daughter', cursive",
+      }}
+    >
+      {errors[field]}
+    </motion.p>
+  );
 
   return (
     <section id="contact">
@@ -98,80 +92,53 @@ export default function ContactForm() {
       </div>
       <h2>Contact</h2>
       <form onSubmit={handleSubmit} className="contact-form" noValidate>
-        {/* Name */}
-        <div style={{ marginBottom: '16px' }}>
-          <input
-            type="text"
-            name="name"
-            placeholder="Name"
-            value={formData.name}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            style={inputStyle('name')}
-            required
-          />
-          {errors.name && (
-            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ color: '#ef4444', fontSize: '12px', margin: '4px 0 0', padding: '0 4px' }}>
-              {errors.name}
-            </motion.p>
-          )}
-        </div>
 
-        {/* Email */}
-        <div style={{ marginBottom: '16px' }}>
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            style={inputStyle('email')}
-            required
-          />
-          {errors.email && (
-            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ color: '#ef4444', fontSize: '12px', margin: '4px 0 0', padding: '0 4px' }}>
-              {errors.email}
-            </motion.p>
-          )}
-        </div>
+        <input
+          type="text"
+          name="name"
+          placeholder="Name"
+          value={formData.name}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          className={errors.name ? 'input-error' : ''}
+          required
+        />
+        {errMsg('name')}
 
-        {/* Subject */}
-        <div style={{ marginBottom: '16px' }}>
-          <input
-            type="text"
-            name="subject"
-            placeholder="Subject"
-            value={formData.subject}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            style={inputStyle('subject')}
-            required
-          />
-          {errors.subject && (
-            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ color: '#ef4444', fontSize: '12px', margin: '4px 0 0', padding: '0 4px' }}>
-              {errors.subject}
-            </motion.p>
-          )}
-        </div>
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={formData.email}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          className={errors.email ? 'input-error' : ''}
+          required
+        />
+        {errMsg('email')}
 
-        {/* Message */}
-        <div style={{ marginBottom: '16px' }}>
-          <textarea
-            name="message"
-            placeholder="Message"
-            value={formData.message}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            style={{ ...inputStyle('message'), minHeight: '120px', resize: 'vertical' }}
-            required
-          />
-          {errors.message && (
-            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ color: '#ef4444', fontSize: '12px', margin: '4px 0 0', padding: '0 4px' }}>
-              {errors.message}
-            </motion.p>
-          )}
-        </div>
+        <input
+          type="text"
+          name="subject"
+          placeholder="Subject"
+          value={formData.subject}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          className={errors.subject ? 'input-error' : ''}
+          required
+        />
+        {errMsg('subject')}
+
+        <textarea
+          name="message"
+          placeholder="Message"
+          value={formData.message}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          className={errors.message ? 'input-error' : ''}
+          required
+        />
+        {errMsg('message')}
 
         <button type="submit" className="btn" disabled={isSubmitting} style={{ opacity: isSubmitting ? 0.7 : 1 }}>
           {isSubmitting ? 'Sending...' : 'Send'}
