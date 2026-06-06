@@ -58,25 +58,29 @@
 - [x] Добавить валидационные декораторы ко всем DTO (`@IsString`, `@IsOptional` и т.д.)
 - [x] Добавить `@IsNumber` / `@Min` / `@Max` для числовых полей (`level`, `sortOrder`)
 - [x] Добавить валидацию email в DTO `ContactMessage`
-- [x] Добавить валидацию размера/типа файлов для загрузок ( Multer image file filter )
-- [x] Добавить rate limiting для endpoint'ов аутентификации ( Throttler в AppModule )
-- [ ] Добавить логирование в модуль аутентификации
+- [x] Добавить валидацию размера/типа файлов для загрузок (Multer image file filter)
+- [x] Добавить rate limiting для endpoint'ов аутентификации (Throttler в AppModule)
+- [x] Добавить логирование в модуль аутентификации (audit-log.interceptor.ts)
 - [x] Написать unit-тесты для сервисов
 - [ ] Написать e2e-тесты для admin модуля
+- [x] Добавить сущность `social-link.entity.ts` и DTO (create/update)
 
 ### Frontend
 - [x] Обновить admin dashboard под новую структуру DTO (с интеграцией загрузки файлов и корзины)
 - [ ] Добавить валидацию форм для контактной формы
 - [ ] Добавить индикатор прогресса загрузки файлов
 - [ ] Добавить error boundaries для страниц
-- [x] Добавить loading skeletons для компонентов ( SkeletonCard в Admin Dashboard )
+- [x] Добавить loading skeletons для компонентов (SkeletonCard в Admin Dashboard)
 - [ ] Добавить улучшения доступности (ARIA-метки, навигация с клавиатуры)
 - [ ] Добавить SEO meta-теги (react-helmet-async)
 - [ ] Добавить сохранение переключателя тёмной темы
 - [ ] Добавить поддержку PWA (service worker)
+- [x] Добавить компоненты: CoffeeCup, DoodleCanvas, DoodleControls, DoodlyHelper
+- [x] Добавить изображения проектов (ecommerce.png, portfolio.png, taskmanager.png, hero.png, hero_avatar.png)
+- [x] Добавить утилиту audioSynth.js
 
 ### Инфраструктура
-- [ ] Добавить health check endpoint'и в docker-compose
+- [x] Добавить health check endpoint'и в docker-compose
 - [ ] Добавить CI/CD пайплайн (GitHub Actions)
 - [ ] Добавить стратегию резервного копирования базы данных
 - [ ] Добавить мониторинг (Prometheus/Grafana)
@@ -92,14 +96,14 @@
 - [ ] Добавить заголовки helmet.js (через пакет `helmet`)
 - [ ] Добавить требования к сложности пароля
 - [ ] Добавить блокировку аккаунта после неудачных попыток
-- [ ] Добавить аудит-логирование действий админа
+- [x] Добавить аудит-логирование действий админа (audit-log.entity.ts + audit-log.interceptor.ts)
 - [ ] Пересмотреть и обновить CORS-источники
 - [ ] Добавить заголовки Content-Security-Policy
 
 ### Документация
 - [ ] Добавить API-документацию (Swagger/OpenAPI)
-- [ ] Добавить README для настройки backend
-- [ ] Добавить README для настройки frontend
+- [x] Добавить README для настройки backend
+- [x] Добавить README для настройки frontend
 - [ ] Добавить диаграмму схемы базы данных
 - [ ] Добавить руководство по развёртыванию
 - [ ] Добавить правила внесения вкладов
