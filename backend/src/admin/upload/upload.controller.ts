@@ -1,4 +1,4 @@
-import { Controller, Post, UseInterceptors, UploadedFile, Delete, HttpCode, HttpStatus, Param, UseGuards } from '@nestjs/common';
+import { Controller, Post, UseInterceptors, UploadedFile, Delete, HttpCode, HttpStatus, Param, UseGuards, Get } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadService } from './upload.service';
 import { ApiConsumes, ApiBody, ApiOperation, ApiResponse, ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -52,5 +52,12 @@ export class UploadController {
     if (!deleted) {
       throw new Error('File not found');
     }
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'Получить список загруженных изображений' })
+  @ApiResponse({ status: 200, description: 'Список файлов успешно получен' })
+  getUploadedFiles() {
+    return this.uploadService.getUploadedFiles();
   }
 }

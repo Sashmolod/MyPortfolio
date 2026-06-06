@@ -8,3 +8,5 @@ export * from './update-skill.dto';
 export * from './update-contact-message.dto';
 export * from './change-password.dto';
 export * from './login.dto';
+export * from './create-social-link.dto';
+export * from './update-social-link.dto';

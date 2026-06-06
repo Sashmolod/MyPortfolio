@@ -36,7 +36,7 @@ export default function Projects({ projects = [] }) {
             <p style={{ minHeight: '60px', margin: '0.5rem 0' }}>{project.description}</p>
             <div className="tags" style={{ marginBottom: 'auto' }}>
               {(typeof project.technologies === 'string' ? project.technologies.split(',') : project.technologies).map((tech) => (
-                <span key={tech.trim()} className="tag">{tech.trim()}</span>
+                <span key={tech.trim()} className="tag sketch-link">{tech.trim()}</span>
               ))}
             </div>
             {project.link && <a href={project.link} className="btn" style={{ marginTop: '12px', display: 'inline-block' }}>View Project</a>}

@@ -4,6 +4,7 @@ import { Hero } from './admin/entities/hero.entity';
 import { Skill } from './admin/entities/skill.entity';
 import { Project } from './admin/entities/project.entity';
 import { ContactMessage } from './admin/entities/contact-message.entity';
+import { SocialLink } from './admin/entities/social-link.entity';
 import * as bcrypt from 'bcryptjs';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
@@ -22,7 +23,7 @@ async function seed() {
     username: process.env.POSTGRES_USER || 'postgres',
     password: process.env.POSTGRES_PASSWORD || 'postgres',
     database: process.env.POSTGRES_DB || 'portfolio_db',
-    entities: [User, Hero, Skill, Project, ContactMessage],
+    entities: [User, Hero, Skill, Project, ContactMessage, SocialLink],
     synchronize: false, // Используем миграции!
   });
 
@@ -34,6 +35,7 @@ async function seed() {
   const skillRepo = dataSource.getRepository(Skill);
   const projectRepo = dataSource.getRepository(Project);
   const contactRepo = dataSource.getRepository(ContactMessage);
+  const socialLinkRepo = dataSource.getRepository(SocialLink);
 
   // ==================== Seed Users ====================
   const adminUsername = process.env.ADMIN_USERNAME || 'admin';
@@ -77,17 +79,26 @@ async function seed() {
       name: 'Your Name',
       title: 'Full-Stack Developer',
       bio: 'I build things for the web and beyond.',
-      avatar: '/favicon.svg',
-      socialLinks: JSON.stringify({
-        github: 'https://github.com/yourusername',
-        linkedin: 'https://linkedin.com/in/yourusername',
-        twitter: 'https://twitter.com/yourusername',
-      }),
+      avatar: '/hero_avatar.png',
     });
     await heroRepo.save(hero);
     console.log('✅ Hero data seeded');
   } else {
     console.log('ℹ️  Hero data already exists');
+  }
+
+  // ==================== Seed Social Links ====================
+  const existingSocialLinks = await socialLinkRepo.count();
+  
+  if (existingSocialLinks === 0) {
+    await socialLinkRepo.save([
+      socialLinkRepo.create({ platform: 'GitHub', url: 'https://github.com/yourusername', sortOrder: 1 }),
+      socialLinkRepo.create({ platform: 'LinkedIn', url: 'https://linkedin.com/in/yourusername', sortOrder: 2 }),
+      socialLinkRepo.create({ platform: 'Twitter', url: 'https://twitter.com/yourusername', sortOrder: 3 }),
+    ]);
+    console.log('✅ Social links seeded');
+  } else {
+    console.log('ℹ️  Social links already exist');
   }
 
   // ==================== Seed Skills ====================

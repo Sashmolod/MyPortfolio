@@ -13,7 +13,10 @@ function SkillIcon({ iconKey, name, size = 48 }) {
   if (!iconKey) return <CodeIcon size={size} />;
 
   // Убираем пробелы, приводим к нижнему регистру для devicon
-  const key = iconKey.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  let key = iconKey.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (key === 'sql') key = 'postgresql';
+  if (key === 'js') key = 'javascript';
+  if (key === 'node') key = 'nodejs';
 
   return (
     <img

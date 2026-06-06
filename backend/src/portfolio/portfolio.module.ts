@@ -6,10 +6,11 @@ import { Skill } from '../admin/entities/skill.entity';
 import { Project } from '../admin/entities/project.entity';
 import { ContactMessage } from '../admin/entities/contact-message.entity';
 import { Hero } from '../admin/entities/hero.entity';
+import { SocialLink } from '../admin/entities/social-link.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Skill, Project, ContactMessage, Hero]),
+    TypeOrmModule.forFeature([Skill, Project, ContactMessage, Hero, SocialLink]),
   ],
   controllers: [PortfolioController],
   providers: [PortfolioService],

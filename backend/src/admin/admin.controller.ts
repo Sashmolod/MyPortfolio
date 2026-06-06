@@ -25,9 +25,11 @@ import { CreateSkillDto } from './dto/create-skill.dto';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { CreateContactMessageDto } from './dto/create-contact-message.dto';
 import { CreateHeroDto } from './dto/create-hero.dto';
+import { CreateSocialLinkDto } from './dto/create-social-link.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { UpdateHeroDto } from './dto/update-hero.dto';
+import { UpdateSocialLinkDto } from './dto/update-social-link.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { AuditLogInterceptor } from './audit-log.interceptor';
 
@@ -223,6 +225,55 @@ export class AdminController {
     return this.adminService.deleteMessage(id);
   }
 
+  // ==================== SOCIAL LINKS ====================
+  @ApiTags('social-links')
+  @ApiOperation({ summary: 'Get all social links (requires JWT auth)' })
+  @ApiOkResponse({ description: 'Returns list of all social links', type: Array })
+  @Get('social-links')
+  async getAllSocialLinks() {
+    return this.adminService.getAllSocialLinks();
+  }
+
+  @ApiTags('social-links')
+  @ApiOperation({ summary: 'Get social link by ID (requires JWT auth)' })
+  @ApiParam({ name: 'id', type: 'integer', description: 'Social Link ID' })
+  @ApiOkResponse({ description: 'Returns social link data', type: CreateSocialLinkDto })
+  @Get('social-link/:id')
+  async getSocialLink(@Param('id', new ParseIntPipe()) id: number) {
+    return this.adminService.getSocialLink(id);
+  }
+
+  @ApiTags('social-links')
+  @ApiOperation({ summary: 'Create a new social link (requires JWT auth)' })
+  @ApiBody({ type: CreateSocialLinkDto })
+  @ApiResponse({ status: 201, description: 'Social link successfully created' })
+  @Post('social-link')
+  async createSocialLink(@Body() dto: CreateSocialLinkDto) {
+    return this.adminService.createSocialLink(dto);
+  }
+
+  @ApiTags('social-links')
+  @ApiOperation({ summary: 'Update a social link (requires JWT auth)' })
+  @ApiParam({ name: 'id', type: 'integer', description: 'Social Link ID' })
+  @ApiBody({ type: UpdateSocialLinkDto })
+  @ApiResponse({ status: 200, description: 'Social link successfully updated' })
+  @Put('social-link/:id')
+  async updateSocialLink(
+    @Param('id', new ParseIntPipe()) id: number,
+    @Body() dto: UpdateSocialLinkDto,
+  ) {
+    return this.adminService.updateSocialLink(id, dto);
+  }
+
+  @ApiTags('social-links')
+  @ApiOperation({ summary: 'Delete a social link (requires JWT auth)' })
+  @ApiParam({ name: 'id', type: 'integer', description: 'Social Link ID' })
+  @ApiResponse({ status: 200, description: 'Social link successfully deleted' })
+  @Delete('social-link/:id')
+  async deleteSocialLink(@Param('id', new ParseIntPipe()) id: number) {
+    return this.adminService.deleteSocialLink(id);
+  }
+
   // ==================== RECOVERY / DELETED ITEMS ====================
 
   @ApiTags('skills')
@@ -283,5 +334,20 @@ export class AdminController {
   @Post('hero/:id/restore')
   async restoreHero(@Param('id') id: number) {
     return this.adminService.restoreHero(id);
+  }
+
+  @ApiTags('social-links')
+  @ApiOperation({ summary: 'Get deleted social links (requires JWT auth)' })
+  @Get('social-links/deleted')
+  async getDeletedSocialLinks() {
+    return this.adminService.getDeletedSocialLinks();
+  }
+
+  @ApiTags('social-links')
+  @ApiOperation({ summary: 'Restore a deleted social link (requires JWT auth)' })
+  @ApiParam({ name: 'id', type: 'integer', description: 'Social Link ID' })
+  @Post('social-link/:id/restore')
+  async restoreSocialLink(@Param('id', new ParseIntPipe()) id: number) {
+    return this.adminService.restoreSocialLink(id);
   }
 }

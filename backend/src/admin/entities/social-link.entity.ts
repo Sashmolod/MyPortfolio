@@ -7,22 +7,19 @@ import {
   DeleteDateColumn,
 } from 'typeorm';
 
-@Entity('hero')
-export class Hero {
+@Entity('social_links')
+export class SocialLink {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'name', type: 'varchar', length: 100 })
-  name: string;
+  @Column({ name: 'platform', type: 'varchar', length: 100 })
+  platform: string;
 
-  @Column({ name: 'title', type: 'varchar', length: 150 })
-  title: string;
+  @Column({ name: 'url', type: 'varchar', length: 255 })
+  url: string;
 
-  @Column({ name: 'bio', type: 'text', default: '' })
-  bio: string;
-
-  @Column({ name: 'avatar', type: 'varchar', length: 255, default: '/favicon.svg' })
-  avatar: string;
+  @Column({ name: 'sort_order', type: 'int', default: 0 })
+  sortOrder: number;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;

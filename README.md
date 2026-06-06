@@ -48,8 +48,7 @@ npm run migration:run
 npm run seed
 
 # 6. Запусти бэкенд в режиме разработки (hot-reload)
-npm run dev
-# или nest start --watch
+npm run start:dev
 ```
 
 
@@ -72,9 +71,11 @@ npm run dev
 Фронтенд доступен на: `http://localhost:5173` (или 5174, если 5173 занят)
 
 ### Админ-панель
-URL: `http://localhost:5173/admin`
+URL: `http://localhost:5173/admin` (или `http://localhost/admin` для Docker PROD)
 - Login: `admin`
-- Password: `admin123`
+- Password:
+  - В DEV режиме: `admin123` (берется из `backend/.env.dev`)
+  - В PROD режиме: `admin` (дефолтное значение в `docker-compose.yml`)
 
 ---
 
@@ -97,9 +98,12 @@ docker compose build
 # 3. Запустить контейнеры
 docker compose up -d
 
+# 4. Заполнить базу данных начальными данными (по желанию)
+docker compose exec backend npm run seed
+
 # Фронтенд: http://localhost
 # Бэкенд API: http://localhost:3000/api
-# База данных: docker-compose service 'db' (порт 5432)
+# База данных: docker-compose service 'db' (порт 5432 на хосте 5433)
 ```
 
 ### Остановка
@@ -148,7 +152,7 @@ docker compose up -d --build
 ### Локальная разработка
 ```bash
 # Backend
-cd backend && npm run dev                            # запустить бэкенд
+cd backend && npm run start:dev                       # запустить бэкенд
 cd backend && npm run seed                           # заполнить БД
 cd backend && npm run migration:generate -- <путь>   # создать миграцию (например, npm run migration:generate -- src/migrations/InitialSchema)
 cd backend && npm run migration:run                  # применить миграции

@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Skill, Hero, Project, ContactMessage } from '../admin/entities';
+import { Skill, Hero, Project, ContactMessage, SocialLink } from '../admin/entities';
 
 @Injectable()
 export class PortfolioService {
@@ -14,6 +14,8 @@ export class PortfolioService {
     private projectRepo: Repository<Project>,
     @InjectRepository(ContactMessage)
     private messageRepo: Repository<ContactMessage>,
+    @InjectRepository(SocialLink)
+    private socialLinkRepo: Repository<SocialLink>,
   ) {}
 
   async getAllSkills() {
@@ -29,6 +31,7 @@ export class PortfolioService {
   async getHeroData() {
     const heroes = await this.heroRepo.find({ take: 1 });
     const hero = heroes[0];
+    const socialLinks = await this.socialLinkRepo.find({ order: { sortOrder: 'ASC' } });
     if (hero) {
       return {
         id: hero.id,
@@ -36,16 +39,20 @@ export class PortfolioService {
         title: hero.title,
         bio: hero.bio,
         avatar: hero.avatar,
-        socialLinks: hero.socialLinks,
+        socialLinks,
       };
     }
     // Дефолтные данные если нет записи в БД
     return {
       name: 'John Doe',
       title: 'Full Stack Developer',
-      bio: 'Passionate developer creating amazing web experiences.',
-      avatar: '/favicon.svg',
-      socialLinks: { github: '#', linkedin: '#', twitter: '#' },
+      bio: 'I build things for the web and beyond.',
+      avatar: null,
+      socialLinks: [
+        { platform: 'GitHub', url: 'https://github.com/yourusername' },
+        { platform: 'LinkedIn', url: 'https://linkedin.com/in/yourusername' },
+        { platform: 'Twitter', url: 'https://twitter.com/yourusername' },
+      ],
     };
   }
 

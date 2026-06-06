@@ -14,13 +14,19 @@
   --border-style: 2px solid var(--border-color);
   --shadow: 5px 5px 0px var(--border-color);
   --shadow-hover: 8px 8px 0px var(--border-color);
-  --input-bg: #ffffff;
+   --input-bg: #ffffff;
 
-  /* Волнистые края для имитации эскиза от руки */
-  --sketch-radius-1: 255px 15px 225px 15px/15px 225px 15px 255px;
-  --sketch-radius-2: 15px 225px 15px 255px/255px 15px 225px 15px;
-  --sketch-radius-3: 20px 95px 20px 95px/95px 20px 95px 20px;
-}
+   /* Ссылки социальных сетей */
+   --accent-link: #1e90ff;
+   --accent-link-bg: rgba(30, 144, 255, 0.08);
+   --accent-link-hover: #ff4757;
+   --accent-link-hover-bg: rgba(255, 71, 87, 0.1);
+
+   /* Волнистые края для имитации эскиза от руки */
+   --sketch-radius-1: 255px 15px 225px 15px/15px 225px 15px 255px;
+   --sketch-radius-2: 15px 225px 15px 255px/255px 15px 225px 15px;
+   --sketch-radius-3: 20px 95px 20px 95px/95px 20px 95px 20px;
+ }
 
 [data-theme='dark'] {
   --bg: #0d1e3d; /* Синий чертеж (Blueprint) */
@@ -29,15 +35,21 @@
   --text-muted: #8fa7c7;
   --primary: #65d5f2; /* Голубой мелок */
   --secondary: #ff9e2c; /* Оранжевый мелок */
-  --accent: #a3e635; /* Зеленый мелок */
+  --accent: #66a401; /* Зеленый мелок */
   --danger: #ff5252; /* Красный мелок для ошибок */
   --card-bg: #142c54;
   --border-color: #e2f1ff;
   --border-style: 2px solid var(--border-color);
   --shadow: 5px 5px 0px var(--border-color);
   --shadow-hover: 8px 8px 0px var(--border-color);
-  --input-bg: #142c54;
-}
+   --input-bg: #142c54;
+
+   /* Ссылки социальных сетей */
+   --accent-link: #65d5f2;
+   --accent-link-bg: rgba(101, 213, 242, 0.12);
+   --accent-link-hover: #a3e635;
+   --accent-link-hover-bg: rgba(163, 230, 53, 0.12);
+ }
 
 * {
   margin: 0;
@@ -248,9 +260,15 @@ header {
   border-style: dashed;
   border-radius: var(--sketch-radius-1);
   max-width: 1152px;
-  margin: 15px auto 40px auto;
+  margin: 15px 24px 40px 24px;
   box-shadow: var(--shadow);
   transition: all 0.3s ease;
+}
+
+@media (min-width: 1200px) {
+  header {
+    margin: 15px auto 40px auto;
+  }
 }
 
 header h1 {
@@ -347,6 +365,38 @@ footer {
   justify-content: center;
 }
 
+/* Ссылка в стиле Sketch */
+.sketch-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 26px;
+  background: var(--card-bg);
+  color: var(--text) !important;
+  border: var(--border-style);
+  border-radius: var(--sketch-radius-3);
+  cursor: pointer;
+  font-family: 'Architects Daughter', cursive;
+  font-weight: bold;
+  font-size: 1rem;
+  text-decoration: none;
+  box-shadow: 3px 3px 0px var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.sketch-link:hover {
+  background: var(--primary);
+  color: var(--bg) !important;
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0px var(--border-color);
+  border-radius: var(--sketch-radius-1);
+}
+
+.sketch-link:active {
+  transform: translate(3px, 3px);
+  box-shadow: 0px 0px 0px var(--border-color);
+}
+
 /* Круглые социальные иконки в скетч-стиле */
 .social-links {
   display: flex;
@@ -354,12 +404,14 @@ footer {
   margin-top: 25px;
 }
 
-.social-links a {
+.social-links a,
+.social-links a.sketch-link {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 44px;
   height: 44px;
+  padding: 0 !important;
   background: var(--card-bg);
   border: var(--border-style);
   border-radius: var(--sketch-radius-3);
@@ -370,10 +422,34 @@ footer {
   box-shadow: 2px 2px 0px var(--border-color);
 }
 
-.social-links a:hover {
+.social-links a:hover,
+.social-links a.sketch-link:hover {
   transform: translateY(-4px) rotate(8deg);
   background: var(--accent);
+  color: var(--bg) !important;
   box-shadow: 4px 4px 0px var(--border-color);
+}
+
+.social-links a svg {
+  width: 20px !important;
+  height: 20px !important;
+  display: block !important;
+  flex-shrink: 0 !important;
+}
+
+.social-links a svg path,
+.social-links a svg rect,
+.social-links a svg circle {
+  stroke: currentColor !important;
+  fill: none !important;
+  stroke-width: 1.8px !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+}
+
+.social-links a svg circle[fill="currentColor"] {
+  fill: currentColor !important;
+  stroke: none !important;
 }
 
 /* Навыки (Skills) */
@@ -437,7 +513,8 @@ footer {
   margin-top: 12px;
 }
 
-.tag {
+.tag,
+.tag.sketch-link {
   background: var(--card-bg);
   border: var(--border-style);
   border-radius: var(--sketch-radius-3);
@@ -448,7 +525,8 @@ footer {
   transition: all 0.2s ease;
 }
 
-.tag:hover {
+.tag:hover,
+.tag.sketch-link:hover {
   background: var(--accent);
   transform: scale(1.05) rotate(2deg);
 }
@@ -515,5 +593,10 @@ footer {
     gap: 15px;
     padding: 16px;
     top: 10px;
+  }
+  header nav {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
   }
 }

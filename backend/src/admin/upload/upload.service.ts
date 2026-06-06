@@ -83,4 +83,33 @@ export class UploadService {
   getFilePath(filename: string): string {
     return join(this.uploadDir, filename);
   }
+
+  /**
+   * Возвращает список всех файлов в директории загрузок
+   */
+  getUploadedFiles() {
+    try {
+      if (!fs.existsSync(this.uploadDir)) {
+        return [];
+      }
+      const files = fs.readdirSync(this.uploadDir);
+      return files
+        .filter((file) => {
+          return !file.startsWith('.') && fs.statSync(join(this.uploadDir, file)).isFile();
+        })
+        .map((file) => {
+          const stats = fs.statSync(join(this.uploadDir, file));
+          return {
+            filename: file,
+            url: this.getFileUrl(file),
+            size: stats.size,
+            createdAt: stats.mtime,
+          };
+        })
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    } catch (error) {
+      console.error('Error reading uploads directory:', error);
+      return [];
+    }
+  }
 }

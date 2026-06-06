@@ -6,13 +6,16 @@ import { Skill } from './entities/skill.entity';
 import { Project } from './entities/project.entity';
 import { ContactMessage } from './entities/contact-message.entity';
 import { Hero } from './entities/hero.entity';
+import { SocialLink } from './entities/social-link.entity';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { CreateContactMessageDto } from './dto/create-contact-message.dto';
 import { CreateHeroDto } from './dto/create-hero.dto';
+import { CreateSocialLinkDto } from './dto/create-social-link.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { UpdateHeroDto } from './dto/update-hero.dto';
+import { UpdateSocialLinkDto } from './dto/update-social-link.dto';
 
 @Injectable()
 export class AdminService {
@@ -25,6 +28,8 @@ export class AdminService {
     private messageRepo: Repository<ContactMessage>,
     @InjectRepository(Hero)
     private heroRepo: Repository<Hero>,
+    @InjectRepository(SocialLink)
+    private socialLinkRepo: Repository<SocialLink>,
   ) {}
 
   // Skills CRUD
@@ -152,10 +157,6 @@ export class AdminService {
 
   async createHero(dto: CreateHeroDto) {
     const hero = this.heroRepo.create(dto);
-    // Convert socialLinks object to JSON string if needed
-    if (dto.socialLinks && typeof dto.socialLinks === 'object') {
-      hero.socialLinks = JSON.stringify(dto.socialLinks);
-    }
     return this.heroRepo.save(hero);
   }
 
@@ -164,18 +165,6 @@ export class AdminService {
     if (!hero) throw new NotFoundException(`Hero with id ${id} not found`);
 
     Object.assign(hero, dto);
-
-    // Нормализуем socialLinks: всегда храним как JSON-строку
-    if (dto.socialLinks !== undefined) {
-      if (typeof dto.socialLinks === 'object') {
-        hero.socialLinks = JSON.stringify(dto.socialLinks);
-      } else if (typeof dto.socialLinks === 'string') {
-        // Валидируем что это корректный JSON, иначе сбрасываем
-        try { JSON.parse(dto.socialLinks); hero.socialLinks = dto.socialLinks; }
-        catch { hero.socialLinks = '{}'; }
-      }
-    }
-
     return this.heroRepo.save(hero);
   }
 
@@ -194,6 +183,45 @@ export class AdminService {
       where: { deletedAt: Not(IsNull()) },
       withDeleted: true,
       order: { createdAt: 'DESC' },
+    });
+  }
+
+  // Social Links CRUD
+  async getAllSocialLinks() {
+    return this.socialLinkRepo.find({ order: { sortOrder: 'ASC' } });
+  }
+
+  async getSocialLink(id: number) {
+    const link = await this.socialLinkRepo.findOne({ where: { id } });
+    if (!link) throw new Error('Social link not found');
+    return link;
+  }
+
+  async createSocialLink(dto: CreateSocialLinkDto) {
+    const link = this.socialLinkRepo.create(dto);
+    return this.socialLinkRepo.save(link);
+  }
+
+  async updateSocialLink(id: number, dto: UpdateSocialLinkDto) {
+    await this.socialLinkRepo.update(id, dto);
+    return this.getSocialLink(id);
+  }
+
+  async deleteSocialLink(id: number) {
+    await this.socialLinkRepo.softDelete(id);
+    return { deleted: true };
+  }
+
+  async restoreSocialLink(id: number) {
+    await this.socialLinkRepo.restore(id);
+    return this.getSocialLink(id);
+  }
+
+  async getDeletedSocialLinks() {
+    return this.socialLinkRepo.find({
+      where: { deletedAt: Not(IsNull()) },
+      withDeleted: true,
+      order: { sortOrder: 'ASC' },
     });
   }
 }

@@ -12,6 +12,10 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { LoginPage } from './pages/LoginPage'
 import AdminDashboard from './admin/pages/AdminDashboard';
 import api from './api';
+import DoodleCanvas from './components/DoodleCanvas';
+import DoodleControls from './components/DoodleControls';
+import DoodlyHelper from './components/DoodlyHelper';
+import CoffeeCup from './components/CoffeeCup';
 
 /**
  * Главная страница приложения (публичная)
@@ -21,6 +25,34 @@ function PublicPage() {
   const [projects, setProjects] = useState([]);
   const [heroData, setHeroData] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // States for doodles
+  const [drawingMode, setDrawingMode] = useState(false);
+  const [doodleColor, setDoodleColor] = useState('rgba(74, 85, 104, 0.85)'); // Default pencil
+  const [brushWidth, setBrushWidth] = useState(3);
+  const [doodlePaths, setDoodlePaths] = useState(() => {
+    try {
+      const saved = localStorage.getItem('doodle_paths');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Save paths to localStorage when changed
+  useEffect(() => {
+    localStorage.setItem('doodle_paths', JSON.stringify(doodlePaths));
+  }, [doodlePaths]);
+
+  const handleUndo = () => {
+    setDoodlePaths((prev) => prev.slice(0, -1));
+  };
+
+  const handleClear = () => {
+    if (window.confirm('Delete all doodles? / Удалить все рисунки?')) {
+      setDoodlePaths([]);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -51,14 +83,33 @@ function PublicPage() {
   }
 
   return (
-    <div>
+    <div style={{ position: 'relative' }}>
+      <DoodleCanvas 
+        active={drawingMode} 
+        color={doodleColor} 
+        brushWidth={brushWidth} 
+        paths={doodlePaths} 
+        setPaths={setDoodlePaths} 
+      />
+      <DoodleControls 
+        active={drawingMode} 
+        setActive={setDrawingMode} 
+        color={doodleColor} 
+        setColor={setDoodleColor} 
+        brushWidth={brushWidth} 
+        setBrushWidth={setBrushWidth} 
+        onUndo={handleUndo} 
+        onClear={handleClear} 
+      />
       <Header />
       <main className="app-main">
         <Hero data={heroData} />
         <Skills skills={skills} />
         <Projects projects={projects} />
         <ContactForm />
+        <CoffeeCup />
       </main>
+      <DoodlyHelper />
       <Footer />
     </div>
   );

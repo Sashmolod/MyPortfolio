@@ -78,6 +78,8 @@ services:
       - "3000:3000"
     networks:
       - portfolio-network
+    volumes:
+      - ./backend/uploads:/app/uploads
     # Healthcheck: проверяем, что NestJS отвечает (используем node вместо curl, так как alpine образ не имеет curl)
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
@@ -101,6 +103,8 @@ services:
       dockerfile: Dockerfile
       target: production
     container_name: portfolio_frontend
+    env_file:
+      - ./frontend/.env.docker
     restart: unless-stopped
     # Ждем готовности Backend
     depends_on:

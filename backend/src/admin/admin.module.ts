@@ -8,13 +8,14 @@ import { ContactMessage } from './entities/contact-message.entity';
 import { User } from './entities/user.entity';
 import { Hero } from './entities/hero.entity';
 import { AuditLog } from './entities/audit-log.entity';
+import { SocialLink } from './entities/social-link.entity';
 import { AuthModule } from './auth.module';
 import { UploadModule } from './upload/upload.module';
 
 @Global() // Делает exports доступными глобально
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Skill, Project, ContactMessage, User, Hero, AuditLog]),
+    TypeOrmModule.forFeature([Skill, Project, ContactMessage, User, Hero, AuditLog, SocialLink]),
     AuthModule,
     UploadModule,
   ],
