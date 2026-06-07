@@ -63,3 +63,11 @@ export class HeroDataDto {
   @ApiProperty({ description: 'Список социальных ссылок', type: [HeroSocialLinkDto] })
   socialLinks: HeroSocialLinkDto[];
 }
+
+export class CaptchaResponseDto {
+  @ApiProperty({ description: 'Математический вопрос для решения (например, "5 + 3 = ?")', example: '5 + 3 = ?' })
+  question: string;
+
+  @ApiProperty({ description: 'Подписанный токен капчи, содержащий время действия и ответ', example: '1780900000000:abc123xyz...' })
+  token: string;
+}

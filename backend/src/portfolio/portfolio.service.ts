@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Skill, Hero, Project, ContactMessage, SocialLink, Settings } from '../admin/entities';
+import { CreateContactMessageDto } from '../admin/dto/create-contact-message.dto';
+import { createHmac } from 'crypto';
 
 @Injectable()
 export class PortfolioService {
@@ -60,6 +62,8 @@ export class PortfolioService {
     };
   }
 
+  // ====== CONTACT MESSAGES ======
+
   async getContactInfo() {
     return {
       email: 'john@example.com',
@@ -68,8 +72,86 @@ export class PortfolioService {
     };
   }
 
-  async createMessage(dto: Partial<ContactMessage>) {
-    const message = this.messageRepo.create(dto);
+  generateCaptcha() {
+    const a = Math.floor(Math.random() * 9) + 1; // 1-9
+    const b = Math.floor(Math.random() * 9) + 1; // 1-9
+    const isPlus = Math.random() > 0.5;
+    
+    let question = '';
+    let expectedAnswer = 0;
+    
+    if (isPlus) {
+      question = `${a} + ${b} = ?`;
+      expectedAnswer = a + b;
+    } else {
+      const maxVal = Math.max(a, b);
+      const minVal = Math.min(a, b);
+      question = `${maxVal} - ${minVal} = ?`;
+      expectedAnswer = maxVal - minVal;
+    }
+    
+    const jwtSecret = this.configService.get<string>('JWT_SECRET') || 'default-captcha-secret';
+    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 mins
+    
+    const hmac = createHmac('sha256', jwtSecret);
+    hmac.update(`${expectedAnswer}:${expiresAt}`);
+    const signature = hmac.digest('hex');
+    
+    const token = `${expiresAt}:${signature}`;
+    
+    return { question, token };
+  }
+
+  verifyCaptcha(answer: string, token: string): boolean {
+    if (!token || !answer) {
+      return false;
+    }
+    
+    const parts = token.split(':');
+    if (parts.length !== 2) {
+      return false;
+    }
+    
+    const [expiresAtStr, signature] = parts;
+    const expiresAt = parseInt(expiresAtStr, 10);
+    
+    if (isNaN(expiresAt) || expiresAt < Date.now()) {
+      return false;
+    }
+    
+    const jwtSecret = this.configService.get<string>('JWT_SECRET') || 'default-captcha-secret';
+    const cleanAnswer = answer.trim();
+    
+    const hmac = createHmac('sha256', jwtSecret);
+    hmac.update(`${cleanAnswer}:${expiresAtStr}`);
+    const expectedSignature = hmac.digest('hex');
+    
+    return signature === expectedSignature;
+  }
+
+  async createMessage(dto: CreateContactMessageDto) {
+    // 1. Honeypot check
+    if (dto.nickname && dto.nickname.trim() !== '') {
+      console.warn(`Spam bot detected via nickname honeypot: ${dto.nickname}`);
+      return {
+        id: 999999,
+        name: dto.name,
+        email: dto.email,
+        subject: dto.subject,
+        message: dto.message,
+        createdAt: new Date(),
+      } as any;
+    }
+
+    // 2. Captcha verification
+    const isCaptchaValid = this.verifyCaptcha(dto.captchaAnswer || '', dto.captchaToken || '');
+    if (!isCaptchaValid) {
+      throw new BadRequestException('Неверный ответ на капчу / Incorrect captcha answer');
+    }
+
+    // 3. Save message
+    const { nickname, captchaAnswer, captchaToken, ...messageData } = dto;
+    const message = this.messageRepo.create(messageData);
     return this.messageRepo.save(message);
   }
 

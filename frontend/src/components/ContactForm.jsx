@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../api';
 import { MailIcon } from './SvgIllustrations';
@@ -7,10 +7,31 @@ import { soundSynth } from '../utils/audioSynth';
 const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 export default function ContactForm() {
-  const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
+  const [formData, setFormData] = useState({ 
+    name: '', 
+    email: '', 
+    subject: '', 
+    message: '',
+    nickname: '',
+    captchaAnswer: ''
+  });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFlying, setIsFlying] = useState(false);
+  const [captcha, setCaptcha] = useState(null);
+
+  const fetchCaptcha = async () => {
+    try {
+      const res = await api.get('/portfolio/captcha');
+      setCaptcha(res.data);
+    } catch (err) {
+      console.error('Failed to fetch captcha:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchCaptcha();
+  }, []);
 
   const validate = (field, value) => {
     switch (field) {
@@ -22,6 +43,8 @@ export default function ContactForm() {
         return !value.trim() ? 'Subject is required' : value.trim().length < 3 ? 'Subject must be at least 3 characters' : '';
       case 'message':
         return !value.trim() ? 'Message is required' : value.trim().length < 10 ? 'Message must be at least 10 characters' : '';
+      case 'captchaAnswer':
+        return !value.trim() ? 'Please solve the math puzzle' : '';
       default:
         return '';
     }
@@ -38,7 +61,9 @@ export default function ContactForm() {
 
   const handleBlur = (e) => {
     const { name, value } = e.target;
-    setErrors(prev => ({ ...prev, [name]: validate(name, value) }));
+    if (name !== 'nickname') {
+      setErrors(prev => ({ ...prev, [name]: validate(name, value) }));
+    }
   };
 
   const handleFocus = () => {
@@ -52,8 +77,9 @@ export default function ContactForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {};
-    for (const field of Object.keys(formData)) {
-      const error = validate(field, formData[field]);
+    const fieldsToValidate = ['name', 'email', 'subject', 'message', 'captchaAnswer'];
+    for (const field of fieldsToValidate) {
+      const error = validate(field, formData[field] || '');
       if (error) newErrors[field] = error;
     }
     setErrors(newErrors);
@@ -65,18 +91,33 @@ export default function ContactForm() {
     window.dispatchEvent(new CustomEvent('form-airplane-sent'));
 
     try {
-      await api.post('/portfolio/message', formData);
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        subject: formData.subject,
+        message: formData.message,
+        nickname: formData.nickname,
+        captchaAnswer: formData.captchaAnswer,
+        captchaToken: captcha?.token
+      };
+      await api.post('/portfolio/message', payload);
       setTimeout(() => {
         window.toast?.('Message sent successfully!', 'success');
-        setFormData({ name: '', email: '', subject: '', message: '' });
+        setFormData({ name: '', email: '', subject: '', message: '', nickname: '', captchaAnswer: '' });
         setErrors({});
         setIsFlying(false);
         setIsSubmitting(false);
+        fetchCaptcha();
       }, 1500);
-    } catch {
-      window.toast?.('Failed to send message. Please try again.', 'error');
+    } catch (err) {
+      const serverMsg = err.response?.data?.message || 'Failed to send message. Please try again.';
+      window.toast?.(serverMsg, 'error');
       setIsFlying(false);
       setIsSubmitting(false);
+      fetchCaptcha();
+      if (serverMsg.toLowerCase().includes('captcha')) {
+        setErrors(prev => ({ ...prev, captchaAnswer: 'Неверный ответ на капчу' }));
+      }
     }
   };
 
@@ -123,6 +164,18 @@ export default function ContactForm() {
               transition={{ duration: 0.4 }}
               style={{ width: '100%' }}
             >
+              {/* Невидимое поле для ботов (Honeypot) */}
+              <div style={{ position: 'absolute', left: '-9999px', top: '-9999px', opacity: 0, height: 0, width: 0, overflow: 'hidden' }}>
+                <input
+                  type="text"
+                  name="nickname"
+                  value={formData.nickname}
+                  onChange={handleChange}
+                  tabIndex="-1"
+                  autoComplete="off"
+                />
+              </div>
+
               <input
                 type="text"
                 name="name"
@@ -173,6 +226,70 @@ export default function ContactForm() {
                 required
               />
               {errMsg('message')}
+
+              {/* Математическая скетч-капча */}
+              {captcha && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  marginBottom: '15px',
+                  fontFamily: "'Architects Daughter', cursive",
+                  fontSize: '0.95rem',
+                  color: 'var(--text)',
+                  userSelect: 'none'
+                }}>
+                  <span>Решите пример:</span>
+                  <span style={{ fontWeight: 'bold', fontSize: '1.1rem', letterSpacing: '1px' }}>
+                    {captcha.question.replace(' = ?', '')} = 
+                  </span>
+                  <input
+                    type="text"
+                    name="captchaAnswer"
+                    placeholder="Ответ"
+                    value={formData.captchaAnswer || ''}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    className={errors.captchaAnswer ? 'input-error' : ''}
+                    style={{
+                      width: '60px',
+                      padding: '6px',
+                      textAlign: 'center',
+                      margin: 0,
+                      borderRadius: '6px',
+                      fontFamily: "'Architects Daughter', cursive",
+                      fontSize: '1rem',
+                      border: 'var(--border-style)',
+                      background: 'var(--input-bg)',
+                      color: 'var(--text)'
+                    }}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={fetchCaptcha}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '1.25rem',
+                      padding: '4px',
+                      color: 'var(--text)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'transform 0.2s ease',
+                      outline: 'none'
+                    }}
+                    title="Обновить пример"
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'rotate(45deg)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'rotate(0deg)'}
+                  >
+                    ↻
+                  </button>
+                </div>
+              )}
+              {errMsg('captchaAnswer')}
 
               <button type="submit" className="btn" disabled={isSubmitting} style={{ opacity: isSubmitting ? 0.7 : 1 }}>
                 {isSubmitting ? 'Sending...' : 'Send'}

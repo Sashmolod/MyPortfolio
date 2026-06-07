@@ -13,6 +13,7 @@ import {
   DoodlyGuessRequestDto,
   DoodlyGuessResponseDto,
   HeroDataDto,
+  CaptchaResponseDto,
 } from './dto/portfolio.dto';
 
 // Re-export for Swagger schema reference
@@ -62,6 +63,14 @@ export class PortfolioController {
   @Get('contact')
   getContactInfo(): Promise<ContactInfoDto> {
     return this.portfolioService.getContactInfo();
+  }
+
+  @ApiTags('contact')
+  @ApiOperation({ summary: 'Сгенерировать математическую капчу для защиты формы' })
+  @ApiOkResponse({ description: 'Капча успешно сгенерирована', type: CaptchaResponseDto })
+  @Get('captcha')
+  getCaptcha(): CaptchaResponseDto {
+    return this.portfolioService.generateCaptcha();
   }
 
   @ApiTags('message')

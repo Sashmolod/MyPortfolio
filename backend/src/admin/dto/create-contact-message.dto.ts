@@ -1,5 +1,5 @@
-import { IsString, IsEmail, IsNotEmpty } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsEmail, IsNotEmpty, IsOptional } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateContactMessageDto {
   @ApiProperty({ description: 'Sender name', example: 'John Doe' })
@@ -21,4 +21,19 @@ export class CreateContactMessageDto {
   @IsString()
   @IsNotEmpty()
   message: string;
+
+  @ApiPropertyOptional({ description: 'Honeypot field (must be left empty by humans)', example: '' })
+  @IsString()
+  @IsOptional()
+  nickname?: string;
+
+  @ApiPropertyOptional({ description: 'User answer to mathematical captcha', example: '12' })
+  @IsString()
+  @IsOptional()
+  captchaAnswer?: string;
+
+  @ApiPropertyOptional({ description: 'Cryptographic captcha token signed by server', example: '1780900000000:abc...' })
+  @IsString()
+  @IsOptional()
+  captchaToken?: string;
 }
