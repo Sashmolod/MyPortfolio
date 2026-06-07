@@ -4,6 +4,7 @@ import api from '../../api';
 
 export default function MediaTab({ items, refresh }) {
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const handleUpload = async (e) => {
     const file = e.target.files[0];
@@ -13,9 +14,14 @@ export default function MediaTab({ items, refresh }) {
     formData.append('file', file);
 
     setUploading(true);
+    setUploadProgress(0);
     try {
       await api.post('/upload/image', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(percentCompleted);
+        }
       });
       window.toast?.('Image uploaded successfully', 'success');
       refresh();
@@ -55,7 +61,7 @@ export default function MediaTab({ items, refresh }) {
 
   return (
     <div>
-      <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
         <div style={{ position: 'relative' }}>
           <input 
             type="file" 
@@ -71,6 +77,36 @@ export default function MediaTab({ items, refresh }) {
         <p style={{ margin: 0, opacity: 0.8, fontSize: '14px' }}>
           Загружайте сюда изображения, чтобы использовать их в качестве аватара или картинок проектов.
         </p>
+
+        {uploading && (
+          <div style={{ width: '100%', maxWidth: '300px', marginTop: '10px' }}>
+            <div style={{
+              border: 'var(--border-style)',
+              borderRadius: 'var(--sketch-radius-2)',
+              height: '18px',
+              position: 'relative',
+              overflow: 'hidden',
+              background: 'var(--secondary)'
+            }}>
+              <div style={{
+                width: `${uploadProgress}%`,
+                height: '100%',
+                backgroundColor: 'var(--text)',
+                transition: 'width 0.1s ease',
+                backgroundImage: 'repeating-linear-gradient(45deg, var(--bg) 0px, var(--bg) 2px, transparent 2px, transparent 10px)'
+              }} />
+            </div>
+            <div style={{ 
+              fontFamily: "'Architects Daughter', cursive", 
+              fontSize: '12px', 
+              textAlign: 'center', 
+              marginTop: '4px',
+              fontWeight: 'bold'
+            }}>
+              Uploading... {uploadProgress}%
+            </div>
+          </div>
+        )}
       </div>
 
       {items.length === 0 ? (

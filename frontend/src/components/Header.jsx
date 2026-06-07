@@ -47,9 +47,13 @@ export default function Header() {
   return (
     <header onDoubleClick={handleDoubleClick}>
         <h1>MyPortfolio</h1>
-        <nav style={{ display: 'flex', alignItems: 'center' }}>
+        <nav style={{ display: 'flex', alignItems: 'center' }} aria-label="Main Navigation">
           {navItems.map((item) => (
-            <a key={item} href={`#${item.toLowerCase()}`}>
+            <a 
+              key={item} 
+              href={`#${item.toLowerCase()}`}
+              aria-label={`Go to ${item} section`}
+            >
               {item}
             </a>
           ))}
@@ -58,6 +62,7 @@ export default function Header() {
               href="/admin"
               onClick={handleAdminClick}
               className="btn"
+              aria-label="Admin Dashboard"
               style={{
                 marginLeft: '10px',
                 textDecoration: 'none',
@@ -84,6 +89,8 @@ export default function Header() {
             padding: '4px'
           }}
           title={theme === 'light' ? 'Dark theme' : 'Light theme'}
+          aria-label={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
+          aria-pressed={theme === 'dark'}
         >
           {theme === 'light' ? <SketchMoonIcon size={20} /> : <SketchSunIcon size={20} />}
         </button>
@@ -102,6 +109,8 @@ export default function Header() {
             padding: '4px'
           }}
           title={muted ? 'Unmute sounds' : 'Mute sounds'}
+          aria-label={muted ? 'Unmute sound effects' : 'Mute sound effects'}
+          aria-pressed={!muted}
         >
           <SketchSoundIcon muted={muted} size={20} />
         </button>

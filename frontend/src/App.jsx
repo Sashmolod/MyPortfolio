@@ -21,6 +21,8 @@ import SketchyBug from './components/SketchyBug';
 import PageTear from './components/PageTear';
 import InkLeak from './components/InkLeak';
 import PageCrumpler from './components/PageCrumpler';
+import ErrorBoundary from './components/ErrorBoundary';
+import { Helmet } from 'react-helmet-async';
 
 /**
  * Главная страница приложения (публичная)
@@ -172,6 +174,17 @@ function PublicPage() {
 
   return (
     <div style={{ position: 'relative' }}>
+      <Helmet>
+        <title>{heroData?.name ? `${heroData.name} - ${heroData.title} | Portfolio` : 'Developer Portfolio | Sketchbook'}</title>
+        <meta name="description" content={heroData?.bio || 'Creative sketch-style web developer portfolio with hand-drawn interactive elements and drawings.'} />
+        <meta name="keywords" content="web developer, sketch portfolio, frontend developer, nestjs react, creative developer, interactive doodles" />
+        <meta property="og:title" content={heroData?.name ? `${heroData.name} - ${heroData.title} | Portfolio` : 'Developer Portfolio | Sketchbook'} />
+        <meta property="og:description" content={heroData?.bio || 'Creative sketch-style web developer portfolio with hand-drawn interactive elements.'} />
+        <meta property="og:type" content="website" />
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:title" content={heroData?.name ? `${heroData.name} - ${heroData.title} | Portfolio` : 'Developer Portfolio | Sketchbook'} />
+        <meta property="twitter:description" content={heroData?.bio || 'Creative sketch-style web developer portfolio with hand-drawn interactive elements.'} />
+      </Helmet>
       <DoodleCanvas 
         active={drawingMode} 
         color={doodleColor} 
@@ -224,14 +237,30 @@ function AppRoutes() {
   return (
     <Routes>
       {/* Публичные route */}
-      <Route path="/" element={<PublicPage />} />
+      <Route path="/" element={
+        <ErrorBoundary>
+          <PublicPage />
+        </ErrorBoundary>
+      } />
 
       {/* Страница логина */}
-      <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/admin" replace />} />
+      <Route path="/login" element={
+        !isAuthenticated ? (
+          <ErrorBoundary>
+            <LoginPage />
+          </ErrorBoundary>
+        ) : (
+          <Navigate to="/admin" replace />
+        )
+      } />
 
       {/* Защищённые route (только для авторизованных) */}
       <Route element={<ProtectedRoute />}>
-        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/admin" element={
+          <ErrorBoundary>
+            <AdminPage />
+          </ErrorBoundary>
+        } />
       </Route>
 
       {/* Всё остальное — редирект на главную */}

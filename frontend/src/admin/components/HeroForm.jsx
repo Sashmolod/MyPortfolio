@@ -104,6 +104,7 @@ export default function HeroForm({ heroData, onSaveData, onCancel }) {
   });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [sketching, setSketching] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -121,9 +122,14 @@ export default function HeroForm({ heroData, onSaveData, onCancel }) {
     const formData = new FormData();
     formData.append('file', file);
     setUploading(true);
+    setUploadProgress(0);
     try {
       const res = await api.post('/upload/image', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(percentCompleted);
+        }
       });
       if (res.data && res.data.url) {
         setForm(prev => ({ ...prev, avatar: res.data.url }));
@@ -194,6 +200,35 @@ export default function HeroForm({ heroData, onSaveData, onCancel }) {
                 </button>
               </div>
             </div>
+            {uploading && (
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{
+                  border: 'var(--border-style)',
+                  borderRadius: 'var(--sketch-radius-2)',
+                  height: '14px',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  background: 'var(--secondary)'
+                }}>
+                  <div style={{
+                    width: `${uploadProgress}%`,
+                    height: '100%',
+                    backgroundColor: 'var(--text)',
+                    transition: 'width 0.1s ease',
+                    backgroundImage: 'repeating-linear-gradient(45deg, var(--bg) 0px, var(--bg) 2px, transparent 2px, transparent 10px)'
+                  }} />
+                </div>
+                <div style={{ 
+                  fontFamily: "'Architects Daughter', cursive", 
+                  fontSize: '11px', 
+                  textAlign: 'center', 
+                  marginTop: '2px',
+                  fontWeight: 'bold'
+                }}>
+                  Uploading: {uploadProgress}%
+                </div>
+              </div>
+            )}
             {form.avatar && (
               <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <img 

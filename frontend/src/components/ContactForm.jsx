@@ -172,8 +172,13 @@ export default function ContactForm() {
               style={{ width: '100%' }}
             >
               {/* Невидимое поле для ботов (Honeypot) */}
-              <div style={{ position: 'absolute', left: '-9999px', top: '-9999px', opacity: 0, height: 0, width: 0, overflow: 'hidden' }}>
+              <div 
+                style={{ position: 'absolute', left: '-9999px', top: '-9999px', opacity: 0, height: 0, width: 0, overflow: 'hidden' }}
+                aria-hidden="true"
+              >
+                <label htmlFor="honeypot-nickname">Leave this field blank</label>
                 <input
+                  id="honeypot-nickname"
                   type="text"
                   name="nickname"
                   value={formData.nickname}
@@ -313,6 +318,7 @@ export default function ContactForm() {
                       outline: 'none'
                     }}
                     title="Обновить пример"
+                    aria-label="Обновить проверочный код"
                     onMouseEnter={(e) => e.currentTarget.style.transform = 'rotate(45deg)'}
                     onMouseLeave={(e) => e.currentTarget.style.transform = 'rotate(0deg)'}
                   >

@@ -622,3 +622,13 @@ footer {
     gap: 12px;
   }
 }
+
+/* --- Accessibility focus outline in sketch-style --- */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px dashed var(--accent, #6366f1);
+  outline-offset: 4px;
+}

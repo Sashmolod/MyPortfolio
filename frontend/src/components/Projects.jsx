@@ -57,7 +57,16 @@ export default function Projects({ projects = [] }) {
                 );
               })}
             </div>
-            {project.link && <a href={project.link} className="btn" style={{ marginTop: '12px', display: 'inline-block' }}>View Project</a>}
+            {project.link && (
+              <a 
+                href={project.link} 
+                className="btn" 
+                style={{ marginTop: '12px', display: 'inline-block' }}
+                aria-label={`View Project: ${project.title}`}
+              >
+                View Project
+              </a>
+            )}
           </motion.div>
         ))}
       </div>

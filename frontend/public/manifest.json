@@ -1,0 +1,23 @@
+{
+  "short_name": "Sketchbook",
+  "name": "MyPortfolio Sketchbook",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512",
+      "purpose": "maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#f4f4f5",
+  "theme_color": "#4a5568",
+  "display": "standalone",
+  "orientation": "portrait"
+}
