@@ -19,13 +19,20 @@ export default function ContactForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFlying, setIsFlying] = useState(false);
   const [captcha, setCaptcha] = useState(null);
+  const [captchaLoading, setCaptchaLoading] = useState(true);
+  const [captchaError, setCaptchaError] = useState(false);
 
   const fetchCaptcha = async () => {
+    setCaptchaLoading(true);
+    setCaptchaError(false);
     try {
       const res = await api.get('/portfolio/captcha');
       setCaptcha(res.data);
     } catch (err) {
       console.error('Failed to fetch captcha:', err);
+      setCaptchaError(true);
+    } finally {
+      setCaptchaLoading(false);
     }
   };
 
@@ -227,8 +234,32 @@ export default function ContactForm() {
               />
               {errMsg('message')}
 
-              {/* Математическая скетч-капча */}
-              {captcha && (
+              {/* Математическая скетч-капча с обработкой ошибок загрузки */}
+              {captchaLoading ? (
+                <div style={{ marginBottom: '15px', opacity: 0.6, fontFamily: "'Architects Daughter', cursive", fontSize: '0.95rem', color: 'var(--text)' }}>
+                  Загрузка проверочного кода...
+                </div>
+              ) : captchaError ? (
+                <div style={{ color: 'var(--danger)', marginBottom: '15px', fontFamily: "'Architects Daughter', cursive", fontSize: '0.95rem' }}>
+                  Не удалось загрузить проверочный код.{' '}
+                  <button
+                    type="button"
+                    onClick={fetchCaptcha}
+                    style={{
+                      textDecoration: 'underline',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: 'var(--text)',
+                      fontFamily: "'Architects Daughter', cursive",
+                      fontSize: '0.95rem',
+                      padding: 0
+                    }}
+                  >
+                    Обновить пример
+                  </button>
+                </div>
+              ) : captcha ? (
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -288,7 +319,7 @@ export default function ContactForm() {
                     ↻
                   </button>
                 </div>
-              )}
+              ) : null}
               {errMsg('captchaAnswer')}
 
               <button type="submit" className="btn" disabled={isSubmitting} style={{ opacity: isSubmitting ? 0.7 : 1 }}>
