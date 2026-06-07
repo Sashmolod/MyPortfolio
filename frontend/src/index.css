@@ -148,19 +148,41 @@ section h2 {
 
 /* Кнопка удаления/выхода в стиле Sketch */
 .btn-danger {
-  border-color: var(--danger) !important;
-  color: var(--danger) !important;
-  box-shadow: 3px 3px 0px var(--danger) !important;
+  background: var(--danger) !important;
+  color: var(--text) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: 3px 3px 0px var(--border-color) !important;
+  border-radius: var(--sketch-radius-3) !important;
 }
 
 .btn-danger:hover {
   background: var(--danger) !important;
   color: var(--bg) !important;
-  box-shadow: 5px 5px 0px var(--danger) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: 5px 5px 0px var(--border-color) !important;
+  border-radius: var(--sketch-radius-1) !important;
 }
 
 .btn-danger:active {
-  box-shadow: 0px 0px 0px var(--danger) !important;
+  transform: translate(3px, 3px);
+  box-shadow: 0px 0px 0px var(--border-color) !important;
+}
+
+/* Настройки для темной Blueprint темы */
+[data-theme='dark'] .btn-danger {
+  background: var(--danger) !important;
+  color: var(--bg) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: 3px 3px 0px var(--border-color) !important;
+  border-radius: var(--sketch-radius-3) !important;
+}
+
+[data-theme='dark'] .btn-danger:hover {
+  background: var(--danger) !important;
+  color: var(--text) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: 5px 5px 0px var(--border-color) !important;
+  border-radius: var(--sketch-radius-1) !important;
 }
 
 /* Вкладки в стиле Sketch для меню админки */

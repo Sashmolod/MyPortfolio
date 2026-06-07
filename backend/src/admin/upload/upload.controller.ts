@@ -1,9 +1,40 @@
 import { Controller, Post, UseInterceptors, UploadedFile, Delete, HttpCode, HttpStatus, Param, UseGuards, Get } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadService } from './upload.service';
-import { ApiConsumes, ApiBody, ApiOperation, ApiResponse, ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiConsumes, ApiBody, ApiOperation, ApiResponse, ApiBearerAuth, ApiTags, ApiProperty, ApiOkResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../jwt-auth.guard';
 import { AuditLogInterceptor } from '../audit-log.interceptor';
+
+export class UploadResponseDto {
+  @ApiProperty({ description: 'Успешность операции загрузки', example: true })
+  success: boolean;
+
+  @ApiProperty({ description: 'Имя сохраненного файла', example: 'image_1780899000000.png' })
+  filename: string;
+
+  @ApiProperty({ description: 'URL-путь для доступа к файлу', example: '/uploads/image_1780899000000.png' })
+  url: string;
+
+  @ApiProperty({ description: 'MIME-тип загруженного файла', example: 'image/png' })
+  mimetype: string;
+
+  @ApiProperty({ description: 'Размер файла в байтах', example: 102400 })
+  size: number;
+}
+
+export class UploadedFileDto {
+  @ApiProperty({ description: 'Имя файла', example: 'image_1780899000000.png' })
+  filename: string;
+
+  @ApiProperty({ description: 'URL-путь для доступа к файлу', example: '/uploads/image_1780899000000.png' })
+  url: string;
+
+  @ApiProperty({ description: 'Размер файла в байтах', example: 102400 })
+  size: number;
+
+  @ApiProperty({ description: 'Дата загрузки файла', example: '2026-06-06T12:00:00.000Z' })
+  createdAt: Date;
+}
 
 @ApiTags('upload')
 @Controller('upload')
@@ -15,7 +46,6 @@ export class UploadController {
 
   @Post('image')
   @UseInterceptors(FileInterceptor('file'))
-
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -24,14 +54,16 @@ export class UploadController {
         file: {
           type: 'string',
           format: 'binary',
+          description: 'Изображение для загрузки (JPEG, PNG, GIF, SVG)',
         },
       },
     },
   })
   @ApiOperation({ summary: 'Загрузить изображение' })
-  @ApiResponse({ status: 201, description: 'Изображение успешно загружено' })
-  @ApiResponse({ status: 400, description: 'Неверный файл' })
-  uploadImage(@UploadedFile() file: Express.Multer.File) {
+  @ApiOkResponse({ status: 201, description: 'Изображение успешно загружено', type: UploadResponseDto })
+  @ApiResponse({ status: 400, description: 'Неверный файл (неподдерживаемый формат или слишком большой размер)' })
+  @ApiResponse({ status: 401, description: 'Не авторизован' })
+  uploadImage(@UploadedFile() file: Express.Multer.File): UploadResponseDto {
     const adjustedFile = this.uploadService.adjustFilename(file);
     return {
       success: true,
@@ -46,6 +78,7 @@ export class UploadController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Удалить загруженное изображение' })
   @ApiResponse({ status: 204, description: 'Файл успешно удален' })
+  @ApiResponse({ status: 401, description: 'Не авторизован' })
   @ApiResponse({ status: 404, description: 'Файл не найден' })
   deleteImage(@Param('filename') filename: string) {
     const deleted = this.uploadService.deleteFile(filename);
@@ -56,8 +89,9 @@ export class UploadController {
 
   @Get()
   @ApiOperation({ summary: 'Получить список загруженных изображений' })
-  @ApiResponse({ status: 200, description: 'Список файлов успешно получен' })
-  getUploadedFiles() {
+  @ApiOkResponse({ status: 200, description: 'Список файлов успешно получен', type: [UploadedFileDto] })
+  @ApiResponse({ status: 401, description: 'Не авторизован' })
+  getUploadedFiles(): UploadedFileDto[] {
     return this.uploadService.getUploadedFiles();
   }
 }

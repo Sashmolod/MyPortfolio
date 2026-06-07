@@ -308,3 +308,118 @@ export function LightningIcon({ size = 20 }) {
     </svg>
   );
 }
+
+// Нарисованный от руки замочек (для кнопки Admin)
+export function SketchLockIcon({ size = 18, className = '' }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      style={{ display: 'inline-block', verticalAlign: 'middle' }}
+    >
+      {/* Корпус замка */}
+      <path d="M 5.8 10.5 C 9.5 9.9, 14.5 10.1, 18.2 10.3 C 18.4 13.5, 18.1 16.8, 18.3 19.8 C 14.5 20.2, 9.8 20.0, 5.7 19.6 C 5.5 16.5, 5.9 13.2, 5.8 10.5 Z" />
+      {/* Дужка замка */}
+      <path d="M 9.2 10 C 9.3 7.2, 9.9 4.3, 12.1 4.2 C 14.2 4.1, 14.9 7.1, 15 10" />
+      {/* Замочная скважина */}
+      <circle cx="12" cy="14" r="1.5" />
+      <path d="M 12 15.5 L 12 17.5" />
+    </svg>
+  );
+}
+
+// Нарисованное от руки солнце (переключатель тем)
+export function SketchSunIcon({ size = 20, className = '' }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      style={{ display: 'inline-block', verticalAlign: 'middle' }}
+    >
+      {/* Круг солнца */}
+      <path d="M12 7.8 C 14.2 7.9, 16.1 9.8, 16.2 12 C 16.3 14.2, 14.4 16.1, 12.2 16.2 C 10.0 16.3, 8.1 14.4, 8.0 12.2 C 7.9 10.0, 9.8 8.1, 12 7.8" />
+      {/* Лучи */}
+      <path d="M12 2.5 L12 4.8" />
+      <path d="M12 19.2 L12 21.5" />
+      <path d="M2.5 12 L4.8 12" />
+      <path d="M19.2 12 L21.5 12" />
+      <path d="M5.3 5.3 L6.9 6.9" />
+      <path d="M17.1 17.1 L18.7 18.7" />
+      <path d="M18.7 5.3 L17.1 6.9" />
+      <path d="M6.9 17.1 L5.3 18.7" />
+    </svg>
+  );
+}
+
+// Нарисованная от руки луна (переключатель тем)
+export function SketchMoonIcon({ size = 20, className = '' }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      style={{ display: 'inline-block', verticalAlign: 'middle' }}
+    >
+      {/* Полумесяц */}
+      <path d="M 12.5 3 C 15.5 3, 18.2 5, 18.8 8.2 C 15.0 9.2, 12.8 12.5, 12.2 16.5 C 9.0 15.5, 6.2 12.2, 5.8 8.8 C 5.4 5.0, 9.0 3, 12.5 3 Z" />
+      {/* Искорки */}
+      <path d="M 18.5 3.5 L 18.5 5.5 M 17.5 4.5 L 19.5 4.5" strokeWidth="1.2" />
+      <path d="M 6.5 16.5 L 6.5 18.5 M 5.5 17.5 L 7.5 17.5" strokeWidth="1.2" />
+    </svg>
+  );
+}
+
+// Нарисованный от руки значок звука
+export function SketchSoundIcon({ muted = false, size = 20, className = '' }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      style={{ display: 'inline-block', verticalAlign: 'middle' }}
+    >
+      {/* Рупор динамика */}
+      <path d="M 4.2 9.2 L 7.8 9.2 L 11.8 5.5 L 11.8 18.5 L 7.8 14.8 L 4.2 14.8 Z" />
+      
+      {muted ? (
+        <>
+          {/* Крестик отключенного звука */}
+          <path d="M 15.5 9.5 L 19.5 13.5" />
+          <path d="M 19.5 9.5 L 15.5 13.5" />
+        </>
+      ) : (
+        <>
+          {/* Звуковые волны */}
+          <path d="M 14.8 9.5 C 15.7 10.3, 15.7 13.7, 14.8 14.5" />
+          <path d="M 17.5 6.8 C 19.5 8.8, 19.5 15.2, 17.5 17.2" />
+        </>
+      )}
+    </svg>
+  );
+}

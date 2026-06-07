@@ -1,10 +1,11 @@
 let audioCtx = null;
 let isMuted = false;
+let isSettingsMuted = false;
 let scribbleNode = null;
 let scribbleGain = null;
 
 function getAudioContext() {
-  if (isMuted) return null;
+  if (isMuted || isSettingsMuted) return null;
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   }
@@ -17,6 +18,13 @@ function getAudioContext() {
 export const soundSynth = {
   setMuted(muted) {
     isMuted = muted;
+    if (muted && audioCtx) {
+      this.stopScribble();
+    }
+  },
+
+  setSettingsMuted(muted) {
+    isSettingsMuted = muted;
     if (muted && audioCtx) {
       this.stopScribble();
     }
@@ -191,5 +199,113 @@ export const soundSynth = {
 
     noise.start();
     noise.stop(ctx.currentTime + 0.45);
+  },
+
+  // 7. Paper airplane whoosh sound
+  playWhoosh() {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const noise = ctx.createBufferSource();
+    noise.buffer = this.createNoiseBuffer(ctx, 0.6);
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.Q.setValueAtTime(2.0, ctx.currentTime);
+    filter.frequency.setValueAtTime(200, ctx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.25);
+    filter.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.6);
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.001, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.25, ctx.currentTime + 0.2);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+
+    noise.start();
+    noise.stop(ctx.currentTime + 0.65);
+  },
+
+  // 8. Ripping/tearing paper sound
+  playTear() {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    for (let i = 0; i < 3; i++) {
+      const delay = i * 0.07;
+      const noise = ctx.createBufferSource();
+      noise.buffer = this.createNoiseBuffer(ctx, 0.15);
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.setValueAtTime(2500 + Math.random() * 1000, ctx.currentTime + delay);
+
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.001, ctx.currentTime + delay);
+      gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + delay + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.12);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      noise.start(ctx.currentTime + delay);
+      noise.stop(ctx.currentTime + delay + 0.16);
+    }
+  },
+
+  // 9. Pencil tap/squash sound
+  playTap() {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(150, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 0.08);
+
+    gain.gain.setValueAtTime(0.001, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.09);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+    osc.stop(ctx.currentTime + 0.1);
+  },
+
+  // 10. Crumpling paper sound
+  playCrumple() {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    for (let i = 0; i < 6; i++) {
+      const delay = i * 0.06 + Math.random() * 0.03;
+      const noise = ctx.createBufferSource();
+      noise.buffer = this.createNoiseBuffer(ctx, 0.12);
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(1400 + Math.random() * 600, ctx.currentTime + delay);
+      filter.Q.setValueAtTime(4.0, ctx.currentTime + delay);
+
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.001, ctx.currentTime + delay);
+      gain.gain.linearRampToValueAtTime(0.14, ctx.currentTime + delay + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.09);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      noise.start(ctx.currentTime + delay);
+      noise.stop(ctx.currentTime + delay + 0.14);
+    }
   }
 };

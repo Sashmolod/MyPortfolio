@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { soundSynth } from '../utils/audioSynth';
+import { usePortfolioSettings } from '../contexts/SettingsContext';
 
 export default function CoffeeCup() {
   const [clicks, setClicks] = useState(0);
   const [isSpilled, setIsSpilled] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
+  const { settings } = usePortfolioSettings();
 
   const handleClick = () => {
+    if (!settings?.enableCoffeeSpill) return;
+
     if (isSpilled) {
       // Reset cup
       soundSynth.playPop();
@@ -22,10 +26,12 @@ export default function CoffeeCup() {
     if (nextClicks >= 5) {
       soundSynth.playSplat();
       setIsSpilled(true);
+      window.dispatchEvent(new CustomEvent('coffee-spill'));
     } else {
       soundSynth.playSlosh();
       setIsShaking(true);
       setTimeout(() => setIsShaking(false), 500);
+      window.dispatchEvent(new CustomEvent('coffee-slosh'));
     }
   };
 

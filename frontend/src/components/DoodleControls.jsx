@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { usePortfolioSettings } from '../contexts/SettingsContext';
 
-export default function DoodleControls({ active, setActive, color, setColor, brushWidth, setBrushWidth, onUndo, onClear }) {
+export default function DoodleControls({ active, setActive, color, setColor, brushWidth, setBrushWidth, onUndo, onClear, onGuessDrawing, isGuessing }) {
   const [minimized, setMinimized] = useState(false);
+  const { settings } = usePortfolioSettings();
 
   // Brush presets
   const presets = [
@@ -10,6 +12,10 @@ export default function DoodleControls({ active, setActive, color, setColor, bru
     { name: 'Red Pen', color: 'rgba(229, 62, 62, 0.9)', width: 3, label: '🖊️ Red Pen' },
     { name: 'Highlighter', color: 'rgba(59, 130, 246, 0.45)', width: 16, label: '🖍️ Highlight' }
   ];
+
+  if (settings?.enableEraser) {
+    presets.push({ name: 'Eraser', color: 'eraser', width: 24, label: '🧼 Eraser / Ластик' });
+  }
 
   const toggleMode = () => {
     setActive(!active);
@@ -158,6 +164,28 @@ export default function DoodleControls({ active, setActive, color, setColor, bru
                       })}
                     </div>
                   </div>
+
+                  {/* AI Guessing Button */}
+                  <button
+                    onClick={onGuessDrawing}
+                    disabled={isGuessing}
+                    className="btn"
+                    style={{
+                      width: '100%',
+                      padding: '8px',
+                      fontSize: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      backgroundColor: 'var(--accent)',
+                      borderColor: 'var(--text)',
+                      color: 'var(--text)',
+                      marginTop: '4px'
+                    }}
+                  >
+                    🎓 {isGuessing ? 'Угадываю...' : 'Дудли, угадай!'}
+                  </button>
 
                   {/* Actions */}
                   <div style={{ display: 'flex', gap: '8px', borderTop: 'var(--border-style)', borderTopStyle: 'dashed', paddingTop: '10px' }}>

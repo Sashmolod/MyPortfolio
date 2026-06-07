@@ -7,6 +7,7 @@ import { Project } from './entities/project.entity';
 import { ContactMessage } from './entities/contact-message.entity';
 import { Hero } from './entities/hero.entity';
 import { SocialLink } from './entities/social-link.entity';
+import { Settings } from './entities/settings.entity';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { CreateContactMessageDto } from './dto/create-contact-message.dto';
@@ -30,6 +31,8 @@ export class AdminService {
     private heroRepo: Repository<Hero>,
     @InjectRepository(SocialLink)
     private socialLinkRepo: Repository<SocialLink>,
+    @InjectRepository(Settings)
+    private settingsRepo: Repository<Settings>,
   ) {}
 
   // Skills CRUD
@@ -223,5 +226,47 @@ export class AdminService {
       withDeleted: true,
       order: { sortOrder: 'ASC' },
     });
+  }
+
+  // Settings Management
+  async getSettings() {
+    let settings = await this.settingsRepo.findOne({ where: { id: 1 } });
+    if (!settings) {
+      settings = this.settingsRepo.create({ id: 1 });
+      await this.settingsRepo.save(settings);
+    }
+    return settings;
+  }
+
+  async updateSettings(dto: Partial<Settings>) {
+    await this.getSettings(); // Ensure settings row 1 exists
+    await this.settingsRepo.update(1, dto);
+    return this.getSettings();
+  }
+
+  // Hard Delete methods (permanent deletion)
+  async hardDeleteSkill(id: number) {
+    await this.skillRepo.delete(id);
+    return { permanentDeleted: true };
+  }
+
+  async hardDeleteProject(id: number) {
+    await this.projectRepo.delete(id);
+    return { permanentDeleted: true };
+  }
+
+  async hardDeleteMessage(id: number) {
+    await this.messageRepo.delete(id);
+    return { permanentDeleted: true };
+  }
+
+  async hardDeleteHero(id: number) {
+    await this.heroRepo.delete(id);
+    return { permanentDeleted: true };
+  }
+
+  async hardDeleteSocialLink(id: number) {
+    await this.socialLinkRepo.delete(id);
+    return { permanentDeleted: true };
   }
 }

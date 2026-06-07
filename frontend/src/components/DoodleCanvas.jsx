@@ -2,6 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { soundSynth } from '../utils/audioSynth';
 
 export default function DoodleCanvas({ active, color, brushWidth, paths, setPaths }) {
+  const resolveColor = (c) => {
+    if (c === 'eraser') {
+      const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+      return bg || '#fcfaf2';
+    }
+    return c;
+  };
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -61,7 +68,7 @@ export default function DoodleCanvas({ active, color, brushWidth, paths, setPath
     paths.forEach((path) => {
       if (path.points.length < 1) return;
       ctx.beginPath();
-      ctx.strokeStyle = path.color;
+      ctx.strokeStyle = resolveColor(path.color);
       ctx.lineWidth = path.width;
       
       const [start, ...rest] = path.points;
@@ -100,6 +107,9 @@ export default function DoodleCanvas({ active, color, brushWidth, paths, setPath
     setIsDrawing(true);
     soundSynth.startScribble();
     
+    // Dispatch doodle drawing start event
+    window.dispatchEvent(new CustomEvent('doodle-draw-start'));
+    
     const { x, y } = getCoordinates(e);
     currentPathRef.current = [{ x, y }];
 
@@ -108,7 +118,7 @@ export default function DoodleCanvas({ active, color, brushWidth, paths, setPath
     const ctx = canvas.getContext('2d');
     ctx.beginPath();
     ctx.arc(x, y, brushWidth / 2, 0, Math.PI * 2);
-    ctx.fillStyle = color;
+    ctx.fillStyle = resolveColor(color);
     ctx.fill();
   };
 
@@ -121,6 +131,19 @@ export default function DoodleCanvas({ active, color, brushWidth, paths, setPath
     }
 
     const { x, y } = getCoordinates(e);
+    
+    // Check if erasing Doodly Helper in bottom-left viewport
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    
+    if (color === 'eraser' && clientX >= 15 && clientX <= 120 && clientY >= window.innerHeight - 150 && clientY <= window.innerHeight) {
+      const now = Date.now();
+      if (!window.lastDoodlyEraseTime || now - window.lastDoodlyEraseTime > 8000) {
+        window.lastDoodlyEraseTime = now;
+        window.dispatchEvent(new CustomEvent('doodly-erased'));
+      }
+    }
+
     const prevPoints = currentPathRef.current;
     
     if (prevPoints.length > 0) {
@@ -129,7 +152,7 @@ export default function DoodleCanvas({ active, color, brushWidth, paths, setPath
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
       ctx.beginPath();
-      ctx.strokeStyle = color;
+      ctx.strokeStyle = resolveColor(color);
       ctx.lineWidth = brushWidth;
       ctx.moveTo(lastPoint.x, lastPoint.y);
       ctx.lineTo(x, y);

@@ -1,15 +1,16 @@
 import { Controller, Get, HttpStatus } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiOkResponse } from '@nestjs/swagger';
+import { HealthResponseDto, DetailHealthResponseDto } from './health-response.dto';
 
 @ApiTags('health')
 @Controller('health')
 export class HealthController {
   @Get()
   @ApiOperation({ summary: 'Health check для Docker (без подключения к БД)' })
-  @ApiResponse({ status: 200, description: 'Service is healthy' })
+  @ApiOkResponse({ description: 'Сервис работает исправно', type: HealthResponseDto })
   @Throttle({ default: { limit: 30, ttl: 60000 } }) // 30 запросов в минуту
-  getHealth(): object {
+  getHealth(): HealthResponseDto {
     return {
       status: 'ok',
       service: 'portfolio-backend',
@@ -19,10 +20,10 @@ export class HealthController {
 
   @Get('detail')
   @ApiOperation({ summary: 'Подробный health check с проверкой БД' })
-  @ApiResponse({ status: 200, description: 'Service is healthy' })
-  @ApiResponse({ status: 503, description: 'Service is unhealthy' })
+  @ApiOkResponse({ description: 'Детальный статус работоспособности получен', type: DetailHealthResponseDto })
+  @ApiResponse({ status: 503, description: 'Сервис или БД не отвечают' })
   @Throttle({ default: { limit: 10, ttl: 60000 } })
-  async getDetailHealth(): Promise<object> {
+  async getDetailHealth(): Promise<DetailHealthResponseDto> {
     const dbStatus = 'unknown';
     
     return {

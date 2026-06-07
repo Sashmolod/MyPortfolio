@@ -68,6 +68,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:-change-this-to-a-secure-value-in-production}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000,http://frontend:80,http://localhost,http://127.0.0.1}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
 
       # Admin User (автоматически создаётся при запуске)
       # ⚠️ В production ОБЯЗАТЕЛЬНО установите ADMIN_PASSWORD через .env файл!

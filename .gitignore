@@ -40,3 +40,9 @@ build/
 # Project specific
 .orbstack/
 orbstack*
+
+# Uploads and backups
+backend/uploads/*
+!backend/uploads/.gitkeep
+backups/*
+!backups/.gitkeep

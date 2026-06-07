@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Skill, Hero, Project, ContactMessage, SocialLink } from '../admin/entities';
+import { ConfigService } from '@nestjs/config';
+import { Skill, Hero, Project, ContactMessage, SocialLink, Settings } from '../admin/entities';
 
 @Injectable()
 export class PortfolioService {
@@ -16,6 +17,9 @@ export class PortfolioService {
     private messageRepo: Repository<ContactMessage>,
     @InjectRepository(SocialLink)
     private socialLinkRepo: Repository<SocialLink>,
+    @InjectRepository(Settings)
+    private settingsRepo: Repository<Settings>,
+    private configService: ConfigService,
   ) {}
 
   async getAllSkills() {
@@ -67,5 +71,142 @@ export class PortfolioService {
   async createMessage(dto: Partial<ContactMessage>) {
     const message = this.messageRepo.create(dto);
     return this.messageRepo.save(message);
+  }
+
+  // ====== AI FEATURES ======
+
+  async askDoodlyChat(message: string): Promise<{ response: string }> {
+    const apiKey = this.configService.get<string>('GEMINI_API_KEY');
+
+    if (!apiKey) {
+      const offlineReplies = [
+        "Ой! Кажется, у меня еще нет доступа к моему AI-мозгу (нужно задать GEMINI_API_KEY в файле .env)! 🔌 Но я всё равно рад пообщаться!",
+        "Я бы с радостью поболтал на любые темы, но пока мой AI-мозг отключен разработчиком. Спросите меня о чём-нибудь ещё! 📎",
+        "Мой API-ключ потерялся среди скрепок в ящике! 🗄️ Попросите разработчика добавить GEMINI_API_KEY."
+      ];
+      return { response: offlineReplies[Math.floor(Math.random() * offlineReplies.length)] };
+    }
+
+    try {
+      const skills = await this.getAllSkills();
+      const projects = await this.getAllProjects();
+      const hero = await this.getHeroData();
+
+      const skillsList = skills.map(s => `${s.name} (${s.level}%)`).join(', ');
+      const projectsList = projects.map(p => `${p.title}: ${p.description}`).join('; ');
+
+      const systemPrompt = `Ты — скрепка-помощник Дудли (Smart Clip) на сайте-портфолио разработчика.
+У тебя нарисованы круглые очки и синяя галстук-бабочка. В руках ты держишь карандаш и листок с отметкой А+.
+Твой характер: дружелюбная, умная, остроумная, слегка саркастичная канцелярская скрепка.
+Отвечай коротко (максимум 2-3 предложения), живо и весело, используй эмодзи (📎, ✏️, 🎓, 📝, ☕, 🥸).
+Информация о владельце сайта (используй её для ответов на вопросы о разработчике):
+- Имя: ${hero.name}
+- Должность: ${hero.title}
+- Описание: ${hero.bio}
+- Навыки: ${skillsList}
+- Проекты: ${projectsList}
+
+Посетитель сайта написал тебе сообщение. Ответь ему на том же языке, на котором написано сообщение (обычно на русском).`;
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [{ text: systemPrompt }]
+          },
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: message }]
+            }
+          ]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Gemini API status ${response.status}`);
+      }
+
+      const data = await response.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      return { response: text?.trim() || 'Ой, я задумался и забыл, что хотел сказать... 📎' };
+    } catch (error) {
+      console.error('Gemini API error:', error);
+      return { response: 'Кажется, пропала связь с моим AI-мозгом... Попробуйте чуть позже! 🔌' };
+    }
+  }
+
+  async guessDoodle(base64Image: string): Promise<{ guess: string }> {
+    const apiKey = this.configService.get<string>('GEMINI_API_KEY');
+
+    if (!apiKey) {
+      const offlineGuesses = [
+        "Хм-м! К сожалению, мой AI-глаз сейчас отключен (не задан GEMINI_API_KEY), но этот рисунок определенно выглядит как шедевр! 🎨",
+        "Я пока не могу рассмотреть ваш рисунок без API-ключа, но уверен, Леонардо да Винчи позавидовал бы такой штриховке! ✏️",
+        "Ой, мой AI-объектив запылился! Без ключа в .env я не угадаю, но это точно что-то прекрасное! 🌟"
+      ];
+      return { guess: offlineGuesses[Math.floor(Math.random() * offlineGuesses.length)] };
+    }
+
+    try {
+      let base64Data = base64Image;
+      let mimeType = 'image/png';
+      if (base64Image.includes(';base64,')) {
+        const parts = base64Image.split(';base64,');
+        mimeType = parts[0].replace('data:', '');
+        base64Data = parts[1];
+      }
+
+      const prompt = `Ты — умная скрепка Дудли. Посмотри на этот быстрый набросок от руки, нарисованный посетителем на холсте.
+Угадай, что это за предмет или существо, опиши его в шутливом и милом тоне скрепки. Дай очень короткий ответ (1-2 предложения).
+Ответ должен начинаться со слов угадывания (например: "Ого, это же...", "Хм-м, похоже на...", "Я вижу здесь..."). Ответь на русском языке.`;
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  inlineData: {
+                    mimeType,
+                    data: base64Data
+                  }
+                },
+                {
+                  text: prompt
+                }
+              ]
+            }
+          ]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Gemini Vision API status ${response.status}`);
+      }
+
+      const data = await response.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      return { guess: text?.trim() || 'Хм-м, не могу разобрать ни одной линии... Нарисуйте что-нибудь почетче! 🎨' };
+    } catch (error) {
+      console.error('Gemini Vision API error:', error);
+      return { guess: 'Ой! У меня зарябило в глазах от этого шедевра. Попробуйте угадать еще раз! 🔌' };
+    }
+  }
+
+  async getSettings(): Promise<Settings> {
+    let settings = await this.settingsRepo.findOne({ where: { id: 1 } });
+    if (!settings) {
+      settings = this.settingsRepo.create({ id: 1 });
+      await this.settingsRepo.save(settings);
+    }
+    return settings;
   }
 }

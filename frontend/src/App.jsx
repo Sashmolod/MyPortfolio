@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
+import { usePortfolioSettings } from './contexts/SettingsContext';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import Skills from './components/Skills';
@@ -16,11 +17,16 @@ import DoodleCanvas from './components/DoodleCanvas';
 import DoodleControls from './components/DoodleControls';
 import DoodlyHelper from './components/DoodlyHelper';
 import CoffeeCup from './components/CoffeeCup';
+import SketchyBug from './components/SketchyBug';
+import PageTear from './components/PageTear';
+import InkLeak from './components/InkLeak';
+import PageCrumpler from './components/PageCrumpler';
 
 /**
  * Главная страница приложения (публичная)
  */
 function PublicPage() {
+  const { settings } = usePortfolioSettings();
   const [skills, setSkills] = useState([]);
   const [projects, setProjects] = useState([]);
   const [heroData, setHeroData] = useState(null);
@@ -46,6 +52,88 @@ function PublicPage() {
 
   const handleUndo = () => {
     setDoodlePaths((prev) => prev.slice(0, -1));
+  };
+
+  const [isGuessing, setIsGuessing] = useState(false);
+
+  const handleGuessDrawing = async () => {
+    if (doodlePaths.length === 0) {
+      window.dispatchEvent(new CustomEvent('doodly-guess-result', {
+        detail: { guess: "Хм-м... Кажется, холст пуст! Нарисуй что-нибудь, и я попробую угадать! 🎨" }
+      }));
+      return;
+    }
+
+    setIsGuessing(true);
+    window.dispatchEvent(new CustomEvent('doodly-guess-start'));
+
+    try {
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      doodlePaths.forEach(p => {
+        p.points.forEach(pt => {
+          if (pt.x < minX) minX = pt.x;
+          if (pt.x > maxX) maxX = pt.x;
+          if (pt.y < minY) minY = pt.y;
+          if (pt.y > maxY) maxY = pt.y;
+        });
+      });
+
+      const pad = 20;
+      const width = (maxX - minX) + pad * 2;
+      const height = (maxY - minY) + pad * 2;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      doodlePaths.forEach((path) => {
+        if (path.points.length < 1) return;
+        ctx.beginPath();
+        ctx.strokeStyle = path.color;
+        ctx.lineWidth = path.width;
+
+        const start = path.points[0];
+        ctx.moveTo(start.x - minX + pad, start.y - minY + pad);
+
+        for (let i = 1; i < path.points.length; i++) {
+          const pt = path.points[i];
+          ctx.lineTo(pt.x - minX + pad, pt.y - minY + pad);
+        }
+        ctx.stroke();
+      });
+
+      const base64Image = canvas.toDataURL('image/png');
+
+      const apiUrl = import.meta.env.VITE_API_URL || '/api';
+      const response = await fetch(`${apiUrl}/portfolio/doodly/guess`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ image: base64Image })
+      });
+
+      if (!response.ok) throw new Error("Vision guess failed");
+      const data = await response.json();
+
+      window.dispatchEvent(new CustomEvent('doodly-guess-result', {
+        detail: { guess: data.guess }
+      }));
+    } catch (err) {
+      console.error(err);
+      window.dispatchEvent(new CustomEvent('doodly-guess-result', {
+        detail: { guess: "Ой! Мой AI-взгляд затуманился. Попробуй еще раз! 🔌" }
+      }));
+    } finally {
+      setIsGuessing(false);
+    }
   };
 
   const handleClear = () => {
@@ -100,6 +188,8 @@ function PublicPage() {
         setBrushWidth={setBrushWidth} 
         onUndo={handleUndo} 
         onClear={handleClear} 
+        onGuessDrawing={handleGuessDrawing}
+        isGuessing={isGuessing}
       />
       <Header />
       <main className="app-main">
@@ -109,7 +199,10 @@ function PublicPage() {
         <ContactForm />
         <CoffeeCup />
       </main>
-      <DoodlyHelper />
+      {settings?.enableDoodly && <DoodlyHelper />}
+      {settings?.enableBug && <SketchyBug />}
+      {settings?.enablePageTear && <PageTear />}
+      {settings?.enableInkLeak && <InkLeak />}
       <Footer />
     </div>
   );
@@ -151,6 +244,7 @@ function App() {
   return (
     <>
       <ToastContainer />
+      <PageCrumpler />
       <AppRoutes />
     </>
   );

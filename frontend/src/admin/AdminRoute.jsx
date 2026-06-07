@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import AdminDashboard from './pages/AdminDashboard';
+import { SketchLockIcon } from '../components/SvgIllustrations';
 
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'admin123';
 
@@ -33,7 +34,16 @@ export default function AdminRoute() {
           padding: '30px',
           margin: '20px'
         }}>
-          <h2 style={{ marginBottom: '20px', textAlign: 'center' }}>🔐 Admin Login</h2>
+          <h2 style={{
+            marginBottom: '20px',
+            textAlign: 'center',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px'
+          }}>
+            <SketchLockIcon size={24} /> Admin Login
+          </h2>
           <div style={{ marginBottom: '15px' }}>
             <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Password:</label>
             <input
