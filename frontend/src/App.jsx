@@ -164,6 +164,26 @@ function PublicPage() {
     fetchData();
   }, []);
 
+  // Track page visit once per session
+  useEffect(() => {
+    const trackVisit = async () => {
+      try {
+        const sessionKey = 'portfolio_tracked_session';
+        if (sessionStorage.getItem(sessionKey)) {
+          return;
+        }
+        await api.post('/portfolio/track-visit', {
+          path: window.location.pathname,
+          referrer: document.referrer || null,
+        });
+        sessionStorage.setItem(sessionKey, 'true');
+      } catch (err) {
+        console.error('Error tracking visit:', err);
+      }
+    };
+    trackVisit();
+  }, []);
+
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>

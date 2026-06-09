@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import api from '../../api';
 import { usePortfolioSettings } from '../../contexts/SettingsContext';
 import { SketchLockIcon } from '../../components/SvgIllustrations';
+import { statsApi } from '../../api/statsApi';
 
 import ConfirmDialog from '../components/ConfirmDialog';
 import MediaTab from '../components/MediaTab';
@@ -12,6 +13,7 @@ import SkillForm from '../components/SkillForm';
 import ProjectForm from '../components/ProjectForm';
 import HeroForm from '../components/HeroForm';
 import SocialLinkForm from '../components/SocialLinkForm';
+import StatsView from '../components/StatsView';
 
 export default function AdminDashboard() {
   const { logout, changePassword } = useAuth();
@@ -29,6 +31,13 @@ export default function AdminDashboard() {
   const [passwordErrors, setPasswordErrors] = useState({});
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState(null);
+  
+  // Stats state
+  const [statsOverview, setStatsOverview] = useState(null);
+  const [visitsList, setVisitsList] = useState([]);
+  const [visitsMeta, setVisitsMeta] = useState(null);
+  const [statsPage, setStatsPage] = useState(1);
+  const [statsLoading, setStatsLoading] = useState(false);
 
   useEffect(() => {
     if (activeTab !== 'settings' && activeTab !== 'security') {
@@ -253,6 +262,65 @@ export default function AdminDashboard() {
     }));
   };
 
+  // Stats functions
+  const fetchStatsOverview = async () => {
+    setStatsLoading(true);
+    try {
+      const data = await statsApi.getOverview();
+      setStatsOverview(data);
+    } catch (err) {
+      console.error('Error fetching stats:', err);
+      window.toast?.('Failed to load stats', 'error');
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  const fetchVisits = async (page = 1) => {
+    setStatsLoading(true);
+    try {
+      const data = await statsApi.getVisits({ page, limit: 20 });
+      setVisitsList(data.visits);
+      setVisitsMeta({ total: data.total, page: data.page, limit: data.limit, totalPages: data.totalPages });
+      setStatsPage(page);
+    } catch (err) {
+      console.error('Error fetching visits:', err);
+      window.toast?.('Failed to load visits', 'error');
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  const handleCleanupStats = async (days = 30) => {
+    const periodLabel = days === 0 ? 'ВСЕ записи о визитах' : `записи о визитах старше ${days} дней`;
+    setConfirmDialog({
+      message: `Вы действительно хотите удалить ${periodLabel}? / Are you sure you want to delete visits: ${periodLabel}?`,
+      onConfirm: async () => {
+        try {
+          const result = await statsApi.cleanupVisits(days);
+          window.toast?.(result.message, 'success');
+          fetchStatsOverview();
+          fetchVisits(statsPage);
+        } catch (err) {
+          console.error('Error cleaning up stats:', err);
+          window.toast?.('Failed to cleanup stats', 'error');
+        } finally {
+          setConfirmDialog(null);
+        }
+      },
+    });
+  };
+
+  useEffect(() => {
+    if (activeTab === 'stats') {
+      fetchStatsOverview();
+      fetchVisits(1);
+    }
+    return () => {
+      // cleanup
+    };
+  }, [activeTab]);
+
   return (
     <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
       <ConfirmDialog {...confirmDialog} onCancel={() => setConfirmDialog(null)} isOpen={!!confirmDialog} />
@@ -268,7 +336,7 @@ export default function AdminDashboard() {
       </div>
 
       <nav style={{ display: 'flex', gap: '8px', marginBottom: '30px', flexWrap: 'wrap' }}>
-        {['skills', 'projects', 'social-links', 'media', 'hero', 'messages', 'trash', 'settings', 'security'].map((tab) => (
+        {['skills', 'projects', 'social-links', 'media', 'hero', 'messages', 'trash', 'stats', 'settings', 'security'].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -279,7 +347,7 @@ export default function AdminDashboard() {
         ))}
       </nav>
 
-      {activeTab !== 'messages' && activeTab !== 'hero' && activeTab !== 'trash' && activeTab !== 'settings' && activeTab !== 'security' && activeTab !== 'media' && (
+      {activeTab !== 'messages' && activeTab !== 'hero' && activeTab !== 'trash' && activeTab !== 'stats' && activeTab !== 'settings' && activeTab !== 'security' && activeTab !== 'media' && (
         <button className="btn" onClick={() => setShowForm(true)} style={{ marginBottom: '20px' }}>
           + Add {typeLabel.charAt(0).toUpperCase() + typeLabel.slice(1)}
         </button>
@@ -347,6 +415,19 @@ export default function AdminDashboard() {
         )
       ) : activeTab === 'media' ? (
         <MediaTab items={items} refresh={fetchData} />
+      ) : activeTab === 'trash' ? (
+        <TrashView items={items} onRestore={handleRestore} onDeletePermanently={handlePermanentDelete} />
+      ) : activeTab === 'stats' ? (
+        <StatsView
+          statsOverview={statsOverview}
+          visitsList={visitsList}
+          visitsMeta={visitsMeta}
+          statsPage={statsPage}
+          statsLoading={statsLoading}
+          onFetchOverview={fetchStatsOverview}
+          onFetchVisits={(page) => fetchVisits(page || statsPage)}
+          onCleanup={handleCleanupStats}
+        />
       ) : activeTab === 'trash' ? (
         <TrashView items={items} onRestore={handleRestore} onDeletePermanently={handlePermanentDelete} />
       ) : activeTab === 'settings' ? (

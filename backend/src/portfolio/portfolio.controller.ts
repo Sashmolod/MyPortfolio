@@ -1,6 +1,8 @@
-import { Controller, Get, Post, Body, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, ParseIntPipe, Req, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiOkResponse, ApiBody } from '@nestjs/swagger';
 import { PortfolioService } from './portfolio.service';
+import { StatsService } from '../stats/stats.service';
+import { Request } from 'express';
 import { CreateContactMessageDto } from '../admin/dto/create-contact-message.dto';
 import { Hero } from '../admin/entities/hero.entity';
 import { Skill } from '../admin/entities/skill.entity';
@@ -22,7 +24,10 @@ export { CreateContactMessageDto } from '../admin/dto/create-contact-message.dto
 @ApiTags('portfolio')
 @Controller('portfolio')
 export class PortfolioController {
-  constructor(private portfolioService: PortfolioService) {}
+  constructor(
+    private portfolioService: PortfolioService,
+    private statsService: StatsService,
+  ) {}
 
   // ====== HERO ======
 
@@ -107,5 +112,26 @@ export class PortfolioController {
   @Get('settings')
   getSettings(): Promise<Settings> {
     return this.portfolioService.getSettings();
+  }
+
+  @ApiTags('stats')
+  @ApiOperation({ summary: 'Записать визит пользователя' })
+  @Post('track-visit')
+  @HttpCode(HttpStatus.OK)
+  async trackVisit(
+    @Body() body: { path: string; referrer?: string },
+    @Req() req: Request,
+  ) {
+    await this.statsService.recordVisitFromRequest(req, body.path, body.referrer);
+    return { success: true };
+  }
+
+  @ApiTags('projects')
+  @ApiOperation({ summary: 'Увеличить счетчик просмотров проекта' })
+  @Post('projects/:id/view')
+  @HttpCode(HttpStatus.OK)
+  async trackProjectView(@Param('id', ParseIntPipe) id: number) {
+    await this.statsService.incrementProjectView(id);
+    return { success: true };
   }
 }

@@ -8,10 +8,12 @@ import { ContactMessage } from '../admin/entities/contact-message.entity';
 import { Hero } from '../admin/entities/hero.entity';
 import { SocialLink } from '../admin/entities/social-link.entity';
 import { Settings } from '../admin/entities/settings.entity';
+import { StatsModule } from '../stats/stats.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Skill, Project, ContactMessage, Hero, SocialLink, Settings]),
+    StatsModule,
   ],
   controllers: [PortfolioController],
   providers: [PortfolioService],

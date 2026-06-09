@@ -7,4 +7,5 @@ export * from './jwt-blacklist.entity';
 export * from './audit-log.entity';
 export * from './social-link.entity';
 export * from './settings.entity';
+export * from './visit-stat.entity';
 

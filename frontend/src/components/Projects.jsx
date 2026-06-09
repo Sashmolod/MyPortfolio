@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { RocketIcon, ProjectIcon } from './SvgIllustrations';
+import api from '../api';
 
 export default function Projects({ projects = [] }) {
   const defaultProjects = [
@@ -63,6 +64,15 @@ export default function Projects({ projects = [] }) {
                 className="btn" 
                 style={{ marginTop: '12px', display: 'inline-block' }}
                 aria-label={`View Project: ${project.title}`}
+                onClick={async () => {
+                  if (project.id) {
+                    try {
+                      await api.post(`/portfolio/projects/${project.id}/view`);
+                    } catch (err) {
+                      console.error('Failed to track project view:', err);
+                    }
+                  }
+                }}
               >
                 View Project
               </a>

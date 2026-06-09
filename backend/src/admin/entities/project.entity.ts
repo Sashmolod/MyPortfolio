@@ -38,6 +38,10 @@ export class Project {
   @Column({ name: 'sort_order', type: 'int', default: 0 })
   sortOrder: number;
 
+  @ApiPropertyOptional({ description: 'Количество просмотров', example: 42 })
+  @Column({ name: 'view_count', type: 'int', default: 0 })
+  viewCount: number;
+
   @ApiProperty({ description: 'Дата создания', example: '2026-06-06T12:00:00Z' })
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;

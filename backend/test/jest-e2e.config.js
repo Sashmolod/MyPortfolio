@@ -6,7 +6,7 @@ module.exports = {
     "^@portfolio/(.*)$": "<rootDir>/src/portfolio/$1",
     "^@common/(.*)$": "<rootDir>/src/common/$1",
   },
-  testRegex: 'e2e\\.spec\\.ts$',
+  testRegex: 'e2e-spec\\.ts$',
   transform: {
     '^.+\\.(t|j)s$': 'ts-jest',
   },

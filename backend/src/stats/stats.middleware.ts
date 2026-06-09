@@ -1,0 +1,127 @@
+import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
+import { Request, Response } from 'express';
+import { StatsService } from './stats.service';
+
+@Injectable()
+export class StatsMiddleware {
+  private readonly logger = new Logger(StatsMiddleware.name);
+
+  constructor(private readonly statsService: StatsService) {}
+
+  async use(req: Request, res: Response, next: Function) {
+    // Пропускаем админ-панель и внутренние запросы
+    if (req.path.startsWith('/api/admin') || req.path.startsWith('/health')) {
+      next();
+      return;
+    }
+
+    // Пропускаем статические файлы
+    if (req.path.match(/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/)) {
+      next();
+      return;
+    }
+
+    try {
+      const startTime = Date.now();
+
+      // Ждём окончания запроса
+      res.on('finish', async () => {
+        try {
+          // Определяем тип устройства по User-Agent
+          const deviceType = this.detectDeviceType(req.headers['user-agent'] || '');
+          
+          const visitData = {
+            ipAddress: this.getClientIp(req),
+            userAgent: req.headers['user-agent'] || null,
+            path: req.originalUrl || req.url,
+            referrer: this.getReferrer(req),
+            country: null, // TODO: Добавить GeoIP в будущем
+            browser: this.extractBrowser(req.headers['user-agent'] || ''),
+            os: this.extractOS(req.headers['user-agent'] || ''),
+            deviceType,
+          };
+
+          await this.statsService.recordVisit(visitData);
+        } catch (error) {
+          this.logger.error(`Failed to record visit: ${error}`);
+        }
+      });
+
+      next();
+    } catch (error) {
+      this.logger.error(`Stats middleware error: ${error}`);
+      next();
+    }
+  }
+
+  private getClientIp(req: Request): string | null {
+    const ip = req.ip || req.socket.remoteAddress || null;
+    if (ip) {
+      // Убираем IPv6 префикс для localhost
+      return ip.replace('::ffff:', '').replace('::1', '127.0.0.1');
+    }
+    return null;
+  }
+
+  private getReferrer(req: Request): string | null {
+    const referrer = req.headers['referer'] || req.headers['referrer'];
+    if (typeof referrer === 'string') {
+      return referrer;
+    }
+    return null;
+  }
+
+  private detectDeviceType(userAgent: string): string {
+    const lower = userAgent.toLowerCase();
+    if (/tablet|ipad|playbook|silk/i.test(lower)) {
+      return 'tablet';
+    }
+    if (/mobile|iphone|android|blackberry|opera mini|opera mobi|seamonkey/i.test(lower)) {
+      return 'mobile';
+    }
+    return 'desktop';
+  }
+
+  private extractBrowser(userAgent: string): string {
+    const lower = userAgent.toLowerCase();
+    if (lower.includes('chrome') && !lower.includes('chromium')) {
+      return 'Chrome';
+    }
+    if (lower.includes('firefox')) {
+      return 'Firefox';
+    }
+    if (lower.includes('safari') && !lower.includes('chrome')) {
+      return 'Safari';
+    }
+    if (lower.includes('edge') || lower.includes('edg/')) {
+      return 'Edge';
+    }
+    if (lower.includes('opera') || lower.includes('opr/')) {
+      return 'Opera';
+    }
+    if (lower.includes('msie') || lower.includes('trident/')) {
+      return 'Internet Explorer';
+    }
+    return 'Other';
+  }
+
+  private extractOS(userAgent: string): string {
+    const lower = userAgent.toLowerCase();
+    if (lower.includes('windows')) {
+      return 'Windows';
+    }
+    if (lower.includes('mac os')) {
+      return 'macOS';
+    }
+    if (lower.includes('linux')) {
+      return 'Linux';
+    }
+    if (lower.includes('android')) {
+      return 'Android';
+    }
+    if (lower.includes('iphone') || lower.includes('ipad') || lower.includes('ios')) {
+      return 'iOS';
+    }
+    return 'Other';
+  }
+}

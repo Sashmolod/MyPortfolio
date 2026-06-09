@@ -6,6 +6,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AdminModule } from './admin/admin.module';
 import { PortfolioModule } from './portfolio/portfolio.module';
 import { HealthModule } from './health.module';
+import { StatsModule } from './stats/stats.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { HealthModule } from './health.module';
     AdminModule,
     PortfolioModule,
     HealthModule,
+    StatsModule,
   ],
   providers: [
     {
