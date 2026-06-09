@@ -1,12 +1,11 @@
-import { Injectable, UnauthorizedException, ConflictException, Logger } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
-import * as jwt from 'jsonwebtoken';
 import { UserService } from './user.service';
 import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
-import { Repository } from 'typeorm';
+import { Repository, LessThan } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { JwtBlacklist } from './entities/jwt-blacklist.entity';
 
@@ -25,8 +24,9 @@ export interface AuthPayload {
 }
 
 @Injectable()
-export class AuthService {
+export class AuthService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(AuthService.name);
+  private pruneIntervalId: NodeJS.Timeout | null = null;
 
   constructor(
     private readonly userService: UserService,
@@ -35,6 +35,37 @@ export class AuthService {
     @InjectRepository(JwtBlacklist)
     private readonly blacklistRepository: Repository<JwtBlacklist>,
   ) {}
+
+  onModuleInit() {
+    // Проводим очистку сразу при запуске
+    this.pruneBlacklist();
+
+    // Запускаем периодическую очистку каждые 12 часов
+    this.pruneIntervalId = setInterval(() => {
+      this.pruneBlacklist();
+    }, 12 * 60 * 60 * 1000);
+  }
+
+  onModuleDestroy() {
+    // Очищаем интервал при остановке приложения для избежания утечек и зависания тестов
+    if (this.pruneIntervalId) {
+      clearInterval(this.pruneIntervalId);
+    }
+  }
+
+  /**
+   * Очистка просроченных токенов из черного списка
+   */
+  async pruneBlacklist(): Promise<void> {
+    try {
+      const result = await this.blacklistRepository.delete({
+        expiresAt: LessThan(new Date()),
+      });
+      this.logger.log(`Успешно удалено устаревших токенов из черного списка: ${result.affected || 0}`);
+    } catch (error: any) {
+      this.logger.error(`Ошибка при очистке черного списка токенов: ${error?.message || error}`);
+    }
+  }
 
   /**
    * Логин администратора.
@@ -64,17 +95,23 @@ export class AuthService {
     }
 
     // 4. Генерируем access token (короткоживущий)
+    const secret = this.configService.get<string>('JWT_SECRET');
+    if (!secret) {
+      throw new Error('JWT_SECRET is not configured inside env');
+    }
+
     const accessPayload = { sub: user.id, username: user.username, type: 'access' };
     const accessToken = this.jwtService.sign(accessPayload, {
-      secret: this.configService.get<string>('JWT_SECRET'),
+      secret,
       expiresIn: this.configService.get<string>('JWT_EXPIRES_IN') || '1h',
       jwtid: `acc_${user.id}_${Date.now()}`, // jti для access token
     });
 
     // 5. Генерируем refresh token (долгосрочный)
+    const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET') || secret;
     const refreshPayload = { sub: user.id, username: user.username, type: 'refresh' };
     const refreshToken = this.jwtService.sign(refreshPayload, {
-      secret: this.configService.get<string>('JWT_REFRESH_SECRET') || this.configService.get<string>('JWT_SECRET'),
+      secret: refreshSecret,
       expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') || '7d',
       jwtid: `ref_${user.id}_${Date.now()}`, // jti для refresh token
     });
@@ -96,9 +133,15 @@ export class AuthService {
    */
   async refreshTokens(refreshToken: string): Promise<AuthPayload> {
     try {
+      const secret = this.configService.get<string>('JWT_SECRET');
+      if (!secret) {
+        throw new Error('JWT_SECRET is not configured');
+      }
+      const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET') || secret;
+
       // Проверяем refresh token
       const decoded = this.jwtService.verify(refreshToken, {
-        secret: this.configService.get<string>('JWT_REFRESH_SECRET') || this.configService.get<string>('JWT_SECRET'),
+        secret: refreshSecret,
       });
 
       // Проверяем что это именно refresh token
@@ -130,13 +173,13 @@ export class AuthService {
       // Генерируем новые токены
       const accessPayload = { sub: user.id, username: user.username, type: 'access' };
       const accessToken = this.jwtService.sign(accessPayload, {
-        secret: this.configService.get<string>('JWT_SECRET'),
+        secret,
         expiresIn: this.configService.get<string>('JWT_EXPIRES_IN') || '1h',
       });
 
       const refreshPayload = { sub: user.id, username: user.username, type: 'refresh' };
       const newRefreshToken = this.jwtService.sign(refreshPayload, {
-        secret: this.configService.get<string>('JWT_REFRESH_SECRET') || this.configService.get<string>('JWT_SECRET'),
+        secret: refreshSecret,
         expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') || '7d',
       });
 
@@ -172,11 +215,6 @@ export class AuthService {
    * Добавление токена в чёрный список
    */
   private async blacklistToken(jti: string, expiresAt: Date): Promise<void> {
-    // Удаляем старые записи (старше 24 часов)
-    await this.blacklistRepository.delete({
-      createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    });
-
     // Добавляем новую запись
     const entry = this.blacklistRepository.create({
       jti,
@@ -190,9 +228,12 @@ export class AuthService {
    */
   async logout(userId: number, refreshToken: string): Promise<{ message: string }> {
     try {
+      const secret = this.configService.get<string>('JWT_SECRET');
+      const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET') || secret;
+
       // Расшифровываем refresh token чтобы получить jti
       const decoded = this.jwtService.verify(refreshToken, {
-        secret: this.configService.get<string>('JWT_REFRESH_SECRET') || this.configService.get<string>('JWT_SECRET'),
+        secret: refreshSecret,
       });
 
       if (decoded?.jti) {

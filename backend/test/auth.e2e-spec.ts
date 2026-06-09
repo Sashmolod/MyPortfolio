@@ -30,7 +30,7 @@ describe('AuthController (e2e)', () => {
   const mockMessageRepo = { find: jest.fn() };
   const mockSocialLinkRepo = { find: jest.fn() };
   const mockSettingsRepo = { find: jest.fn() };
-  const mockVisitStatRepo = { find: jest.fn() };
+  const mockVisitStatRepo = { find: jest.fn(), save: jest.fn(), create: jest.fn().mockImplementation((dto) => dto) };
   const mockAuditLogRepo = { find: jest.fn(), save: jest.fn(), create: jest.fn() };
 
   const mockAuthService = {

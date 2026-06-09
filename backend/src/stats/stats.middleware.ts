@@ -9,14 +9,22 @@ export class StatsMiddleware {
   constructor(private readonly statsService: StatsService) {}
 
   async use(req: Request, res: Response, next: Function) {
-    // Пропускаем админ-панель и внутренние запросы
-    if (req.path.startsWith('/api/admin') || req.path.startsWith('/health')) {
+    // Пропускаем админ-панель, авторизацию и внутренние запросы (health checks)
+    const url = req.originalUrl;
+    const cleanUrl = url.split('?')[0];
+
+    if (
+      cleanUrl.startsWith('/api/admin') ||
+      cleanUrl.startsWith('/api/auth') ||
+      cleanUrl.startsWith('/api/health') ||
+      cleanUrl.startsWith('/health')
+    ) {
       next();
       return;
     }
 
     // Пропускаем статические файлы
-    if (req.path.match(/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/)) {
+    if (cleanUrl.match(/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/)) {
       next();
       return;
     }

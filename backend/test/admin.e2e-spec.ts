@@ -27,7 +27,7 @@ describe('AdminController (e2e)', () => {
   const mockMessageRepo = { find: jest.fn(), findOne: jest.fn(), save: jest.fn(), create: jest.fn(), update: jest.fn(), softDelete: jest.fn(), restore: jest.fn() };
   const mockSocialLinkRepo = { find: jest.fn(), findOne: jest.fn(), save: jest.fn(), create: jest.fn(), update: jest.fn(), softDelete: jest.fn(), restore: jest.fn() };
   const mockSettingsRepo = { find: jest.fn(), findOne: jest.fn(), save: jest.fn(), update: jest.fn() };
-  const mockVisitStatRepo = { find: jest.fn(), findOne: jest.fn(), save: jest.fn() };
+  const mockVisitStatRepo = { find: jest.fn(), findOne: jest.fn(), save: jest.fn(), create: jest.fn().mockImplementation((dto) => dto) };
   
   // We mock save and create for AuditLog to check interceptor execution
   const mockAuditLogRepo = {

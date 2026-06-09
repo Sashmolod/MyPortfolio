@@ -1,15 +1,19 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, RequestMethod } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { DataSource } from 'typeorm';
-import { ThrottlerModule } from '@nestjs/throttler';
 import helmet from 'helmet';
-const cookieParser = require('cookie-parser');
+import cookieParser from 'cookie-parser';
+import express from 'express';
+import * as bcryptjs from 'bcryptjs';
+import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 import * as path from 'path';
+import { User } from './admin/entities/user.entity';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
 
   // ==========================================
   // Helmet - безопасные HTTP заголовки
@@ -17,28 +21,32 @@ async function bootstrap() {
   app.use(helmet());
 
   // ==========================================
-  // Глобальный rate limiting (добавляется через AppModule)
+  // Валидация JWT_SECRET на старте
   // ==========================================
+  const jwtSecret = configService.get<string>('JWT_SECRET');
+  if (!jwtSecret || jwtSecret.length < 32) {
+    throw new Error('FATAL: JWT_SECRET must be defined in the environment and be at least 32 characters long for production security.');
+  }
 
   // Включение CORS для фронтенда
   // Читаем из env: ALLOWED_ORIGINS через запятую, или используем дефолт
-  const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
+  const allowedOriginsSetting = configService.get<string>('ALLOWED_ORIGINS') || '';
+  const allowedOrigins = allowedOriginsSetting
     .split(',')
     .map((o) => o.trim())
     .filter(Boolean);
 
+  // Базовые порты локальной разработки фронтенда
   const defaultOrigins = [
-    'http://localhost',
     'http://localhost:5173',
     'http://localhost:5174',
     'http://localhost:5175',
     'http://localhost:3000',
     'http://localhost:80',
     'http://frontend',
-    'http://127.0.0.1',
   ];
 
-  // Always include http://localhost and http://127.0.0.1 in allowed origins
+  // Всегда разрешаем базовые локальные адреса
   const corsOrigins = Array.from(
     new Set([
       'http://localhost',
@@ -46,7 +54,6 @@ async function bootstrap() {
       ...(allowedOrigins.length > 0 ? allowedOrigins : defaultOrigins),
     ]),
   );
-
 
   app.enableCors({
     origin: (origin, callback) => {
@@ -117,9 +124,9 @@ async function bootstrap() {
   });
 
   // Статические файлы загрузки
-  app.use('/uploads', require('express').static(path.join(__dirname, '..', 'uploads')));
+  app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
-  const port = process.env.PORT || 3001;
+  const port = configService.get<number>('PORT') || 3001;
 
   await app.listen(port);
   console.log(`\n🚀 Backend running on http://localhost:${port}`);
@@ -128,18 +135,17 @@ async function bootstrap() {
   // ==========================================
   // Авто-создание первого администратора при запуске
   // ==========================================
-  const adminUsername = process.env.ADMIN_USERNAME;
-  const adminPassword = process.env.ADMIN_PASSWORD;
+  const adminUsername = configService.get<string>('ADMIN_USERNAME');
+  const adminPassword = configService.get<string>('ADMIN_PASSWORD');
 
   if (adminUsername && adminPassword) {
     try {
-      const bcryptjs = require('bcryptjs');
       const saltRounds = 12;
       const hashedPassword = bcryptjs.hashSync(adminPassword, saltRounds);
 
       // Получаем DataSource из Dependency Injection
       const dataSource = app.get(DataSource);
-      const userRepo = dataSource.getRepository('User');
+      const userRepo = dataSource.getRepository(User);
 
       // Проверяем есть ли уже пользователи
       const existingUserCount = await userRepo.count();
