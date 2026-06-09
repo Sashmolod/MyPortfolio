@@ -2,6 +2,7 @@ import { Module, Global } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
+import { SeedService } from './seed.service';
 import { Skill } from './entities/skill.entity';
 import { Project } from './entities/project.entity';
 import { ContactMessage } from './entities/contact-message.entity';
@@ -21,7 +22,7 @@ import { UploadModule } from './upload/upload.module';
     UploadModule,
   ],
   controllers: [AdminController],
-  providers: [AdminService],
+  providers: [AdminService, SeedService],
   exports: [AdminService, TypeOrmModule],
 })
 export class AdminModule {}

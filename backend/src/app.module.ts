@@ -21,12 +21,12 @@ import { StatsModule } from './stats/stats.module';
         {
           name: 'short',
           ttl: 1000,
-          limit: 10,
+          limit: 100,
         },
         {
           name: 'default',
           ttl: 60000,
-          limit: 60,
+          limit: 300,
         },
       ],
     }),

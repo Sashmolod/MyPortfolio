@@ -1,15 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { DataSource } from 'typeorm';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
-import express from 'express';
-import * as bcryptjs from 'bcryptjs';
+import express, { Router } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 import * as path from 'path';
-import { User } from './admin/entities/user.entity';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -49,8 +46,10 @@ async function bootstrap() {
   // Всегда разрешаем базовые локальные адреса
   const corsOrigins = Array.from(
     new Set([
-      'http://localhost',
-      'http://127.0.0.1',
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'http://127.0.0.1:5173',
+      'http://127.0.0.1:3000',
       ...(allowedOrigins.length > 0 ? allowedOrigins : defaultOrigins),
     ]),
   );
@@ -124,73 +123,13 @@ async function bootstrap() {
   });
 
   // Статические файлы загрузки
-  app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+  app.use('/uploads', Router().use(express.static(path.join(__dirname, '..', 'uploads'))));
 
   const port = configService.get<number>('PORT') || 3001;
 
   await app.listen(port);
   console.log(`\n🚀 Backend running on http://localhost:${port}`);
   console.log(`📖 Swagger UI available at http://localhost:${port}/docs\n`);
-
-  // ==========================================
-  // Авто-создание первого администратора при запуске
-  // ==========================================
-  const adminUsername = configService.get<string>('ADMIN_USERNAME');
-  const adminPassword = configService.get<string>('ADMIN_PASSWORD');
-
-  if (adminUsername && adminPassword) {
-    try {
-      const saltRounds = 12;
-      const hashedPassword = bcryptjs.hashSync(adminPassword, saltRounds);
-
-      // Получаем DataSource из Dependency Injection
-      const dataSource = app.get(DataSource);
-      const userRepo = dataSource.getRepository(User);
-
-      // Проверяем есть ли уже пользователи
-      const existingUserCount = await userRepo.count();
-      
-      if (existingUserCount === 0) {
-        // Создаём первого администратора
-        await userRepo.save(
-          userRepo.create({
-            username: adminUsername,
-            password: hashedPassword,
-            isActive: true,
-          })
-        );
-        
-        console.log(`\n✅ Первый администратор создан: ${adminUsername}`);
-      } else {
-        // Проверяем существует ли пользователь с таким username
-        const existingUser = await userRepo.findOne({ where: { username: adminUsername } });
-        if (existingUser) {
-          // Обновляем пароль
-          await userRepo.update(existingUser.id, { password: hashedPassword });
-          console.log(`\n🔑 Пароль администратора ${adminUsername} обновлён`);
-        } else {
-          // Создаём нового пользователя с указанным username
-          await userRepo.save(
-            userRepo.create({
-              username: adminUsername,
-              password: hashedPassword,
-              isActive: true,
-            })
-          );
-          console.log(`\n✅ Администратор создан: ${adminUsername}`);
-        }
-      }
-      
-      console.log(`\n💡 Для входа используйте логин: ${adminUsername}. Пароль задайте в ADMIN_PASSWORD из .env файла.\n`);
-    } catch (error: any) {
-      console.error(`\n❌ Ошибка при создании администратора:`, error?.message || error);
-    }
-  } else {
-    console.log(`\n⚠️ ADMIN_USERNAME и ADMIN_PASSWORD не заданы в backend/.env`);
-    console.log(`💡 Добавьте в backend/.env:`);
-    console.log(`   ADMIN_USERNAME=admin`);
-    console.log(`   ADMIN_PASSWORD=your-password\n`);
-  }
 }
 
 bootstrap();

@@ -1,7 +1,8 @@
-import { Injectable, UnauthorizedException, ConflictException, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, Logger, OnApplicationBootstrap, OnModuleDestroy } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
+import { randomUUID } from 'crypto';
 import { UserService } from './user.service';
 import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -24,7 +25,7 @@ export interface AuthPayload {
 }
 
 @Injectable()
-export class AuthService implements OnModuleInit, OnModuleDestroy {
+export class AuthService implements OnApplicationBootstrap, OnModuleDestroy {
   private readonly logger = new Logger(AuthService.name);
   private pruneIntervalId: NodeJS.Timeout | null = null;
 
@@ -36,7 +37,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     private readonly blacklistRepository: Repository<JwtBlacklist>,
   ) {}
 
-  onModuleInit() {
+  onApplicationBootstrap() {
     // Проводим очистку сразу при запуске
     this.pruneBlacklist();
 
@@ -104,7 +105,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     const accessToken = this.jwtService.sign(accessPayload, {
       secret,
       expiresIn: this.configService.get<string>('JWT_EXPIRES_IN') || '1h',
-      jwtid: `acc_${user.id}_${Date.now()}`, // jti для access token
+      jwtid: `acc_${user.id}_${randomUUID()}`, // jti для access token
     });
 
     // 5. Генерируем refresh token (долгосрочный)
@@ -113,7 +114,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     const refreshToken = this.jwtService.sign(refreshPayload, {
       secret: refreshSecret,
       expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') || '7d',
-      jwtid: `ref_${user.id}_${Date.now()}`, // jti для refresh token
+      jwtid: `ref_${user.id}_${randomUUID()}`, // jti для refresh token
     });
 
     return {
@@ -290,7 +291,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     const hashedPassword = await bcrypt.hash(dto.newPassword, saltRounds);
 
     // Обновляем пароль
-    await this.userService.update(userId as any, { password: hashedPassword });
+    await this.userService.update(userId, { password: hashedPassword });
 
     this.logger.log(`Пароль пользователя ${user.username} успешно изменён`);
 

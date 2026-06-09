@@ -15,7 +15,7 @@ export class UserService {
    */
   async findById(id: number): Promise<User | null> {
     return this.usersRepository.findOne({
-      where: { id: id as any, isActive: true },
+      where: { id: id, isActive: true },
       select: ['id', 'username', 'isActive', 'createdAt'],
     });
   }
@@ -25,7 +25,7 @@ export class UserService {
    */
   async findByIdWithPassword(id: number): Promise<User | null> {
     return this.usersRepository.findOne({
-      where: { id: id as any },
+      where: { id: id },
       select: ['id', 'username', 'password', 'isActive'],
     });
   }
@@ -44,7 +44,7 @@ export class UserService {
    * Обновить пользователя по ID (без обновления пароля)
    */
   async update(id: number, partialData: Partial<User>): Promise<User> {
-    await this.usersRepository.update(id as any, partialData);
+    await this.usersRepository.update(id, partialData);
     return this.findById(id);
   }
 

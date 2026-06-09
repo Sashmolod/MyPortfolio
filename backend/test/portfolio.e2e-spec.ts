@@ -25,7 +25,7 @@ describe('PortfolioController (e2e)', () => {
   let app: INestApplication;
   let portfolioService: PortfolioService;
 
-  const mockUserRepo = { find: jest.fn(), findOne: jest.fn(), count: jest.fn() };
+  const mockUserRepo = { find: jest.fn(), findOne: jest.fn(), count: jest.fn(), save: jest.fn().mockImplementation((u) => Promise.resolve(u)), create: jest.fn().mockImplementation((dto) => dto), update: jest.fn().mockResolvedValue({}) };
   const mockSkillRepo = { find: jest.fn(), findOne: jest.fn(), save: jest.fn() };
   const mockProjectRepo = { find: jest.fn(), findOne: jest.fn(), save: jest.fn(), increment: jest.fn() };
   const mockHeroRepo = { find: jest.fn(), findOne: jest.fn(), save: jest.fn() };

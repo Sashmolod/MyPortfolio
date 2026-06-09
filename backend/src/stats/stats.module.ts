@@ -1,4 +1,4 @@
-import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { StatsController } from './stats.controller';
 import { StatsService } from './stats.service';
@@ -16,6 +16,14 @@ export class StatsModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(StatsMiddleware)
-      .forRoutes('*');
+      .exclude(
+        { path: 'uploads/(.*)', method: RequestMethod.ALL },
+        { path: 'docs', method: RequestMethod.ALL },
+        { path: 'docs/(.*)', method: RequestMethod.ALL },
+        { path: 'api/admin/(.*)', method: RequestMethod.ALL },
+        { path: 'api/auth/(.*)', method: RequestMethod.ALL },
+        { path: 'api/health', method: RequestMethod.ALL },
+      )
+      .forRoutes({ path: '*', method: RequestMethod.ALL });
   }
 }

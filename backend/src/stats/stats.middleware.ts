@@ -35,6 +35,11 @@ export class StatsMiddleware {
       // Ждём окончания запроса
       res.on('finish', async () => {
         try {
+          // Записываем только успешные ответы (2xx) и редиректы (3xx)
+          if (res.statusCode >= 400) {
+            return;
+          }
+
           // Определяем тип устройства по User-Agent
           const deviceType = this.detectDeviceType(req.headers['user-agent'] || '');
           

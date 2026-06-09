@@ -20,7 +20,7 @@ describe('AdminController (e2e)', () => {
   let jwtService: JwtService;
   let authToken: string;
 
-  const mockUserRepo = { findOne: jest.fn(), count: jest.fn() };
+  const mockUserRepo = { findOne: jest.fn(), count: jest.fn(), save: jest.fn().mockImplementation((u) => Promise.resolve(u)), create: jest.fn().mockImplementation((dto) => dto), update: jest.fn().mockResolvedValue({}) };
   const mockSkillRepo = { find: jest.fn(), findOne: jest.fn(), save: jest.fn(), create: jest.fn(), update: jest.fn(), softDelete: jest.fn(), restore: jest.fn() };
   const mockProjectRepo = { find: jest.fn(), findOne: jest.fn(), save: jest.fn(), create: jest.fn(), update: jest.fn(), softDelete: jest.fn(), restore: jest.fn() };
   const mockHeroRepo = { find: jest.fn(), findOne: jest.fn(), save: jest.fn(), create: jest.fn(), update: jest.fn(), softDelete: jest.fn(), restore: jest.fn() };
