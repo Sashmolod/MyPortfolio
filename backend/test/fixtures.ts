@@ -12,6 +12,8 @@ export function createMockUser(overrides: Partial<User> = {}): User {
     username: 'admin',
     password: 'hashedpassword123',
     isActive: true,
+    loginAttempts: 0,
+    lockoutUntil: null,
     createdAt: new Date('2026-06-09T00:00:00.000Z'),
     updatedAt: new Date('2026-06-09T00:00:00.000Z'),
     deletedAt: null,

@@ -81,18 +81,38 @@ export class AuthService implements OnApplicationBootstrap, OnModuleDestroy {
       throw new UnauthorizedException('Неверный логин или пароль');
     }
 
-    // 2. Валидируем пароль через bcrypt
+    // 2. Проверяем блокировку аккаунта
+    if (user.lockoutUntil && user.lockoutUntil > new Date()) {
+      const remainingMs = user.lockoutUntil.getTime() - Date.now();
+      const remainingMins = Math.ceil(remainingMs / 60000);
+      this.logger.warn(`Попытка входа в заблокированный аккаунт: ${dto.username}. Осталось блокировки: ${remainingMins} мин.`);
+      throw new UnauthorizedException(`Аккаунт временно заблокирован из-за частых ошибок ввода пароля. Попробуйте через ${remainingMins} мин.`);
+    }
+
+    // 3. Валидируем пароль через bcrypt
     const isPasswordValid = await bcrypt.compare(dto.password, user.password);
 
     if (!isPasswordValid) {
-      this.logger.warn(`Неверный пароль для пользователя: ${dto.username}`);
-      throw new UnauthorizedException('Неверный логин или пароль');
+      await this.userService.incrementLoginAttempts(user);
+      const attempts = (user.loginAttempts || 0) + 1;
+      this.logger.warn(`Неверный пароль для пользователя: ${dto.username}. Попытка ${attempts}/5`);
+      
+      if (attempts >= 5) {
+        throw new UnauthorizedException('Неверный логин или пароль. Аккаунт заблокирован на 15 минут.');
+      } else {
+        throw new UnauthorizedException(`Неверный логин или пароль. Осталось попыток: ${5 - attempts}`);
+      }
     }
 
-    // 3. Неактивный пользователь?
+    // 4. Неактивный пользователь?
     if (!user.isActive) {
       this.logger.warn(`Попытка входа в неактивный аккаунт: ${dto.username}`);
       throw new UnauthorizedException('Аккаунт деактивирован');
+    }
+
+    // Сбрасываем попытки входа при успешной аутентификации
+    if (user.loginAttempts > 0 || user.lockoutUntil) {
+      await this.userService.resetLoginAttempts(user.id);
     }
 
     // 4. Генерируем access token (короткоживущий)

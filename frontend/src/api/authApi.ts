@@ -8,6 +8,7 @@ const authApi = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
   },
   withCredentials: true, // Отправляем cookie вместе с запросами
 });

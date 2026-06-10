@@ -26,6 +26,14 @@ export class User {
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
 
+  @ApiProperty({ description: 'Количество неудачных попыток входа', example: 0 })
+  @Column({ name: 'login_attempts', type: 'int', default: 0 })
+  loginAttempts: number;
+
+  @ApiPropertyOptional({ description: 'Время окончания блокировки аккаунта', example: null, nullable: true })
+  @Column({ name: 'lockout_until', type: 'timestamptz', nullable: true })
+  lockoutUntil: Date | null;
+
   @ApiProperty({ description: 'Дата создания аккаунта', example: '2026-06-06T12:00:00Z' })
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;

@@ -7,15 +7,36 @@ import express, { Router } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 import * as path from 'path';
+import compression from 'compression';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bodyParser: false });
   const configService = app.get(ConfigService);
 
   // ==========================================
-  // Helmet - безопасные HTTP заголовки
+  // Лимиты на размер запроса и сжатие
   // ==========================================
-  app.use(helmet());
+  app.use(express.json({ limit: '2mb' }));
+  app.use(express.urlencoded({ limit: '2mb', extended: true }));
+  app.use(compression());
+
+  // ==========================================
+  // Helmet - безопасные HTTP заголовки и CSP
+  // ==========================================
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+          styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+          fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
+          imgSrc: ["'self'", "data:", "https://placehold.co", "https://*.placehold.co"],
+          connectSrc: ["'self'", "http://localhost:*", "ws://localhost:*"],
+        },
+      },
+    }),
+  );
 
   // ==========================================
   // Валидация JWT_SECRET на старте

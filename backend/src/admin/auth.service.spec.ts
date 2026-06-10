@@ -30,6 +30,8 @@ describe('AuthService', () => {
     username: 'admin',
     password: '$2a$12$hashedpassword',
     isActive: true,
+    loginAttempts: 0,
+    lockoutUntil: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     deletedAt: null,
@@ -72,6 +74,8 @@ describe('AuthService', () => {
     findByIdWithPassword: jest.fn(),
     createDefaultAdmin: jest.fn(),
     update: jest.fn(),
+    incrementLoginAttempts: jest.fn().mockResolvedValue(undefined),
+    resetLoginAttempts: jest.fn().mockResolvedValue(undefined),
   };
 
   const mockBlacklistRepository = {

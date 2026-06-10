@@ -36,7 +36,7 @@ export class UserService {
   async findByUsername(username: string): Promise<User | null> {
     return this.usersRepository.findOne({
       where: { username },
-      select: ['id', 'username', 'password', 'isActive'],
+      select: ['id', 'username', 'password', 'isActive', 'loginAttempts', 'lockoutUntil'],
     });
   }
 
@@ -63,8 +63,32 @@ export class UserService {
     const newUser = this.usersRepository.create({
       ...data,
       isActive: true,
+      loginAttempts: 0,
+      lockoutUntil: null,
     });
 
     return this.usersRepository.save(newUser);
+  }
+
+  /**
+   * Увеличить количество неудачных попыток входа
+   */
+  async incrementLoginAttempts(user: User): Promise<void> {
+    const attempts = (user.loginAttempts || 0) + 1;
+    const updateData: Partial<User> = { loginAttempts: attempts };
+    
+    if (attempts >= 5) {
+      // Блокировка на 15 минут
+      updateData.lockoutUntil = new Date(Date.now() + 15 * 60 * 1000);
+    }
+    
+    await this.usersRepository.update(user.id, updateData);
+  }
+
+  /**
+   * Сбросить количество неудачных попыток входа
+   */
+  async resetLoginAttempts(userId: number): Promise<void> {
+    await this.usersRepository.update(userId, { loginAttempts: 0, lockoutUntil: null });
   }
 }
