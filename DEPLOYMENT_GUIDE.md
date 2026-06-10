@@ -1,19 +1,21 @@
-# Deployment Guide — Portfolio Project
+# Руководство по деплою — Portfolio Project
 
-This guide provides instructions on how to build, deploy, backup, and secure the Portfolio Project in a production environment (such as a Linux VPS) using Docker Compose, set up secure HTTPS using Nginx and Certbot, and configure automated backups.
-
----
-
-## 1. Prerequisites
-Before deploying, ensure the target server has the following installed:
-* **Docker** (version 20.10+)
-* **Docker Compose** (version 2.0+)
-* **Git**
+Это руководство содержит инструкции по сборке, деплою, резервному копированию и защите проекта Portfolio в продакшен-среде (например, Linux VPS) с использованием Docker Compose, настройке безопасного HTTPS через Nginx и Certbot, а также автоматизации резервных копий.
 
 ---
 
-## 2. Environment Configurations
-Prepare your production environment variables. Create a `.env` file in the root directory of the project:
+## 1. Требования
+
+Перед деплоем убедитесь, что на целевом сервере установлены:
+- **Docker** (версия 20.10+)
+- **Docker Compose** (версия 2.0+)
+- **Git**
+
+---
+
+## 2. Конфигурация окружения
+
+Подготовьте переменные окружения для продакшена. Создайте файл `.env` в корневой директории проекта:
 
 ```bash
 # PostgreSQL
@@ -27,54 +29,60 @@ DATABASE_URL=postgresql://your_secure_db_user:your_super_secure_db_password@db:5
 # Backend & Security
 BACKEND_PORT=3000
 NODE_ENV=production
-# Generate a secure random string (64 characters):
+# Сгенерируйте безопасную случайную строку (64 символа):
 # node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 JWT_SECRET=your_generated_secure_64_char_jwt_secret
 JWT_EXPIRES_IN=7d
 CORS_ORIGIN=https://yourportfolio.com
 
-# First Admin Credentials (Seeded on first startup)
+# Учётные данные первого админа (сидируются при первом запуске)
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=your_highly_secure_admin_password_123!
 
-# AI Assistant
+# AI Ассистент
 GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
 ---
 
-## 3. Launching with Docker Compose
-The project is completely containerized. Start the stack (Database, NestJS Backend, React Frontend served via Nginx) using:
+## 3. Запуск через Docker Compose
+
+Проект полностью контейнеризован. Запустите стек (База данных, NestJS Backend, React Frontend через Nginx):
 
 ```bash
-# Build and start services in detached mode
+# Собрать образы и запустить сервисы в фоновом режиме
 docker-compose up -d --build
 ```
 
-### Checking Services Health
-You can check the health and status of the running containers with:
+### Проверка здоровья сервисов
+
+Проверьте статус запущенных контейнеров:
 ```bash
 docker ps
 ```
-The output should show three healthy containers:
-* `portfolio_frontend` (serving SPA and acting as reverse-proxy on port 80/443)
-* `portfolio_backend` (running NestJS API on internal port 3000)
-* `portfolio_db` (running PostgreSQL 16 on port 5432)
+
+Должны отображаться три healthy контейнера:
+- `portfolio_frontend` (раздаёт SPA и работает как reverse-proxy на порту 80/443)
+- `portfolio_backend` (запускает NestJS API на внутреннем порту 3000)
+- `portfolio_db` (запускает PostgreSQL 16 на порту 5432)
 
 ---
 
-## 4. Host-Level Nginx Reverse Proxy Setup (Recommended for SSL)
-For full production security, it is recommended to run Nginx on the host machine to proxy requests into the Docker network and manage SSL certificates.
+## 4. Настройка Nginx Reverse Proxy на уровне хоста (Рекомендуется для SSL)
 
-### A. Install Nginx and Certbot
-On Ubuntu/Debian:
+Для полной продакшен-безопасности рекомендуется запускать Nginx на хост-машине для проксирования запросов в Docker-сеть и управления SSL-сертификатами.
+
+### A. Установка Nginx и Certbot
+
+На Ubuntu/Debian:
 ```bash
 sudo apt update
 sudo apt install nginx certbot python3-certbot-nginx -y
 ```
 
-### B. Configure Server Block
-Create an Nginx configuration file at `/etc/nginx/sites-available/portfolio` with reverse proxy rules pointing to the Docker services:
+### B. Настройка Server Block
+
+Создайте файл конфигурации Nginx по пути `/etc/nginx/sites-available/portfolio` с правилами reverse proxy, указывающими на Docker-сервисы:
 
 ```nginx
 server {
@@ -113,51 +121,56 @@ server {
 }
 ```
 
-Enable the configuration and restart Nginx:
+Включите конфигурацию и перезапустите Nginx:
 ```bash
 sudo ln -s /etc/nginx/sites-available/portfolio /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl restart nginx
 ```
 
-### C. Obtain SSL (HTTPS) Certificates
-Run Certbot to obtain and automatically configure Let's Encrypt certificates:
+### C. Получение SSL (HTTPS) сертификатов
+
+Запустите Certbot для получения и автоматической настройки сертификатов Let's Encrypt:
 ```bash
 sudo certbot --nginx -d yourportfolio.com -d www.yourportfolio.com
 ```
-Follow the interactive prompts. Certbot will automatically rewrite the Nginx configuration to support secure HTTPS redirects on port 443.
+
+Следуйте интерактивным подсказкам. Certbot автоматически перепишет конфигурацию Nginx для поддержки безопасных HTTPS-перенаправлений на порту 443.
 
 ---
 
-## 5. Automated Database Backups
-A backup script is available under [scripts/backup.sh](file:///Users/hot_pepper/MyProjectGitHub/MyPortfolio/scripts/backup.sh). It dumps the database, compresses it with gzip, and deletes backups older than 30 days.
+## 5. Автоматизированные резервные копии базы данных
 
-### Setting up a Cron Job
-To automate nightly backups (e.g., at 2:00 AM), edit the root crontab on the host machine:
+Скрипт бэкапа доступен по пути [scripts/backup.sh](file:///Users/hot_pepper/MyProjectGitHub/MyPortfolio/scripts/backup.sh). Он создаёт дамп базы данных, сжимает его через gzip и удаляет бэкапы старше 30 дней.
+
+### Настройка Cron-задачи
+
+Для автоматизации ночных бэкапов (например, в 2:00 AM), отредактируйте root crontab на хост-машине:
 
 ```bash
 sudo crontab -e
 ```
 
-Add the following line (adjust path to match your project root folder):
+Добавьте следующую строку (замените путь на корневую папку вашего проекта):
 ```bash
 0 2 * * * /bin/bash /path/to/MyPortfolio/scripts/backup.sh >> /path/to/MyPortfolio/backups/backup.log 2>&1
 ```
 
-Make sure the script has execute permissions:
+Убедитесь, что скрипт имеет права на выполнение:
 ```bash
 chmod +x /path/to/MyPortfolio/scripts/backup.sh
 ```
 
 ---
 
-## 6. Built-in Security & Performance Safeguards
-The application includes several production-grade security protections:
+## 6. Встроенные меры защиты и производительности
 
-* **Account Lockout**: After 5 consecutive failed login attempts, the admin account is locked for **15 minutes** to prevent brute-force attacks.
-* **Password Complexity**: Admin passwords must satisfy strength requirements (min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special character).
-* **Request Limits**: JSON payload limits are globally restricted to **2MB** in NestJS to prevent memory exhaustion. Nginx supports up to **10MB** only for file uploads (`client_max_body_size 10M`).
-* **CSRF Protection**: JWT tokens are stored in `SameSite=Strict` HttpOnly cookies. The browser automatically rejects cross-origin requests, eliminating the need for custom headers.
-* **CSP Headers**: Content-Security-Policy headers are enforced on both the Nginx proxy layer and the NestJS Helmet middleware to prevent XSS.
-* **Gzip Compression**: Backend responses and frontend assets are compressed using Gzip for fast loading.
-* **CI/CD Workflow**: Every pull request and push to the `main` branch triggers an automated test runner (Unit and E2E tests inside a Postgres container) to ensure no regressions.
+Приложение включает несколько защитных механизмов уровня продакшена:
+
+- **Блокировка аккаунта**: После 5 последовательных неудачных попыток входа, аккаунт администратора блокируется на **15 минут** для предотвращения brute-force атак.
+- **Сложность пароля**: Пароли администратора должны соответствовать требованиям сложности (мин. 8 символов, 1 заглавная, 1 строчная, 1 цифра, 1 спецсимвол).
+- **Лимиты запросов**: Лимиты JSON payload глобально ограничены до **2MB** в NestJS для предотвращения исчерпания памяти. Nginx поддерживает до **10MB** только для загрузки файлов (`client_max_body_size 10M`).
+- **CSRF защита**: JWT токены хранятся в `SameSite=Strict` HttpOnly cookies. Браузер автоматически отклоняет межсайтовые запросы, что исключает необходимость в дополнительных заголовках.
+- **CSP заголовки**: Content-Security-Policy заголовки применяются на уровне прокси Nginx и NestJS Helmet middleware для предотвращения XSS.
+- **Gzip сжатие**: Ответы бэкенда и ресурсы фронтенда сжимаются через Gzip для быстрой загрузки.
+- **CI/CD воркфлоу**: Каждый pull request и push в ветку `main` запускает автоматизированный тестовый раннер (Unit и E2E тесты в контейнере Postgres) для обеспечения отсутствия регрессий.
