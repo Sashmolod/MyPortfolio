@@ -249,3 +249,84 @@ ls -lh backups/
 ### Порт 5433 уже занят
 ```bash
 # Проверить что слушит порт
+lsof -i :5433
+# Остановить процесс
+kill -9 <PID>
+```
+
+---
+
+## 🗄️ Структура базы данных
+
+Проект использует PostgreSQL с TypeORM. Основные таблицы:
+
+| Таблица | Описание |
+|---------|----------|
+| `users` | Администраторы |
+| `hero` | Блок приветствия |
+| `skills` | Навыки |
+| `projects` | Проекты |
+| `social_links` | Социальные сети |
+| `contact_messages` | Сообщения формы |
+| `visit_stats` | Статистика посещений |
+| `audit_log` | Логи действий админа |
+| `jwt_blacklist` | Черный список токенов |
+| `settings` | Настройки сайта |
+
+Полная схема: [DB_SCHEMA.md](DB_SCHEMA.md)
+
+---
+
+## 🔄 Миграции базы данных
+
+```bash
+# Создать миграцию (изменить схему)
+npm run db:migrate:gen
+
+# Применить миграции
+npm run db:migrate:run
+```
+
+Или напрямую в Docker:
+```bash
+docker compose -f docker-compose.dev.yml exec backend npm run migration:generate -d src/data-source.ts
+docker compose -f docker-compose.dev.yml exec backend npm run migration:run -d src/data-source.ts
+```
+
+---
+
+## 💻 Локальная разработка (без Docker)
+
+### Backend
+```bash
+cd backend
+cp .env.dev .env
+npm install
+npm run dev
+# http://localhost:3000/api
+```
+
+### Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+# http://localhost:5173
+```
+
+### Seed данных (первый запуск)
+```bash
+cd backend
+npm run seed
+```
+
+Требуется запущенная PostgreSQL на localhost:5432 с БД `portfolio_db`.
+
+---
+
+## 📚 Дополнительная документация
+
+- [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) — деплой на сервер, SSL, CI/CD
+- [DB_SCHEMA.md](DB_SCHEMA.md) — полная схема базы данных
+- [CONTRIBUTING.md](CONTRIBUTING.md) — правила внесения вкладов
+- [CODE_AUDIT.md](CODE_AUDIT.md) — аудит кода и рекомендации
