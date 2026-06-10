@@ -11,6 +11,7 @@ import {
   UseInterceptors,
   ClassSerializerInterceptor,
   Logger,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -165,7 +166,7 @@ export class AuthController {
     const userId = parseInt((req.user as { sub: string })?.sub, 10);
 
     if (!userId) {
-      throw new Error('Пользователь не найден в токене');
+      throw new UnauthorizedException('Пользователь не найден в токене');
     }
 
     const user = await this.authService.getCurrentUser(userId);
@@ -201,7 +202,7 @@ export class AuthController {
     const userId = parseInt((req.user as { sub: string })?.sub, 10);
 
     if (!userId) {
-      throw new Error('Пользователь не найден в токене');
+      throw new UnauthorizedException('Пользователь не найден в токене');
     }
 
     const result = await this.authService.changePassword(userId, dto);

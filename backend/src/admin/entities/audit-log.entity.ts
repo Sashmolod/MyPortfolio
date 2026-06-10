@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, Index } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 @Entity('audit_log')
@@ -12,6 +12,7 @@ export class AuditLog {
   username: string;
 
   @ApiProperty({ description: 'Совершенное действие', example: 'UPDATE_SETTINGS' })
+  @Index()
   @Column({ type: 'varchar', length: 100 })
   action: string;
 
@@ -32,6 +33,7 @@ export class AuditLog {
   ip: string;
 
   @ApiProperty({ description: 'Дата и время действия', example: '2026-06-06T12:00:00Z' })
+  @Index()
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 }

@@ -3,6 +3,7 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  Index,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -21,6 +22,7 @@ export class VisitStat {
   userAgent: string;
 
   @ApiProperty({ description: 'URL страницы', example: '/' })
+  @Index()
   @Column({ name: 'path', type: 'varchar', length: 1000 })
   path: string;
 
@@ -45,6 +47,7 @@ export class VisitStat {
   deviceType: string;
 
   @ApiProperty({ description: 'Дата и время визита', example: '2026-06-09T12:00:00Z' })
+  @Index()
   @CreateDateColumn({ name: 'visited_at', type: 'timestamptz' })
   visitedAt: Date;
 }

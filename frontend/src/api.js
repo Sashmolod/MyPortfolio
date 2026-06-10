@@ -3,9 +3,6 @@ import axios from 'axios';
 const api = axios.create({
   baseURL: '/api',
   withCredentials: true, // Отправляем cookie вместе с запросами
-  headers: {
-    'X-Requested-With': 'XMLHttpRequest',
-  },
 });
 
 /**
@@ -17,6 +14,11 @@ const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (!error.response) {
+      // CORS или сетевая ошибка — бэкенд недоступен или отклоняет запрос
+      console.error('CORS/Network error — бэкенд недоступен:', error.message);
+    }
+
     if (error.response?.status === 401) {
       // Токен истёк или невалиден — очищаем cookie и редиректим на логин
       // Удаляем AccessToken cookie (path совпадает с тем, как установлен cookie)

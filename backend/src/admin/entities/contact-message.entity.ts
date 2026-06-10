@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
+  Index,
 } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -38,10 +39,12 @@ export class ContactMessage {
   attachments: string[];
 
   @ApiProperty({ description: 'Дата отправки сообщения', example: '2026-06-06T12:00:00Z' })
+  @Index()
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 
   @ApiPropertyOptional({ description: 'Дата мягкого удаления', example: null, nullable: true })
+  @Index()
   @DeleteDateColumn({ name: 'deleted_at', type: 'timestamptz', nullable: true })
   deletedAt: Date | null;
 }

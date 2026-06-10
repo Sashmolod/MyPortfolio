@@ -1,4 +1,4 @@
-import { Controller, Post, UseInterceptors, UploadedFile, Delete, HttpCode, HttpStatus, Param, UseGuards, Get } from '@nestjs/common';
+import { Controller, Post, UseInterceptors, UploadedFile, Delete, HttpCode, HttpStatus, Param, UseGuards, Get, NotFoundException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadService } from './upload.service';
 import { ApiConsumes, ApiBody, ApiOperation, ApiResponse, ApiBearerAuth, ApiTags, ApiProperty, ApiOkResponse } from '@nestjs/swagger';
@@ -86,7 +86,7 @@ export class UploadController {
   deleteImage(@Param('filename') filename: string) {
     const deleted = this.uploadService.deleteFile(filename);
     if (!deleted) {
-      throw new Error('File not found');
+      throw new NotFoundException('Файл не найден');
     }
   }
 

@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  Index,
 } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -23,10 +24,12 @@ export class SocialLink {
   url: string;
 
   @ApiPropertyOptional({ description: 'Порядок сортировки', example: 1 })
+  @Index()
   @Column({ name: 'sort_order', type: 'int', default: 0 })
   sortOrder: number;
 
   @ApiProperty({ description: 'Дата создания', example: '2026-06-06T12:00:00Z' })
+  @Index()
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 
@@ -35,6 +38,7 @@ export class SocialLink {
   updatedAt: Date;
 
   @ApiPropertyOptional({ description: 'Дата мягкого удаления', example: null, nullable: true })
+  @Index()
   @DeleteDateColumn({ name: 'deleted_at', type: 'timestamptz', nullable: true })
   deletedAt: Date | null;
 }

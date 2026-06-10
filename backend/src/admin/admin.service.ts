@@ -42,7 +42,7 @@ export class AdminService {
 
   async getSkill(id: number) {
     const skill = await this.skillRepo.findOne({ where: { id } });
-    if (!skill) throw new Error('Skill not found');
+    if (!skill) throw new NotFoundException('Skill not found');
     return skill;
   }
 
@@ -81,7 +81,7 @@ export class AdminService {
 
   async getProject(id: number) {
     const project = await this.projectRepo.findOne({ where: { id } });
-    if (!project) throw new Error('Project not found');
+    if (!project) throw new NotFoundException('Project not found');
     return project;
   }
 
@@ -120,7 +120,7 @@ export class AdminService {
 
   async getMessage(id: number) {
     const message = await this.messageRepo.findOne({ where: { id } });
-    if (!message) throw new Error('Message not found');
+    if (!message) throw new NotFoundException('Message not found');
     return message;
   }
 
@@ -154,7 +154,7 @@ export class AdminService {
 
   async getHero(id: number) {
     const hero = await this.heroRepo.findOne({ where: { id } });
-    if (!hero) throw new Error('Hero not found');
+    if (!hero) throw new NotFoundException('Hero not found');
     return hero;
   }
 
@@ -196,7 +196,7 @@ export class AdminService {
 
   async getSocialLink(id: number) {
     const link = await this.socialLinkRepo.findOne({ where: { id } });
-    if (!link) throw new Error('Social link not found');
+    if (!link) throw new NotFoundException('Social link not found');
     return link;
   }
 

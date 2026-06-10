@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  Index,
 } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -31,6 +32,7 @@ export class Hero {
   avatar: string;
 
   @ApiProperty({ description: 'Дата создания', example: '2026-06-06T12:00:00Z' })
+  @Index()
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 
@@ -39,6 +41,7 @@ export class Hero {
   updatedAt: Date;
 
   @ApiPropertyOptional({ description: 'Дата мягкого удаления', example: null, nullable: true })
+  @Index()
   @DeleteDateColumn({ name: 'deleted_at', type: 'timestamptz', nullable: true })
   deletedAt: Date | null;
 }

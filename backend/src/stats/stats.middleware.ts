@@ -9,6 +9,12 @@ export class StatsMiddleware {
   constructor(private readonly statsService: StatsService) {}
 
   async use(req: Request, res: Response, next: Function) {
+    // Пропускаем CORS preflight запросы
+    if (req.method === 'OPTIONS') {
+      next();
+      return;
+    }
+
     // Пропускаем любые API запросы, загрузки и проверки здоровья
     const url = req.originalUrl;
     const cleanUrl = url.split('?')[0];

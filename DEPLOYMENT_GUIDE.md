@@ -157,7 +157,7 @@ The application includes several production-grade security protections:
 * **Account Lockout**: After 5 consecutive failed login attempts, the admin account is locked for **15 minutes** to prevent brute-force attacks.
 * **Password Complexity**: Admin passwords must satisfy strength requirements (min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special character).
 * **Request Limits**: JSON payload limits are globally restricted to **2MB** in NestJS to prevent memory exhaustion. Nginx supports up to **10MB** only for file uploads (`client_max_body_size 10M`).
-* **CSRF Protection**: All mutating endpoints (POST, PUT, DELETE, PATCH) validate the custom `X-Requested-With: XMLHttpRequest` header to reject cross-origin requests.
+* **CSRF Protection**: JWT tokens are stored in `SameSite=Strict` HttpOnly cookies. The browser automatically rejects cross-origin requests, eliminating the need for custom headers.
 * **CSP Headers**: Content-Security-Policy headers are enforced on both the Nginx proxy layer and the NestJS Helmet middleware to prevent XSS.
 * **Gzip Compression**: Backend responses and frontend assets are compressed using Gzip for fast loading.
 * **CI/CD Workflow**: Every pull request and push to the `main` branch triggers an automated test runner (Unit and E2E tests inside a Postgres container) to ensure no regressions.

@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as multer from 'multer';
 import { extname, join, resolve } from 'path';
@@ -6,6 +6,7 @@ import * as fs from 'fs';
 
 @Injectable()
 export class UploadService {
+  private readonly logger = new Logger(UploadService.name);
   private uploadDir: string;
 
   constructor(private readonly configService: ConfigService) {
@@ -144,6 +145,7 @@ export class UploadService {
           }
         }
       } catch (err: any) {
+        this.logger.error(`Ошибка при проверке контента файла: ${err.message}`, err.stack);
         if (err instanceof BadRequestException) {
           throw err;
         }
