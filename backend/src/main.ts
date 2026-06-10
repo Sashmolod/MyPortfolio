@@ -31,10 +31,18 @@ async function bootstrap() {
           scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
           styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
           fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
-          imgSrc: ["'self'", "data:", "https://placehold.co", "https://*.placehold.co"],
-          connectSrc: ["'self'", "http://localhost:*", "ws://localhost:*"],
+          imgSrc: ["'self'", "data:", "https://placehold.co", "https://*.placehold.co", "https://*.gravatar.com"],
+          connectSrc: [
+            "'self'",
+            "http://localhost:*",
+            "ws://localhost:*",
+            "http://127.0.0.1:*",
+            "ws://127.0.0.1:*"
+          ],
+          frameAncestors: ["'none'"],
         },
       },
+      frameguard: { action: 'deny' },
     }),
   );
 
@@ -110,38 +118,40 @@ async function bootstrap() {
   );
 
   // ==========================================
-  // Swagger configuration (после global prefix)
+  // Swagger configuration (только для non-production окружения)
   // ==========================================
-  const config = new DocumentBuilder()
-    .setTitle('Portfolio API')
-    .setDescription('API documentation for Portfolio with Admin Panel & JWT Auth')
-    .setVersion('2.0')
-    .addTag('portfolio', 'Public portfolio endpoints')
-    .addTag('admin', 'Admin panel endpoints (JWT required)')
-    .addTag('auth', 'Authentication endpoints')
-    .addBearerAuth(
-      {
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('Portfolio API')
+      .setDescription('API documentation for Portfolio with Admin Panel & JWT Auth')
+      .setVersion('2.0')
+      .addTag('portfolio', 'Public portfolio endpoints')
+      .addTag('admin', 'Admin panel endpoints (JWT required)')
+      .addTag('auth', 'Authentication endpoints')
+      .addBearerAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          name: 'JWT',
+          description: 'Enter your JWT token from /api/auth/login',
+          in: 'header',
+        },
+        'jwt-in-header', // имя для использования в @ApiBearerAuth('jwt-in-header')
+      )
+      .addCookieAuth('AccessToken', {
         type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'JWT',
-        description: 'Enter your JWT token from /api/auth/login',
-        in: 'header',
-      },
-      'jwt-in-header', // имя для использования в @ApiBearerAuth('jwt-in-header')
-    )
-    .addCookieAuth('AccessToken', {
-      type: 'http',
-      description: 'JWT token from HttpOnly cookie (auto-sent by browser)',
-    })
-    .build();
+        description: 'JWT token from HttpOnly cookie (auto-sent by browser)',
+      })
+      .build();
 
-  const document = SwaggerModule.createDocument(app, config);
+    const document = SwaggerModule.createDocument(app, config);
 
-  // Swagger UI доступен по адресу /docs
-  SwaggerModule.setup('docs', app, document, {
-    customCss: '.swagger-ui .topbar { display: none }',
-  });
+    // Swagger UI доступен по адресу /docs
+    SwaggerModule.setup('docs', app, document, {
+      customCss: '.swagger-ui .topbar { display: none }',
+    });
+  }
 
   // Статические файлы загрузки
   app.use('/uploads', Router().use(express.static(path.join(__dirname, '..', 'uploads'))));

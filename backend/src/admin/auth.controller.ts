@@ -48,12 +48,12 @@ export class AuthController {
     const result: AuthPayload = await this.authService.login(dto);
     this.logger.log(`Успешный вход пользователя: ${dto.username} с IP: ${req.ip}`);
 
-    // Устанавливаем HttpOnly, Secure (в prod), SameSite=Lax cookie
+    // Устанавливаем HttpOnly, Secure (в prod), SameSite=Strict cookie
     // path: '/api' — cookie отправляется только на API routes
     res.cookie('AccessToken', result.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax' as const,
+      sameSite: 'strict' as const,
       maxAge: result.expiresIn * 1000, // из токена
       path: '/api',
     });
@@ -62,7 +62,7 @@ export class AuthController {
     res.cookie('RefreshToken', result.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax' as const,
+      sameSite: 'strict' as const,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 дней
       path: '/api/auth',
     });
@@ -99,7 +99,7 @@ export class AuthController {
     res.cookie('AccessToken', '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax' as const,
+      sameSite: 'strict' as const,
       maxAge: 0,
       path: '/api',
     });
@@ -107,7 +107,7 @@ export class AuthController {
     res.cookie('RefreshToken', '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax' as const,
+      sameSite: 'strict' as const,
       maxAge: 0,
       path: '/api/auth',
     });
@@ -133,7 +133,7 @@ export class AuthController {
     res.cookie('AccessToken', result.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax' as const,
+      sameSite: 'strict' as const,
       maxAge: result.expiresIn * 1000,
       path: '/api',
     });
@@ -141,7 +141,7 @@ export class AuthController {
     res.cookie('RefreshToken', result.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax' as const,
+      sameSite: 'strict' as const,
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: '/api/auth',
     });
@@ -189,6 +189,7 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('jwt-in-header')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @ApiOperation({ summary: 'Сменить пароль текущего пользователя' })
   @ApiBody({ type: ChangePasswordDto })
   @ApiOkResponse({ description: 'Пароль успешно изменён', type: MessageResponseDto })

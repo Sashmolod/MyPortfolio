@@ -154,7 +154,7 @@ describe('AuthService', () => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
       await expect(service.login(dto)).rejects.toThrow(UnauthorizedException);
-      await expect(service.login(dto)).rejects.toThrow('Аккаунт деактивирован');
+      await expect(service.login(dto)).rejects.toThrow('Неверный логин или пароль');
     });
   });
 

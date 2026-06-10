@@ -1,13 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import * as multer from 'multer';
-import { extname, join } from 'path';
+import { extname, join, resolve } from 'path';
 import * as fs from 'fs';
 
 @Injectable()
 export class UploadService {
-  private uploadDir = process.env.UPLOAD_DIR || join(process.cwd(), 'uploads');
+  private uploadDir: string;
 
-  constructor() {
+  constructor(private readonly configService: ConfigService) {
+    this.uploadDir = this.configService.get<string>('UPLOAD_DIR') || join(process.cwd(), 'uploads');
     // Создаем директорию для загруженных файлов если её нет
     if (!fs.existsSync(this.uploadDir)) {
       fs.mkdirSync(this.uploadDir, { recursive: true });
@@ -64,7 +66,19 @@ export class UploadService {
    * Удаляет файл с диска
    */
   deleteFile(filename: string): boolean {
+    // Блокируем path traversal
+    if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+      throw new BadRequestException('Неверное имя файла');
+    }
+
     const filePath = join(this.uploadDir, filename);
+    const normalizedUploadDir = resolve(this.uploadDir);
+    const normalizedFilePath = resolve(filePath);
+
+    if (!normalizedFilePath.startsWith(normalizedUploadDir)) {
+      throw new BadRequestException('Неверное имя файла');
+    }
+
     try {
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
@@ -81,7 +95,65 @@ export class UploadService {
    * Получает абсолютный путь к файлу
    */
   getFilePath(filename: string): string {
-    return join(this.uploadDir, filename);
+    // Блокируем path traversal
+    if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+      throw new BadRequestException('Неверное имя файла');
+    }
+
+    const filePath = join(this.uploadDir, filename);
+    const normalizedUploadDir = resolve(this.uploadDir);
+    const normalizedFilePath = resolve(filePath);
+
+    if (!normalizedFilePath.startsWith(normalizedUploadDir)) {
+      throw new BadRequestException('Неверное имя файла');
+    }
+
+    return filePath;
+  }
+
+  /**
+   * Проверяет содержимое загруженного файла (например, на наличие скриптов в SVG)
+   */
+  async validateFileContent(file: Express.Multer.File): Promise<void> {
+    const filePath = join(this.uploadDir, file.filename || '');
+    if (!fs.existsSync(filePath)) {
+      return;
+    }
+
+    const isSvg = file.originalname.toLowerCase().endsWith('.svg') || file.mimetype === 'image/svg+xml';
+    if (isSvg) {
+      try {
+        const content = fs.readFileSync(filePath, 'utf-8');
+        const dangerousPatterns = [
+          '<script',
+          'javascript:',
+          'data:text/html',
+          'onerror',
+          'onload',
+          'onclick',
+          'onmouseover',
+          '<iframe',
+          '<object'
+        ];
+        
+        for (const pattern of dangerousPatterns) {
+          if (content.toLowerCase().includes(pattern)) {
+            // Удаляем файл с диска
+            fs.unlinkSync(filePath);
+            throw new BadRequestException('SVG содержит небезопасный исполняемый код (скрипт)');
+          }
+        }
+      } catch (err: any) {
+        if (err instanceof BadRequestException) {
+          throw err;
+        }
+        // Если при проверке возникла ошибка — удаляем файл на всякий случай
+        try {
+          fs.unlinkSync(filePath);
+        } catch {}
+        throw new BadRequestException('Не удалось проверить содержимое файла');
+      }
+    }
   }
 
   /**

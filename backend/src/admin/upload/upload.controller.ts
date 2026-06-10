@@ -63,8 +63,9 @@ export class UploadController {
   @ApiOkResponse({ status: 201, description: 'Изображение успешно загружено', type: UploadResponseDto })
   @ApiResponse({ status: 400, description: 'Неверный файл (неподдерживаемый формат или слишком большой размер)' })
   @ApiResponse({ status: 401, description: 'Не авторизован' })
-  uploadImage(@UploadedFile() file: Express.Multer.File): UploadResponseDto {
+  async uploadImage(@UploadedFile() file: Express.Multer.File): Promise<UploadResponseDto> {
     const adjustedFile = this.uploadService.adjustFilename(file);
+    await this.uploadService.validateFileContent(adjustedFile);
     return {
       success: true,
       filename: adjustedFile.filename,

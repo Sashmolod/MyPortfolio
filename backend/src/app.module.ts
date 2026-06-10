@@ -7,7 +7,6 @@ import { AdminModule } from './admin/admin.module';
 import { PortfolioModule } from './portfolio/portfolio.module';
 import { HealthModule } from './health.module';
 import { StatsModule } from './stats/stats.module';
-import { CsrfGuard } from './admin/csrf.guard';
 
 @Module({
   imports: [
@@ -54,10 +53,6 @@ import { CsrfGuard } from './admin/csrf.guard';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: CsrfGuard,
     },
   ],
 })
