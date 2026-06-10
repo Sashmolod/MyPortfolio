@@ -45,7 +45,9 @@ export class UploadController {
   constructor(private readonly uploadService: UploadService) {}
 
   @Post('image')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', {
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  }))
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
