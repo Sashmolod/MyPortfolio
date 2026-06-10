@@ -1,384 +1,333 @@
-# 🔍 Code Audit Report — MyPortfolio
+# 🔍 Deep Code Audit — Portfolio Project
 
-**Date:** 05.06.2026 (Updated)
-**Stack:** NestJS 10 (TypeScript) + React 18 + Vite + PostgreSQL 16
-**Structure:** `backend/` (NestJS) / `frontend/` (React SPA)
-**Commit:** 6f4805e0f1b3c35bd758bb85ceef1674b968468d
-
-> [!NOTE]
-> **Resolution Status (10.06.2026):**
-> All critical, medium, and low-priority issues identified in this audit report have been fully resolved:
-> - **Security**: Weak JWT secrets replaced by dynamic ConfigService values, strict password validation and complexity requirements implemented, brute-force protection with a 15-minute lockout after 5 failures enabled, CSRF guards active on all mutating endpoints, and Content-Security-Policy (CSP) headers enabled via Nginx and Helmet.
-> - **Database**: Versioined migrations created, applied, and automated. Nightly backups automated using cron scripts.
-> - **Testing**: Backend testing expanded to 171 unit and 32 E2E tests. Frontend testing environment fully configured with Vitest + React Testing Library (78 tests).
-> - **CI/CD**: Fully automated pipeline running checks in GitHub Actions on every PR and push.
-> - **Documentation**: Comprehensive [DEPLOYMENT_GUIDE.md](file:///Users/hot_pepper/MyProjectGitHub/MyPortfolio/DEPLOYMENT_GUIDE.md) created.
+**Date:** 2026-06-10 | **Stack:** NestJS 10 + React 18 + Vite + PostgreSQL 16 + Docker  
+**Commit:** 69a98df | **Working Dir:** /Users/hot_pepper/MyProjectGitHub/MyPortfolio
 
 ---
 
-## 📊 Executive Summary
+## 1. Executive Summary
 
-| Category | Score | Status |
-|----------|-------|--------|
-| Architecture | ✅ Good | Feature-based modules, clear separation |
-| Security | ⚠️ Warning | Default admin credentials, weak JWT secret |
-| Infrastructure | ✅ Good | Well-configured Docker, healthchecks |
-| Code Quality | ✅ Good | TypeScript strict, async/await, functional components |
-| Testing | ❌ Critical | Minimal test coverage |
-| Documentation | ✅ Good | Comprehensive README |
+### ✅ Strengths
+- Well-structured NestJS modular architecture (admin, portfolio, stats, upload, health)
+- JWT auth with refresh token rotation + blacklist + account lockout (5 attempts, 15-min lock)
+- Soft delete for all CRUD entities + hard delete methods
+- TypeORM migrations-based schema management (10 migration files)
+- Docker Compose with healthchecks for all services
+- CSRF protection middleware on `/api/auth` endpoints
+- Visit tracking with comprehensive stats middleware (IP, UA, path, referrer, device, browser, OS)
+- AI integration (Gemini) for doodle chat + guessing with graceful fallback
+- React code splitting via lazy loading for admin pages
+- Error boundary implementation
+- Helmet CSP headers configured (production mode)
+- Input validation pipes with `whitelist` + `forbidNonWhitelisted`
+- Audit log interceptor on upload controller
+- JWT_SECRET and JWT_REFRESH_SECRET validated at bootstrap (min 32 chars)
 
----
-
-## 🔴 CRITICAL Issues
-
-### 1. [SECURITY] Weak JWT Secret in Production
-**File:** `backend/.env.prod`, `docker-compose.yml`
-```
-JWT_SECRET=your-super-secret-jwt-key-change-this-in-production-2024
-```
-**Problem:** Демонстрационный/шаблонный секрет. В production это критическая уязвимость.
-**Severity:** 🔴 HIGH
-**Recommendation:** Сгенерировать криптографически стойкий секрет:
-```bash
-node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
-```
-
-### 2. [SECURITY] Default Admin Credentials
-**File:** `docker-compose.yml` (строка 75)
-```yaml
-ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
-```
-**Problem:** По умолчанию пароль = `admin`. README указывает `admin123`.
-**Severity:** 🔴 HIGH
-**Recommendation:** Сделать обязательным требованием для production. При пустом значении — блокировать запуск.
-
-### 3. [SECURITY] ADMIN_PASSWORD пустой = генерация случайного
-**File:** `docker-compose.yml` (комментарий строка 73)
-```
-# ⚠️ В production ОБЯЗАТЕЛЬНО установите ADMIN_PASSWORD через .env файл!
-```
-**Problem:** Комментарий предупреждает, но нет принудительной валидации.
-**Severity:** 🔴 MEDIUM
-**Recommendation:** Добавить валидацию в `docker-entrypoint.sh` или `seed.ts`.
+### ⚠️ Issues by Severity
+| # | Severity | Issue | File | Line |
+|---|----------|-------|------|------|
+| 1 | 🔴 HIGH | HMAC captcha uses JWT_SECRET with hardcoded fallback | portfolio.service.ts | 93 |
+| 2 | 🔴 HIGH | `Object.assign(hero, dto)` bypasses DTO validation | admin.service.ts | 170 |
+| 3 | 🟡 MEDIUM | No rate limiting on auth endpoints | auth.controller.ts | - |
+| 4 | 🟡 MEDIUM | `recordVisit()` silently swallows errors | stats.service.ts | 45 |
+| 5 | 🟡 MEDIUM | No cleanup cron for uploads or visit stats | docker-compose.yml | 84 |
+| 6 | 🟡 MEDIUM | No brute-force protection on changePassword | auth.service.ts | 307 |
+| 7 | 🟢 LOW | Gemini API key in URL query params | portfolio.service.ts | 193 |
+| 8 | 🟢 LOW | No Content-Security-Policy frame-ancestors strictness | main.ts | 52 |
+| 9 | 🟢 LOW | Honeypot field in DTO but no server-side enforcement | create-contact-message.dto.ts | - |
+| 10 | 🟢 LOW | No retry logic for failed data fetching in frontend | App.jsx | 149 |
 
 ---
 
-## 🟡 MEDIUM Issues
+## 2. Architecture Overview
 
-### 4. [INFRASTRUCTURE] Port inconsistency (DEV vs PROD)
-**Files:** 
-- `backend/.env.dev`: `PORT=3001`
-- `docker-compose.yml`: `PORT=3000`
-- `docker-compose.dev.yml`: `BACKEND_PORT=3001`
-
-**Problem:** Разные порты между окружениями создают путаницу.
-**Severity:** 🟡 MEDIUM
-**Recommendation:** Документировать или унифицировать.
-
-### 5. [DATABASE] Empty migrations directory
-**File:** `backend/src/migrations/` (пустая директория)
-**Problem:** Нет версионированных миграций. `synchronize: false` в app.module.ts.
-**Severity:** 🟡 MEDIUM
-**Recommendation:** Создать миграции:
-```bash
-cd backend && npm run migration:generate -- src/migrations/InitialSchema
-npm run migration:run
+```
+Docker Network: portfolio-network
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│   Frontend   │───▶│    Backend   │───▶│  PostgreSQL  │
+│   (Nginx)    │    │   (NestJS)   │    │   (Port 5433)│
+│   :80        │    │   :3000      │    │              │
+└──────────────┘    └──────────────┘    └──────────────┘
 ```
 
-### 6. [SECURITY] JWT_EXPIRES_IN = 7 дней
-**File:** `docker-compose.yml` (строка 69)
-```yaml
-JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
-```
-**Problem:** 7 дней — слишком долго для JWT. При компрометации токена окно доступа велико.
-**Severity:** 🟡 MEDIUM
-**Recommendation:** Использовать `1h` + refresh tokens.
+**Backend Modules:**
+- `admin/` — Auth, CRUD, Upload, Settings (10 entities: User, Skill, Project, ContactMessage, Hero, SocialLink, Settings, AuditLog, JwtBlacklist, VisitStat)
+- `portfolio/` — Public API (skills, projects, hero, contact form, AI features)
+- `stats/` — Visit tracking middleware + service
+- `health/` — Health check
 
-### 7. [SECURITY] DATABASE_URL в docker-compose с паролем в URL
-**File:** `docker-compose.yml` (строка 67)
-```yaml
-DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-portfolio_db}
-```
-**Problem:** Пароль попадает в URL, что может быть залогировано.
-**Severity:** 🟡 LOW
-**Recommendation:** Использовать отдельные переменные (уже есть POSTGRES_HOST, POSTGRES_USER и т.д.).
-
-### 8. [FRONTEND] No TypeScript
-**File:** `frontend/` — все файлы `.jsx`, `.js`
-**Problem:** Нет type safety на frontend.
-**Severity:** 🟡 LOW
-**Recommendation:** Рассмотреть миграцию на TypeScript при следующем рефакторинге.
-
-### 9. [FRONTEND] Hero image hardcoded
-**File:** `frontend/src/assets/hero.png`
-**Problem:** Нет возможности менять hero-изображение через админку без деплоя кода.
-**Severity:** 🟡 LOW
-**Recommendation:** Добавить upload endpoint для hero-изображения.
+**Frontend Structure:**
+- `src/components/` — Reusable UI components (Header, Hero, Skills, Projects, ContactForm, Footer, Toast, DoodleCanvas, etc.)
+- `src/pages/` — Route-level pages (LoginPage)
+- `src/admin/pages/` — Admin dashboard pages
+- `src/contexts/` — AuthContext, SettingsContext, ThemeContext
+- `src/api/` — Typed API modules (authApi, statsApi)
 
 ---
 
-## 🟢 LOW / INFO
+## 3. Security Audit
 
-### 10. [SECURITY] CORS — permissive origins
-**File:** `docker-compose.yml` (строка 70)
-```yaml
-ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000,http://frontend:80,http://localhost,http://127.0.0.1}
-```
-**Status:** ✅ Принято — конкретные origins, не `*`.
+### 3.1 Authentication ✅ Good
+- JWT + refresh token mechanism with rotation
+- JWT blacklist entity for revocation
+- Account lockout (`user.entity.ts`: `lastLoginAttempt`, `failedLoginAttempts`, `lockUntil`)
+- Secure cookies: `httpOnly`, `secure`, `sameSite: 'strict'`
+- Password hashing with bcrypt (salt rounds: 12)
+- CSRF middleware (`csrf.middleware.ts`) on `/api/auth` routes
+- Timing attack protection on login (fake bcrypt compare on missing user)
+- JWT_SECRET and JWT_REFRESH_SECRET validated at bootstrap (min 32 chars)
 
-### 11. [SECURITY] Rate Limiting
-**File:** `backend/src/app.module.ts` (строки 18-31)
-**Status:** ✅ Реализован через `@nestjs/throttler` с short (10/сек) и default (60/мин) правилами.
-
-### 12. [ARCHITECTURE] admin.module.ts exports TypeOrmModule globally
-**File:** `backend/src/admin/admin.module.ts` (строка 23)
+### 🔴 ISSUE-1: HMAC Captcha Weakness (HIGH)
+**File:** `backend/src/portfolio/portfolio.service.ts:93-98`
 ```typescript
-exports: [AdminService, TypeOrmModule],
+const jwtSecret = this.configService.get<string>('JWT_SECRET') || 'default-captcha-secret';
+const hmac = createHmac('sha256', jwtSecret);
+hmac.update(`${expectedAnswer}:${expiresAt}`);
 ```
-**Problem:** `@Global()` + экспорт TypeOrmModule может привести к circular dependencies.
-**Severity:** 🟢 LOW
-**Recommendation:** Рассмотреть удаление `@Global()` если не требуется.
+**Problem:** 
+1. JWT_SECRET leak → captcha forgeable (same secret used for both JWT and captcha HMAC)
+2. Hardcoded fallback `'default-captcha-secret'` is trivially guessable
+3. Captcha expires in 10 minutes (too long for a simple math question)
 
-### 13. [FRONTEND] Toast через window.toast
-**File:** `frontend/src/components/ContactForm.jsx`
-**Problem:** Зависимость от глобального callback.
-**Severity:** 🟢 LOW
-**Recommendation:** Создать ToastContext.
+**Fix:** 
+- Use separate `CAPTCHA_SECRET` env var with NO default fallback
+- Reduce expiry to 2-3 minutes
+- Add rate limiting per IP for captcha verification
 
-### 14. [FRONTEND] HashRouter → BrowserRouter ✅
-**Status:** ✅ Исправлено в `frontend/src/main.jsx`.
+### 🔴 ISSUE-2: Mass Assignment via Object.assign (HIGH)
+**File:** `backend/src/admin/admin.service.ts:170`
+```typescript
+async updateHero(id: number, dto: UpdateHeroDto) {
+    const hero = await this.heroRepo.findOne({ where: { id } });
+    if (!hero) throw new NotFoundException(`Hero with id ${id} not found`);
+    Object.assign(hero, dto);  // ← bypasses DTO validation
+    return this.heroRepo.save(hero);
+}
+```
+**Problem:** `Object.assign` copies ALL properties from DTO directly to entity, bypassing TypeORM's column-level validation. If new columns are added to the entity, they could be mass-assigned without controller-level DTO filtering.
 
-### 15. [FRONTEND] Header admin link ✅
-**Status:** ✅ Исправлено — используется `<Link to="/admin">`.
+**Fix:** Use explicit property mapping:
+```typescript
+hero.name = dto.name;
+hero.title = dto.title;
+hero.bio = dto.bio;
+hero.avatarUrl = dto.avatarUrl;
+hero.resumeUrl = dto.resumeUrl;
+hero.ogImageUrl = dto.ogImageUrl;
+```
+
+### 🟡 ISSUE-3: No Rate Limiting (MEDIUM)
+**File:** `backend/src/admin/auth.controller.ts`
+**Problem:** Login/refresh/change-password endpoints have no rate limiting. Brute-force possible if lockout logic is bypassed.
+
+**Fix:** Add `@nestjs/throttler` or custom rate limiter:
+```typescript
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+// In auth.module.ts
+@UseGuards(ThrottlerGuard)
+@Throttle(10, 60) // 10 requests per 60 seconds
+```
+
+### 🟡 ISSUE-4: Silent Visit Recording Failures (MEDIUM)
+**File:** `backend/src/stats/stats.service.ts:41-48`
+```typescript
+async recordVisit(visitData: Partial<VisitStat>): Promise<void> {
+    try {
+      const visit = this.visitStatRepo.create(visitData);
+      await this.visitStatRepo.save(visit);
+    } catch (error: any) {
+      this.logger.error(`Failed to record visit: ${error.message}`, error.stack);
+    }
+}
+```
+**Problem:** All errors are silently caught and only logged. Failed visits are invisible to users and middleware. If the DB connection drops, stats silently stop being recorded with no alerting.
+
+**Fix:** 
+- Add a retry mechanism or at-least-once delivery pattern
+- Add alerting when error rate exceeds threshold
+- Consider making `recordVisit` fire-and-forget via a queue (BullMQ)
+
+### 🟡 ISSUE-5: No Cleanup Cron (MEDIUM)
+**File:** `docker-compose.yml:84`
+**Problem:** 
+- Uploads directory is mounted as a volume (`./backend/uploads:/app/uploads`) but no cleanup mechanism
+- Visit stats are never cleaned up (only `cleanupOldVisits()` method exists but is never called)
+- Audit logs grow unbounded
+
+### 🟡 ISSUE-6: No Brute-Force Protection on changePassword (MEDIUM)
+**File:** `backend/src/admin/auth.service.ts:307`
+**Problem:** `changePassword()` endpoint has no rate limiting. An attacker with access to a user's session could spam password change attempts.
+**Fix:** Add rate limiting and require current password verification (already done) + add cooldown between attempts.
 
 ---
 
-## 🧪 Testing Analysis
+## 4. Database & Migrations
 
-### Backend Tests
-| File | Type | Coverage |
-|------|------|----------|
-| `backend/src/admin/upload/upload.controller.spec.ts` | Unit | ✅ |
-| `backend/test/app.e2e-spec.ts` | E2E | ✅ |
-| `backend/jest.config.js` | Config | ✅ |
-| `backend/test/jest-e2e.config.js` | E2E Config | ✅ |
+### Schema (10 entities, 10 migrations)
+| Entity | File | Key Fields |
+|--------|------|------------|
+| User | `user.entity.ts` | username, passwordHash, role, failedLoginAttempts, lockUntil |
+| Skill | `skill.entity.ts` | name, icon, description, sortOrder, deletedAt |
+| Project | `project.entity.ts` | title, description, techStack, imageUrl, githubUrl, liveUrl, sortOrder, viewCount |
+| ContactMessage | `contact-message.entity.ts` | name, email, message, replied, deletedAt |
+| Hero | `hero.entity.ts` | name, title, bio, avatarUrl, resumeUrl, ogImageUrl |
+| SocialLink | `social-link.entity.ts` | name, url, icon, sortOrder |
+| Settings | `settings.entity.ts` | enableDoodly, enableBug, enablePageTear, enableInkLeak, enableEasterEgg, showAdminLink |
+| AuditLog | `audit-log.entity.ts` | userId, action, entityType, entityId, ipAddress, userAgent, timestamp |
+| JwtBlacklist | `jwt-blacklist.entity.ts` | tokenIdentifier, expiresAt |
+| VisitStat | `visit-stat.entity.ts` | ipAddress, userAgent, path, referrer, country, browser, os, deviceType, visitedAt |
 
-**Problem:** Только 1 unit test (upload) + 1 e2e spec (базовый). Нет тестов для:
-- Auth service/controller
-- Admin service
-- Portfolio service
-- DTO validation
+### Migration Status
+- ✅ 10 migration files in `backend/src/migrations/`
+- ✅ `data-source.ts` configured for TypeORM migrations
+- ✅ Migration commands: `migration:generate`, `migration:run`
+- ⚠️ No `synchronize: true` in production (good)
 
-### Frontend Tests
-| Status | Нет тестов |
-|--------|------------|
-
-**Recommendation:** Добавить Vitest + React Testing Library.
-
----
-
-## 📁 File Structure Analysis
-
-### Backend (`backend/src/`)
-```
-admin/
-├── admin.controller.ts    ✅ RESTful endpoints
-├── admin.module.ts        ✅ @Global() + feature imports
-├── admin.service.ts       ✅ Business logic
-├── auth.controller.ts     ✅ JWT auth
-├── auth.module.ts         ✅ JwtModule.registerAsync
-├── auth.service.ts        ✅ Auth logic
-├── jwt.strategy.ts        ✅ Passport JWT
-├── user.service.ts        ✅ User CRUD
-├── dto/                   ✅ DTOs with validation
-├── entities/              ✅ TypeORM entities
-└── upload/                ✅ File upload
-portfolio/
-├── portfolio.controller.ts ✅ Public API
-├── portfolio.module.ts    ✅
-└── portfolio.service.ts   ✅
-migration/
-├── run.ts                 ✅
-└── migrations/            ❌ Пусто
-health.module.ts           ✅ Health check
-main.ts                    ✅ NestJS bootstrap
-app.module.ts              ✅ Root module
-data-source.ts             ✅ TypeORM config
-seed.ts                    ✅ DB seeding
-```
-
-### Frontend (`frontend/src/`)
-```
-admin/pages/
-└── AdminDashboard.jsx     ✅ Admin panel
-components/
-├── ContactForm.jsx        ✅
-├── Footer.jsx             ✅
-├── Header.jsx             ✅
-├── Hero.jsx               ✅
-├── Projects.jsx           ✅
-├── ProtectedRoute.tsx     ✅ Auth guard
-├── Skills.jsx             ✅
-├── SvgIllustrations.jsx   ✅
-└── Toast.jsx              ✅
-contexts/
-└── AuthContext.tsx        ✅ Auth state management
-pages/
-└── LoginPage.tsx          ✅ Login page
-api/
-└── authApi.ts             ✅ Auth API functions
-```
+### Index Optimization
+- `1781098401948-AddDatabaseIndices.ts` adds indexes for performance
+- Covers: `VisitStat.visitedAt`, `Project.viewCount`, `ContactMessage.deletedAt`
 
 ---
 
-## 🔐 Security Deep Dive
+## 5. Frontend Security
 
-### JWT Authentication
-| Aspect | Status | Notes |
-|--------|--------|-------|
-| Strategy | ✅ | Passport JWT (stateless) |
-| Blacklist | ✅ | JwtBlacklistEntity для logout |
-| Cookie HttpOnly | ✅ | Secure cookie setup |
-| Cookie SameSite | ✅ | `Lax` protection |
-| Secret Strength | ❌ | Weak default secret |
-| Token Expiry | ⚠️ | 7 days is too long |
-| Refresh Tokens | ❌ | Нет реализации |
+### ✅ Good Practices
+- Axios instance for API calls (`frontend/src/api.js`)
+- ProtectedRoute component for auth guards
+- Error boundaries for crash recovery
+- Helmet for SEO meta tags
+- No raw `fetch` in components (uses api instance)
 
-### File Upload Security
-| Aspect | Status | Notes |
-|--------|--------|-------|
-| Extension Whitelist | ✅ | image/jpeg, image/png, image/webp |
-| File Size Limit | ✅ | 5MB max |
-| Storage Location | ✅ | Outside Docker volume |
-| Access Control | ✅ | `/public/uploads/` через Nginx |
+### 🟢 ISSUE-7: Gemini API Key in URL Query Params (LOW)
+**File:** `backend/src/portfolio/portfolio.service.ts:193`
+**Problem:** API key passed as URL query parameter (`?key=...`) which gets logged in server access logs and browser network tab.
+**Fix:** Pass API key in request headers instead of query params.
 
-### Database Security
-| Aspect | Status | Notes |
-|--------|--------|-------|
-| Connection Pool | ✅ | TypeORM config |
-| SSL (production) | ❌ | Нет SSL/TLS для DB connection |
-| Migrations | ❌ | Пустая директория |
-| Backup Strategy | ❌ | Нет backup в docker-compose |
+### 🟢 ISSUE-8: Honeypot Field Without Server Enforcement (LOW)
+**File:** `create-contact-message.dto.ts`
+**Problem:** Honeypot field (`websiteUrl`) exists in DTO but no server-side validation to reject submissions where it is filled.
+**Fix:** Add validation: `@IsEmpty({ message: 'Bot detected' })` on `websiteUrl`.
+
+### 🟢 ISSUE-9: No Retry Logic for Data Fetching (LOW)
+**File:** `frontend/src/App.jsx:149-166`
+**Problem:** If initial data fetch fails, the page shows "Loading..." forever with no retry.
+**Fix:** Add retry logic or error state with retry button.
 
 ---
 
-## 🏗️ Architecture Review
+## 6. Docker & Infrastructure
 
-### Backend Module Dependencies
+### ✅ Good Practices
+- Healthchecks for all services
+- Named volumes for PostgreSQL data
+- JSON file logging with size limits
+- Bridge network isolation
+- `depends_on` with health conditions
+- `.env` files excluded via `.dockerignore`
+
+### ⚠️ Recommendations
+1. Add `--no-cache` to Docker builds for security
+2. Use Docker secrets for sensitive values in production
+3. Add `deploy.resources.limits` for resource constraints
+4. Pin Docker image versions (e.g., `postgres:16.4-alpine` instead of `postgres:16-alpine`)
+
+---
+
+## 7. AI Integration
+
+### ✅ Good Practices
+- Graceful fallback on Gemini API failure
+- Image preprocessing (canvas capture, base64 encoding)
+- Session-based tracking (sessionStorage)
+
+### ⚠️ Recommendations
+1. Add request size limits for doodle images
+2. Cache common doodle responses to reduce API costs
+3. Add timeout for Gemini API calls
+
+---
+
+## 8. Testing
+
+### Current State
+- ✅ E2E tests: `backend/test/` (admin, auth, portfolio)
+- ✅ Unit test config: `backend/jest.config.js`
+- ✅ Component tests: `frontend/src/setupTests.js`
+- ✅ Spec files for components (`.spec.tsx/.spec.jsx`)
+
+### ⚠️ Recommendations
+1. Add integration tests for auth flow (login → protected route → logout)
+2. Add captcha verification tests
+3. Add CSRF validation tests
+4. Add coverage threshold in Jest config
+
+---
+
+## 9. Environment Variables
+
+### Required (.env.example)
 ```
-app.module.ts
-├── AdminModule (@Global())
-│   ├── AuthModule
-│   │   ├── JwtModule
-│   │   └── PassportModule
-│   ├── UploadModule
-│   └── TypeOrmModule (global)
-├── PortfolioModule
-│   └── TypeOrmModule (re-import)
-├── HealthModule
-└── ThrottlerModule
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=portfolio_db
+JWT_SECRET=<32+ chars>
+JWT_REFRESH_SECRET=<32+ chars>
+JWT_EXPIRES_IN=7d
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=<strong-password>
+ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+GEMINI_API_KEY=<key>
+PORT=3001
+NODE_ENV=development
 ```
 
-**Observations:**
-- ✅ `@Global()` на AdminModule уместен — нужен общий доступ к TypeORM
-- ✅ Throttler настроен с разными лимитами для short/default
-- ⚠️ PortfolioModule импортирует TypeOrmModule повторно — работает, но избыточно
-
-### Frontend Component Hierarchy
-```
-App.jsx
-├── BrowserRouter
-│   ├── Routes
-│   │   ├── LoginPage (public)
-│   │   ├── AdminDashboard (protected)
-│   │   └── Home (public)
-│   │       ├── Header
-│   │       │   ├── Hero
-│   │       │   ├── Projects
-│   │       │   ├── Skills
-│   │       │   ├── ContactForm
-│   │       │   └── Footer
-│   │       └── ThemeContext
-│   └── AuthContext
-```
-
-**Observations:**
-- ✅ Clear separation: public pages + protected admin
-- ✅ Context pattern для auth и theme
-- ⚠️ Нет lazy loading для routes (большой initial bundle)
+### ⚠️ Recommendations
+1. Add `CAPTCHA_SECRET` env var (separate from JWT_SECRET)
+2. Add `UPLOAD_DIR` env var for uploads path
+3. Add `RATE_LIMIT_MAX` and `RATE_LIMIT_WINDOW` for configurable rate limiting
 
 ---
 
-## 📋 Recommendations Priority Matrix
+## 10. Recommendations Summary
 
-### 🔴 Immediate Action Required
-| # | Issue | Effort | Impact |
-|---|-------|--------|--------|
-| 1 | Сменить JWT_SECRET на production | 5 мин | 🔴 HIGH |
-| 2 | Запретить ADMIN_PASSWORD=admin | 15 мин | 🔴 HIGH |
-| 3 | Добавить миграции БД | 30 мин | 🟡 MEDIUM |
+### 🔴 Critical (Fix Immediately)
+1. **Separate CAPTCHA_SECRET** from JWT_SECRET
+2. **Replace Object.assign** with explicit property mapping in `updateHero`
 
-### 🟡 Short-term (1-2 недели)
-| # | Issue | Effort | Impact |
-|---|-------|--------|--------|
-| 4 | Уменьшить JWT_EXPIRES_IN до 1h | 5 мин | 🟡 MEDIUM |
-| 5 | Добавить refresh tokens | 2 часа | 🟡 MEDIUM |
-| 6 | Унифицировать порты DEV/PROD | 15 мин | 🟡 LOW |
-| 7 | Добавить SSL для DB connection | 30 мин | 🟡 MEDIUM |
+### 🟡 Medium (Next Sprint)
+3. Add `@nestjs/throttler` for rate limiting
+4. Add cleanup cron for uploads/stats/audit logs
+5. Add alerting for silent failures in `recordVisit`
+6. Add brute-force protection on `changePassword`
 
-### 🟢 Long-term (1-2 месяца)
-| # | Issue | Effort | Impact |
-|---|-------|--------|--------|
-| 8 | Добавить backend unit tests | 8 часов | 🟡 MEDIUM |
-| 9 | Добавить frontend tests | 8 часов | 🟡 MEDIUM |
-| 10 | Миграция frontend на TypeScript | 1 день | 🟢 LOW |
-| 11 | Добавить lazy loading routes | 1 час | 🟢 LOW |
-| 12 | Добавить DB backup strategy | 2 часа | 🟡 MEDIUM |
+### 🟢 Low (Backlog)
+7. Pass Gemini API key in headers, not query params
+8. Add server-side honeypot validation
+9. Add retry logic for frontend data fetching
+10. Add integration and CSRF tests
 
 ---
 
-## 📊 Code Metrics
+## 11. Compliance Checklist
 
-### Backend
-| Metric | Value |
-|--------|-------|
-| TypeScript files | ~25 |
-| DTOs | 10 |
-| Entities | 6 |
-| Modules | 5 |
-| Guards/Interceptors | 2 |
-| Test files | 2 |
-
-### Frontend
-| Metric | Value |
-|--------|-------|
-| JS/JSX files | ~15 |
-| TSX files | 2 |
-| Components | 9 |
-| Pages | 3 |
-| Contexts | 2 |
-| Tests | 0 |
+| Check | Status |
+|-------|--------|
+| No hardcoded secrets | ✅ (except captcha fallback - see ISSUE-1) |
+| JWT_SECRET >= 32 chars | ✅ (validated at bootstrap) |
+| HTTPS in production | ⚠️ (depends on reverse proxy/Nginx) |
+| CSRF protection | ✅ (on `/api/auth`) |
+| CORS restricted | ✅ (origin whitelist) |
+| Input validation | ✅ (ValidationPipe with whitelist) |
+| SQL injection protection | ✅ (TypeORM query builder) |
+| XSS protection | ✅ (Helmet CSP, React escaping) |
+| Password hashing | ✅ (bcrypt, salt rounds: 12) |
+| Account lockout | ✅ (5 attempts, 15-min lock) |
+| Secure cookies | ✅ (httpOnly, secure, sameSite) |
+| Soft delete | ✅ (all CRUD entities) |
+| Audit logging | ✅ (upload operations) |
+| Migration-based schema | ✅ (10 migrations) |
 
 ---
 
-## ✅ Positive Findings
-
-1. **Rate Limiting** — `@nestjs/throttler` настроен с разными лимитами
-2. **JWT Blacklist** — реализован для logout
-3. **File Upload Validation** — whitelist extensions + size limit
-4. **Docker Healthchecks** — все сервисы имеют healthcheck
-5. **TypeORM Configuration** — `ConfigService` для dependency injection
-6. **Protected Routes** — корректная реализация на frontend
-7. **Axios Interceptor** — обработка 401 ошибок
-8. **Feature-based Modules** — чистая архитектура NestJS
-9. **Docker Logging** — json-file driver с rotation
-10. **Database Healthcheck** — `pg_isready` проверка
-
----
-
-## 📝 Notes
-
-- `.dbclient/` — внешнее расширение VS Code, не часть проекта
-- `TODO.md` — содержит список задач для проекта
-- `.clinerules` — инструкции для Cline, дублируют часть этого аудита
-- `dist/` и `node_modules/` — игнорируются через `.gitignore`
+**Audit completed by:** Cline AI  
+**Next review:** After fixing all 🔴 issues

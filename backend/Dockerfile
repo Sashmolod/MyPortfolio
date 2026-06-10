@@ -22,7 +22,31 @@ COPY . .
 RUN npm run build
 
 # ============================================
-# Stage 2: Запуск (Production)
+# Stage 2: Development
+# Полноценное окружение для разработки с hot reload
+# ============================================
+FROM node:20-alpine AS development
+
+WORKDIR /app
+
+# Копируем package.json и package-lock.json для кэширования зависимостей
+COPY package*.json ./
+
+# Устанавливаем ВСЕ зависимости (включая devDependencies для nest --watch)
+RUN npm ci && \
+    npm cache clean --force
+
+# Копируем исходный код
+COPY . .
+
+# Открываем порт NestJS приложения
+EXPOSE 3000
+
+# Запускаем NestJS в watch-режиме для hot reload
+CMD ["npx", "nest", "start", "--watch"]
+
+# ============================================
+# Stage 3: Запуск (Production)
 # Используем минимальный образ для уменьшения размера итогового образа
 # ============================================
 FROM node:20-alpine AS production

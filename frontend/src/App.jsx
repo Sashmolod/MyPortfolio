@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import { usePortfolioSettings } from './contexts/SettingsContext';
+import api from './api';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import Skills from './components/Skills';
@@ -10,9 +11,6 @@ import ContactForm from './components/ContactForm';
 import Footer from './components/Footer';
 import ToastContainer from './components/Toast';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import { LoginPage } from './pages/LoginPage'
-import AdminDashboard from './admin/pages/AdminDashboard';
-import api from './api';
 import DoodleCanvas from './components/DoodleCanvas';
 import DoodleControls from './components/DoodleControls';
 import DoodlyHelper from './components/DoodlyHelper';
@@ -24,6 +22,10 @@ import PageCrumpler from './components/PageCrumpler';
 import ErrorBoundary from './components/ErrorBoundary';
 import { Helmet } from 'react-helmet-async';
 
+// Lazy-loaded components for code splitting
+const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
+const AdminDashboard = lazy(() => import('./admin/pages/AdminDashboard'));
+
 /**
  * Главная страница приложения (публичная)
  */
@@ -32,6 +34,7 @@ function PublicPage() {
   const [skills, setSkills] = useState([]);
   const [projects, setProjects] = useState([]);
   const [heroData, setHeroData] = useState(null);
+  const [hero, setHero] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // States for doodles
@@ -113,8 +116,7 @@ function PublicPage() {
 
       const base64Image = canvas.toDataURL('image/png');
 
-      const apiUrl = import.meta.env.VITE_API_URL || '/api';
-      const response = await fetch(`${apiUrl}/portfolio/doodly/guess`, {
+      const response = await fetch('/api/portfolio/doodly/guess', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -155,6 +157,7 @@ function PublicPage() {
         setSkills(skillsRes.data);
         setProjects(projectsRes.data);
         setHeroData(heroRes.data);
+        setHero(heroRes.data?.hero || null);
       } catch (err) {
         console.error('Error fetching data:', err);
       } finally {
@@ -195,15 +198,15 @@ function PublicPage() {
   return (
     <div style={{ position: 'relative' }}>
       <Helmet>
-        <title>{heroData?.name ? `${heroData.name} - ${heroData.title} | Portfolio` : 'Developer Portfolio | Sketchbook'}</title>
-        <meta name="description" content={heroData?.bio || 'Creative sketch-style web developer portfolio with hand-drawn interactive elements and drawings.'} />
+        <title>{hero?.name ? `${hero.name} - ${hero.title} | Portfolio` : 'Developer Portfolio | Sketchbook'}</title>
+        <meta name="description" content={hero?.bio || 'Creative sketch-style web developer portfolio with hand-drawn interactive elements and drawings.'} />
         <meta name="keywords" content="web developer, sketch portfolio, frontend developer, nestjs react, creative developer, interactive doodles" />
-        <meta property="og:title" content={heroData?.name ? `${heroData.name} - ${heroData.title} | Portfolio` : 'Developer Portfolio | Sketchbook'} />
-        <meta property="og:description" content={heroData?.bio || 'Creative sketch-style web developer portfolio with hand-drawn interactive elements.'} />
+        <meta property="og:title" content={hero?.name ? `${hero.name} - ${hero.title} | Portfolio` : 'Developer Portfolio | Sketchbook'} />
+        <meta property="og:description" content={hero?.bio || 'Creative sketch-style web developer portfolio with hand-drawn interactive elements.'} />
         <meta property="og:type" content="website" />
         <meta property="twitter:card" content="summary_large_image" />
-        <meta property="twitter:title" content={heroData?.name ? `${heroData.name} - ${heroData.title} | Portfolio` : 'Developer Portfolio | Sketchbook'} />
-        <meta property="twitter:description" content={heroData?.bio || 'Creative sketch-style web developer portfolio with hand-drawn interactive elements.'} />
+        <meta property="twitter:title" content={hero?.name ? `${hero.name} - ${hero.title} | Portfolio` : 'Developer Portfolio | Sketchbook'} />
+        <meta property="twitter:description" content={hero?.bio || 'Creative sketch-style web developer portfolio with hand-drawn interactive elements.'} />
       </Helmet>
       <DoodleCanvas 
         active={drawingMode} 
@@ -226,7 +229,7 @@ function PublicPage() {
       />
       <Header />
       <main className="app-main">
-        <Hero data={heroData} />
+        <Hero data={hero} />
         <Skills skills={skills} />
         <Projects projects={projects} />
         <ContactForm />
@@ -242,10 +245,25 @@ function PublicPage() {
 }
 
 /**
+ * Loading fallback для lazy-loaded компонентов
+ */
+function LoadingFallback() {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <p>Loading...</p>
+    </div>
+  );
+}
+
+/**
  * Админ-панель (защищённая)
  */
 function AdminPage() {
-  return <AdminDashboard />;
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <AdminDashboard />
+    </Suspense>
+  );
 }
 
 /**
@@ -266,9 +284,11 @@ function AppRoutes() {
       {/* Страница логина */}
       <Route path="/login" element={
         !isAuthenticated ? (
-          <ErrorBoundary>
-            <LoginPage />
-          </ErrorBoundary>
+          <Suspense fallback={<LoadingFallback />}>
+            <ErrorBoundary>
+              <LoginPage />
+            </ErrorBoundary>
+          </Suspense>
         ) : (
           <Navigate to="/admin" replace />
         )

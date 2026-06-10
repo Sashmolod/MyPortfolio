@@ -86,14 +86,26 @@ export default function AdminDashboard() {
         setMessages(res.data);
       } else if (activeTab === 'hero') {
         const res = await api.get('/portfolio/hero');
-        let data = res.data;
-        // Парсим до объекта (защита от двойного кодирования)
-        let sl = data.socialLinks;
+        const data = res.data;
+        // Извлекаем hero объект из обёртки { hero: {...}, socialLinks: [...] }
+        let hero = data.hero || data;
+        // Парсим socialLinks (защита от двойного кодирования)
+        let sl = data.socialLinks || data.socialLinksStr;
         while (sl && typeof sl === 'string') {
           try { sl = JSON.parse(sl); } catch { sl = {}; break; }
         }
-        data = { ...data, socialLinks: sl || {} };
-        setHeroData(data);
+        // Преобразуем массив socialLinks в объект для обратной совместимости
+        let socialLinksObj = {};
+        if (Array.isArray(sl)) {
+          socialLinksObj = sl.reduce((acc, link) => {
+            acc[link.platform] = link.url;
+            return acc;
+          }, {});
+        } else if (typeof sl === 'object') {
+          socialLinksObj = sl;
+        }
+        hero = { ...hero, socialLinks: socialLinksObj };
+        setHeroData(hero);
       } else if (activeTab === 'trash') {
         const [skillsRes, projectsRes, messagesRes, socialLinksRes] = await Promise.all([
           api.get('/admin/skills/deleted'),

@@ -44,9 +44,9 @@ export class HeroSocialLinkDto {
   url: string;
 }
 
-export class HeroDataDto {
-  @ApiProperty({ description: 'ID профиля (может отсутствовать для дефолтных данных)', example: 1, required: false })
-  id?: number;
+export class HeroDto {
+  @ApiProperty({ description: 'ID hero-записи', example: 1, required: false })
+  id?: number | null;
 
   @ApiProperty({ description: 'Имя', example: 'Александр' })
   name: string;
@@ -59,6 +59,11 @@ export class HeroDataDto {
 
   @ApiProperty({ description: 'Аватар (путь к изображению или null)', example: '/uploads/avatar.png', nullable: true })
   avatar: string | null;
+}
+
+export class HeroDataDto {
+  @ApiProperty({ description: 'Hero-запись', type: HeroDto })
+  hero: HeroDto;
 
   @ApiProperty({ description: 'Список социальных ссылок', type: [HeroSocialLinkDto] })
   socialLinks: HeroSocialLinkDto[];

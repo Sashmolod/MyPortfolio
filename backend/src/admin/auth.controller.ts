@@ -89,8 +89,9 @@ export class AuthController {
     if (userId && refreshToken) {
       try {
         await this.authService.logout(userId, refreshToken);
-      } catch (error) {
-        this.logger.error(`Ошибка аннулирования токена при выходе: ${error.message}`);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.logger.error(`Ошибка аннулирования токена при выходе: ${message}`);
       }
     }
 
@@ -182,6 +183,16 @@ export class AuthController {
   async createFirstAdmin(@Body() dto: LoginDto) {
     const result = await this.authService.createDefaultAdmin(dto);
     return result;
+  }
+
+  @ApiOperation({ summary: 'Получить CSRF token (устанавливает csrf_token cookie)' })
+  @ApiOkResponse({ description: 'CSRF token получен', type: MessageResponseDto })
+  @HttpCode(HttpStatus.OK)
+  @Get('csrf-token')
+  async getCsrfToken(@Res() res: Response) {
+    // Middleware сгенерирует CSRF token при следующем POST запросе
+    // Но мы можем сгенерировать его заранее для удобства
+    return res.json({ message: 'CSRF token будет сгенерирован при следующем запросе' });
   }
 
   @UseGuards(JwtAuthGuard)

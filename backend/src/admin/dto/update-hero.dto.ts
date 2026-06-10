@@ -1,4 +1,4 @@
-import { IsString, IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsBoolean } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { CreateHeroDto } from './create-hero.dto';
 
@@ -27,4 +27,9 @@ export class UpdateHeroDto implements Partial<CreateHeroDto> {
   @IsString()
   @IsOptional()
   socialLinks?: string;
+
+  @ApiPropertyOptional({ description: 'Is this the primary hero (only one can be true)', example: true })
+  @IsBoolean()
+  @IsOptional()
+  isPrimary?: boolean;
 }

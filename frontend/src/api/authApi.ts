@@ -1,7 +1,11 @@
 import axios from 'axios';
 
 // @ts-ignore - import.meta.env is available in Vite
-const API_URL = (import.meta as any).env?.VITE_API_URL || '/api';
+// В development (Vite dev server) используем относительный путь — запросы проксируются через Vite HMR-сервер
+// В production (Nginx) используем VITE_API_URL из env
+const API_URL = (import.meta as any).env?.DEV
+  ? '/api'
+  : (import.meta as any).env?.VITE_API_URL || '/api';
 
 
 const authApi = axios.create({

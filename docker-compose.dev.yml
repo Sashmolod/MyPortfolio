@@ -1,6 +1,8 @@
 services:
   db:
     image: postgres:16-alpine
+    container_name: portfolio_db_dev
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
@@ -13,30 +15,39 @@ services:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
+      start_period: 30s
       retries: 5
     networks:
       - portfolio-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      target: development
       args:
         NODE_ENV: development
+    container_name: portfolio_backend_dev
+    restart: unless-stopped
     environment:
       POSTGRES_HOST: db
-      POSTGRES_PORT: 5432
+      POSTGRES_PORT: "5432"
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-portfolio_db}
       DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@db:5432/portfolio_db}
-      PORT: ${PORT:-3000}
+      PORT: "3000"
       JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret_change_in_production_min_32_chars}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev_jwt_refresh_secret_change_in_prod_32}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000,http://frontend:80,http://localhost,http://127.0.0.1}
-      GEMINI_API_KEY: ${GEMINI_API_KEY}
-
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      CAPTCHA_SECRET: ${CAPTCHA_SECRET:-dev_captcha_secret_change_in_production_min_32_chars}
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
     ports:
@@ -44,34 +55,64 @@ services:
     volumes:
       - ./backend:/app
       - /app/node_modules
-      - /app/dist
-    command: npx nest start --watch
     depends_on:
       db:
         condition: service_healthy
     networks:
       - portfolio-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      target: development
       args:
         NODE_ENV: development
+    container_name: portfolio_frontend_dev
+    restart: unless-stopped
     environment:
-      VITE_API_URL: ${VITE_API_URL:-http://localhost:3000/api}
+      - DOCKER_DEV=true
+      - NODE_ENV=development
+      - VITE_API_URL=http://backend:3000/api
+      - VITE_HMR_PROTOCOL=ws
+      - VITE_HMR_HOST=0.0.0.0
+      - VITE_HMR_PORT=5173
     ports:
-      - "5173:80"
+      - "5173:5173"
     volumes:
       - ./frontend:/app
       - /app/node_modules
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - portfolio-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:5173/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      start_period: 15s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
 
 volumes:
   postgres_data:
+    driver: local
 
 networks:
   portfolio-network:

@@ -35,25 +35,32 @@ export class PortfolioService {
   // ====== HERO CRUD ======
 
   async getHeroData() {
-    const heroes = await this.heroRepo.find({ take: 1 });
-    const hero = heroes[0];
+    const heroes = await this.heroRepo.find({ order: { createdAt: 'DESC' }, take: 1 });
+    const hero = heroes[0] ?? null;
     const socialLinks = await this.socialLinkRepo.find({ order: { sortOrder: 'ASC' } });
+    
+    // Возвращаем одиночный hero
     if (hero) {
       return {
-        id: hero.id,
-        name: hero.name,
-        title: hero.title,
-        bio: hero.bio,
-        avatar: hero.avatar,
+        hero: {
+          id: hero.id,
+          name: hero.name,
+          title: hero.title,
+          bio: hero.bio,
+          avatar: hero.avatar,
+        },
         socialLinks,
       };
     }
     // Дефолтные данные если нет записи в БД
     return {
-      name: 'John Doe',
-      title: 'Full Stack Developer',
-      bio: 'I build things for the web and beyond.',
-      avatar: null,
+      hero: {
+        id: null,
+        name: 'John Doe',
+        title: 'Full Stack Developer',
+        bio: 'I build things for the web and beyond.',
+        avatar: null,
+      },
       socialLinks: [
         { platform: 'GitHub', url: 'https://github.com/yourusername' },
         { platform: 'LinkedIn', url: 'https://linkedin.com/in/yourusername' },
@@ -90,10 +97,13 @@ export class PortfolioService {
       expectedAnswer = maxVal - minVal;
     }
     
-    const jwtSecret = this.configService.get<string>('JWT_SECRET') || 'default-captcha-secret';
-    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 mins
+    const captchaSecret = this.configService.get<string>('CAPTCHA_SECRET');
+    if (!captchaSecret) {
+      throw new Error('CAPTCHA_SECRET is not configured');
+    }
+    const expiresAt = Date.now() + 3 * 60 * 1000; // 3 mins
     
-    const hmac = createHmac('sha256', jwtSecret);
+    const hmac = createHmac('sha256', captchaSecret);
     hmac.update(`${expectedAnswer}:${expiresAt}`);
     const signature = hmac.digest('hex');
     
@@ -119,10 +129,13 @@ export class PortfolioService {
       return false;
     }
     
-    const jwtSecret = this.configService.get<string>('JWT_SECRET') || 'default-captcha-secret';
+    const captchaSecret = this.configService.get<string>('CAPTCHA_SECRET');
+    if (!captchaSecret) {
+      return false;
+    }
     const cleanAnswer = answer.trim();
     
-    const hmac = createHmac('sha256', jwtSecret);
+    const hmac = createHmac('sha256', captchaSecret);
     hmac.update(`${cleanAnswer}:${expiresAtStr}`);
     const expectedSignature = hmac.digest('hex');
     
@@ -172,10 +185,11 @@ export class PortfolioService {
     try {
       const skills = await this.getAllSkills();
       const projects = await this.getAllProjects();
-      const hero = await this.getHeroData();
+      const heroData = await this.getHeroData();
 
       const skillsList = skills.map(s => `${s.name} (${s.level}%)`).join(', ');
       const projectsList = projects.map(p => `${p.title}: ${p.description}`).join('; ');
+      const hero = heroData.hero ?? { name: 'Неизвестно', title: 'Full Stack Developer', bio: '' };
 
       const systemPrompt = `Ты — скрепка-помощник Дудли (Smart Clip) на сайте-портфолио разработчика.
 У тебя нарисованы круглые очки и синяя галстук-бабочка. В руках ты держишь карандаш и листок с отметкой А+.
@@ -190,10 +204,11 @@ export class PortfolioService {
 
 Посетитель сайта написал тебе сообщение. Ответь ему на том же языке, на котором написано сообщение (обычно на русском).`;
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey,
         },
         body: JSON.stringify({
           systemInstruction: {
@@ -246,10 +261,11 @@ export class PortfolioService {
 Угадай, что это за предмет или существо, опиши его в шутливом и милом тоне скрепки. Дай очень короткий ответ (1-2 предложения).
 Ответ должен начинаться со слов угадывания (например: "Ого, это же...", "Хм-м, похоже на...", "Я вижу здесь..."). Ответь на русском языке.`;
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+       const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey,
         },
         body: JSON.stringify({
           contents: [

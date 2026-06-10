@@ -188,8 +188,7 @@ export default function DoodlyHelper() {
     soundSynth.playPop();
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || '/api';
-      const response = await fetch(`${apiUrl}/portfolio/doodly/chat`, {
+      const response = await fetch('/api/portfolio/doodly/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

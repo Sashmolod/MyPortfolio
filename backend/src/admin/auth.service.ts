@@ -150,7 +150,12 @@ export class AuthService implements OnApplicationBootstrap, OnModuleDestroy {
   }
 
   /**
-   * Обновление токенов через refresh token
+   * Обновление токенов через refresh token (с Rotation)
+   * 
+   * Refresh Token Rotation — при каждом refresh:
+   * 1. Старый refresh token добавляется в blacklist
+   * 2. Выпускается НОВЫЙ refresh token
+   * 3. Это предотвращает повторное использование скомпрометированного refresh token
    */
   async refreshTokens(refreshToken: string): Promise<AuthPayload> {
     try {
@@ -191,6 +196,15 @@ export class AuthService implements OnApplicationBootstrap, OnModuleDestroy {
         throw new UnauthorizedException('Пользователь не найден или деактивирован');
       }
 
+      // ==========================================
+      // Refresh Token Rotation: blacklist старый токен
+      // ==========================================
+      if (decoded.jti) {
+        const expiresAt = decoded.exp ? new Date(decoded.exp * 1000) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        await this.blacklistToken(decoded.jti, expiresAt);
+        this.logger.log(`Старый refresh token аннулирован (jti: ${decoded.jti}), выпущен новый`)
+      }
+
       // Генерируем новые токены
       const accessPayload = { sub: user.id, username: user.username, type: 'access' };
       const accessToken = this.jwtService.sign(accessPayload, {
@@ -202,6 +216,7 @@ export class AuthService implements OnApplicationBootstrap, OnModuleDestroy {
       const newRefreshToken = this.jwtService.sign(refreshPayload, {
         secret: refreshSecret,
         expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') || '7d',
+        jwtid: `ref_${user.id}_${randomUUID()}`, // jti для нового refresh token
       });
 
       return {

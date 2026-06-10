@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not, IsNull } from 'typeorm';
 
@@ -147,31 +147,60 @@ export class AdminService {
     });
   }
 
-  // Hero CRUD
+  // Hero CRUD — всегда только ОДИН hero в БД
+  private async softDeleteAllHeroes(): Promise<void> {
+    // Soft-delete все hero, которые не помечены как удалённые
+    await this.heroRepo.query(
+      "UPDATE \"hero\" SET deleted_at = NOW() WHERE deleted_at IS NULL"
+    );
+  }
+
   async getAllHeroes() {
-    return this.heroRepo.find({ order: { createdAt: 'DESC' } });
+    return this.heroRepo.find({ 
+      where: { deletedAt: IsNull() },
+      order: { createdAt: 'DESC' } 
+    });
   }
 
   async getHero(id: number) {
-    const hero = await this.heroRepo.findOne({ where: { id } });
+    const hero = await this.heroRepo.findOne({ where: { id, deletedAt: IsNull() } });
     if (!hero) throw new NotFoundException('Hero not found');
     return hero;
   }
 
   async createHero(dto: CreateHeroDto) {
+    // Удаляем все существующие hero перед созданием нового
+    await this.softDeleteAllHeroes();
     const hero = this.heroRepo.create(dto);
     return this.heroRepo.save(hero);
   }
 
   async updateHero(id: number, dto: UpdateHeroDto) {
-    const hero = await this.heroRepo.findOne({ where: { id } });
-    if (!hero) throw new NotFoundException(`Hero with id ${id} not found`);
+    // Находим hero по id (или единственную существующую)
+    let hero = await this.heroRepo.findOne({ where: { id, deletedAt: IsNull() } });
+    
+    if (!hero) {
+      // Пробуем найти по любому id (для обратной совместимости)
+      hero = await this.heroRepo.findOne({ where: { deletedAt: IsNull() } });
+    }
+    
+    if (!hero) {
+      // Нет hero — создаём новый
+      await this.softDeleteAllHeroes();
+      hero = this.heroRepo.create(dto);
+      return this.heroRepo.save(hero);
+    }
 
     Object.assign(hero, dto);
     return this.heroRepo.save(hero);
   }
 
   async deleteHero(id: number) {
+    // Нельзя удалить единственного hero — вместо этого создаём дефолтный
+    const count = await this.heroRepo.count({ where: { deletedAt: IsNull() } });
+    if (count <= 1) {
+      throw new BadRequestException('Нельзя удалить единственного hero. Сначала создайте новый.');
+    }
     await this.heroRepo.softDelete(id);
     return { deleted: true };
   }

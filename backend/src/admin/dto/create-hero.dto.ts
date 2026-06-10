@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsBoolean } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateHeroDto {
@@ -26,4 +26,9 @@ export class CreateHeroDto {
   @IsString()
   @IsOptional()
   socialLinks?: string;
+
+  @ApiPropertyOptional({ description: 'Is this the primary hero (defaults to true, only one can be true)', example: true, default: true })
+  @IsBoolean()
+  @IsOptional()
+  isPrimary?: boolean;
 }

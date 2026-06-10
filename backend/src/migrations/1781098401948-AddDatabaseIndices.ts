@@ -4,12 +4,23 @@ export class AddDatabaseIndices1781098401948 implements MigrationInterface {
     name = 'AddDatabaseIndices1781098401948'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`CREATE TABLE "social_links" ("id" SERIAL NOT NULL, "platform" character varying(100) NOT NULL, "url" character varying(255) NOT NULL, "sort_order" integer NOT NULL DEFAULT '0', "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_50d32c67ddd71c09d372b02167f" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE INDEX "IDX_7774aec66b560f3cc7a4c78e2f" ON "social_links" ("sort_order") `);
-        await queryRunner.query(`CREATE INDEX "IDX_27d26dea9b68c0cdf91cd6f516" ON "social_links" ("created_at") `);
-        await queryRunner.query(`CREATE INDEX "IDX_c5bfabed8b7b7e97d69db18edc" ON "social_links" ("deleted_at") `);
-        await queryRunner.query(`ALTER TABLE "hero" DROP COLUMN "social_links_raw"`);
-        await queryRunner.query(`ALTER TABLE "hero" DROP COLUMN "social_links"`);
+        // Создаём таблицу social_links только если её нет (idempotent migration)
+        await queryRunner.query(`CREATE TABLE IF NOT EXISTS "social_links" ("id" SERIAL NOT NULL, "platform" character varying(100) NOT NULL, "url" character varying(255) NOT NULL, "sort_order" integer NOT NULL DEFAULT '0', "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_50d32c67ddd71c09d372b02167f" PRIMARY KEY ("id"))`);
+        
+        // Создаём индексы только если их нет
+        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_7774aec66b560f3cc7a4c78e2f" ON "social_links" ("sort_order")`);
+        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_27d26dea9b68c0cdf91cd6f516" ON "social_links" ("created_at")`);
+        await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_c5bfabed8b7b7e97d69db18edc" ON "social_links" ("deleted_at")`);
+        
+        // Удаляем старые колонки social_links из hero только если они существуют
+        const hasSocialLinksColumn = await queryRunner.hasColumn("hero", "social_links");
+        if (hasSocialLinksColumn) {
+          await queryRunner.query(`ALTER TABLE "hero" DROP COLUMN "social_links"`);
+        }
+        const hasSocialLinksRawColumn = await queryRunner.hasColumn("hero", "social_links_raw");
+        if (hasSocialLinksRawColumn) {
+          await queryRunner.query(`ALTER TABLE "hero" DROP COLUMN "social_links_raw"`);
+        }
         await queryRunner.query(`CREATE INDEX "IDX_b4a01d5d502d44cf40d8f4cd8f" ON "visit_stats" ("path") `);
         await queryRunner.query(`CREATE INDEX "IDX_880843f753f5439dd0eabfd857" ON "visit_stats" ("visited_at") `);
         await queryRunner.query(`CREATE INDEX "IDX_c9b5b525a96ddc2c5647d7f7fa" ON "users" ("created_at") `);

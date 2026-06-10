@@ -100,7 +100,7 @@ export default function HeroForm({ heroData, onSaveData, onCancel }) {
     if (heroData) {
       return pick(heroData, ['name', 'title', 'bio', 'avatar']);
     }
-    return { name: '', title: '', bio: '', avatar: null };
+    return { name: '', title: '', bio: '', avatar: '' };
   });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -109,9 +109,14 @@ export default function HeroForm({ heroData, onSaveData, onCancel }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name.trim()) { window.toast?.('Name is required', 'warning'); return; }
+    if (!form.name?.trim()) { window.toast?.('Name is required', 'warning'); return; }
     setSaving(true);
-    const payload = pick(form, ['name', 'title', 'bio', 'avatar']);
+    // Only send non-empty values (avoid sending null/empty strings)
+    const payload = {};
+    if (form.name?.trim()) payload.name = form.name.trim();
+    if (form.title?.trim()) payload.title = form.title.trim();
+    if (form.bio?.trim()) payload.bio = form.bio.trim();
+    if (form.avatar?.trim()) payload.avatar = form.avatar.trim();
     await onSaveData(payload);
     setSaving(false);
   };
@@ -185,14 +190,14 @@ export default function HeroForm({ heroData, onSaveData, onCancel }) {
       <h3 style={{ fontFamily: "'Architects Daughter', cursive", fontWeight: 'bold', marginBottom: '20px' }}>{heroData?.id ? 'Edit Hero Section' : 'Create Hero Section'}</h3>
       <form onSubmit={handleSubmit}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <input placeholder="Name (e.g., John Doe)" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
-          <input placeholder="Title (e.g., Full Stack Developer)" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
-          <textarea placeholder="Bio" value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} rows="3" />
+          <input placeholder="Name (e.g., John Doe)" value={form.name || ''} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+          <input placeholder="Title (e.g., Full Stack Developer)" value={form.title || ''} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
+          <textarea placeholder="Bio" value={form.bio || ''} onChange={(e) => setForm({ ...form, bio: e.target.value })} rows="3" />
           
           <div style={{ border: 'var(--border-style)', borderRadius: 'var(--sketch-radius-3)', padding: '12px', background: 'var(--card-bg)' }}>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontFamily: "'Architects Daughter', cursive" }}>Avatar Image</label>
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '8px' }}>
-              <input placeholder="Avatar URL" value={form.avatar} onChange={(e) => setForm({ ...form, avatar: e.target.value })} style={{ flex: 1, margin: 0 }} />
+              <input placeholder="Avatar URL" value={form.avatar || ''} onChange={(e) => setForm({ ...form, avatar: e.target.value })} style={{ flex: 1, margin: 0 }} />
               <div style={{ position: 'relative', flexShrink: 0 }}>
                 <input type="file" accept="image/*" onChange={handleAvatarUpload} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }} />
                 <button type="button" className="btn" disabled={uploading} style={{ whiteSpace: 'nowrap', margin: 0 }}>

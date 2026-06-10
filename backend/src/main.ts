@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 import * as path from 'path';
 import compression from 'compression';
+import { CsrfMiddleware } from './admin/csrf.middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bodyParser: false });
@@ -35,8 +36,12 @@ async function bootstrap() {
           styleSrc: isProd
             ? ["'self'", "https://fonts.googleapis.com"]
             : ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-          fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
-          imgSrc: ["'self'", "data:", "https://placehold.co", "https://*.placehold.co", "https://*.gravatar.com"],
+          fontSrc: isProd
+            ? ["'self'", "https://fonts.gstatic.com"]
+            : ["'self'", "data:", "https://fonts.gstatic.com"],
+          imgSrc: isProd
+            ? ["'self'", "https://placehold.co", "https://*.placehold.co", "https://*.gravatar.com"]
+            : ["'self'", "data:", "https://placehold.co", "https://*.placehold.co", "https://*.gravatar.com"],
           connectSrc: [
             "'self'",
             "http://localhost:*",
@@ -57,6 +62,14 @@ async function bootstrap() {
   const jwtSecret = configService.get<string>('JWT_SECRET');
   if (!jwtSecret || jwtSecret.length < 32) {
     throw new Error('FATAL: JWT_SECRET must be defined in the environment and be at least 32 characters long for production security.');
+  }
+
+  // ==========================================
+  // Валидация JWT_REFRESH_SECRET на старте
+  // ==========================================
+  const jwtRefreshSecret = configService.get<string>('JWT_REFRESH_SECRET');
+  if (!jwtRefreshSecret || jwtRefreshSecret.length < 32) {
+    throw new Error('FATAL: JWT_REFRESH_SECRET must be defined in the environment and be at least 32 characters long for production security.');
   }
 
   // Включение CORS для фронтенда
@@ -90,8 +103,10 @@ async function bootstrap() {
 
   app.enableCors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like curl, Postman, mobile apps)
+      // В production — разрешаем запросы без origin для healthcheck (wget/curl)
+      // Разрешаем только конкретные доверенные origin для браузерных запросов
       if (!origin) {
+        // Разрешаем запросы без origin: healthcheck, server-to-server, CLI tools
         callback(null, true);
         return;
       }
@@ -102,12 +117,19 @@ async function bootstrap() {
       }
     },
     credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   });
 
   // Cookie parser middleware - необходим для чтения HttpOnly cookie
   app.use(cookieParser());
+
+  // ==========================================
+  // CSRF protection для auth endpoints
+  // ==========================================
+  // CSRF middleware применяется только к auth routes (login, logout, refresh, change-password)
+  // GET, HEAD, OPTIONS запросы не требуют CSRF token
+  app.use('/api/auth', new CsrfMiddleware().use.bind(new CsrfMiddleware()));
 
   // Глобальный префикс API
   app.setGlobalPrefix('api');

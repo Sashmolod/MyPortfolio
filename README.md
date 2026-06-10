@@ -6,109 +6,110 @@
 .
 ├── .env                    ← корневой (для Docker Compose prod)
 ├── .env.example            ← шаблон переменных окружения
+├── .env.dev                ← корневой для dev режима (передаётся в Docker)
 ├── backend/
-│   ├── .env.dev            ← локальный бэкенд (OrbStack PostgreSQL)
-│   └── .env.prod           ← бэкенд в Docker сети
+│   ├── .env.dev            ← бэкенд в Docker dev сети
+│   └── .env.prod           ← бэкенд в Docker prod сети
 └── frontend/
-    ├── .env.dev            ← настройки для локальной разработки (VITE_API_URL=/api)
-    └── .env.docker         ← настройки для Docker-окружения (VITE_API_URL=/api)
+    ├── .env.dev            ← настройки для Docker dev (VITE_API_URL=http://backend:3000/api)
+    └── .env                ← настройки для Docker prod / локальной разработки
 ```
 
 ---
 
-## 🚀 Режим 1: DEV (локальная разработка)
+## 🚀 Режим 1: DEV (Docker Compose — разработка с hot-reload)
+
+Режим для разработки. Все файлы проекта монтируются в контейнеры через `volumes`, NestJS работает в `--watch` режиме, Vite — в dev режиме с HMR.
 
 ### Требования
-- **OrbStack** с PostgreSQL (сервис `postgres`)
-- Node.js 18+
-- npm или pnpm
+- **OrbStack** или **Docker Desktop** с Docker Compose
+- Node.js 18+ (для локальных команд npm)
 
-### Запуск PostgreSQL
-В OrbStack Dashboard → сервис `postgres`:
-- Host: `localhost`
-- Port: `5432`
-- User: имя твоего ОС-юзера (обычно `hot_pepper`)
-- Password: тот, что задал при создании
-- Database: `portfolio_db`
+### Запуск
 
-### Запуск Backend
 ```bash
-# 1. Убедись что OrbStack PostgreSQL запущен
-# 2. Скопируй .env.dev в .env (если нужно)
-cd backend
-cp .env.dev .env
+# 1. Запустить все сервисы в dev режиме
+npm run docker:dev
 
-# 3. Установи зависимости
-npm install
+# Или вручную:
+docker compose -f docker-compose.dev.yml up -d
 
-# 4. Запусти миграции (создание таблиц)
-npm run migration:run
+# 2. Заполнить базу данных начальными данными (первый запуск)
+docker compose -f docker-compose.dev.yml exec backend npm run seed
 
-# 5. Запусти seed (заполнение данными)
-npm run seed
-
-# 6. Запусти бэкенд в режиме разработки (hot-reload)
-npm run start:dev
+# Фронтенд: http://localhost:5173  (Vite Dev Server с HMR)
+# Бэкенд API: http://localhost:3000/api
+# Админ-панель: http://localhost:5173/admin
 ```
 
+### Горячая перезагрузка (Hot-reload)
+- **Backend**: NestJS работает в `--watch` режиме. При изменении `.ts` файлов контейнер автоматически перезапускается (~2 сек).
+- **Frontend**: Vite Dev Server с HMR. При изменении `.jsx/.tsx` файлов браузер обновляется мгновенно без перезагрузки.
+- **Не нужно перезапускать Docker** — просто редактируй файлы в `./backend/` или `./frontend/`.
 
-Бэкенд доступен на: `http://localhost:3001`
-
-### Запуск Frontend
+### Остановка
 ```bash
-cd frontend
+# Остановить контейнеры (данные сохраняются)
+npm run docker:dev:down
 
-# 1. Скопируй .env.dev
-cp .env.dev .env
+# Или вручную:
+docker compose -f docker-compose.dev.yml down
 
-# 2. Установи зависимости
-npm install
-
-# 3. Запусти Vite Dev Server
-npm run dev
+# Остановить + удалить volumes (осторожно! все данные будут удалены)
+docker compose -f docker-compose.dev.yml down -v
 ```
 
-Фронтенд доступен на: `http://localhost:5173` (или 5174, если 5173 занят)
+### Просмотр логов
+```bash
+# Все сервисы
+docker compose -f docker-compose.dev.yml logs -f
 
-### Админ-панель
-URL: `http://localhost:5173/admin` (или `http://localhost/admin` для Docker PROD)
-- Login: `admin`
-- Password:
-  - В DEV режиме: `admin123` (берется из `backend/.env.dev`)
-  - В PROD режиме: `admin` (дефолтное значение в `docker-compose.yml`)
+# Конкретный сервис
+docker compose -f docker-compose.dev.yml logs -f backend
+docker compose -f docker-compose.dev.yml logs -f frontend
+docker compose -f docker-compose.dev.yml logs -f db
+```
+
+### Обновление приложения
+```bash
+# При изменении Dockerfile или зависимостей
+docker compose -f docker-compose.dev.yml up -d --build
+```
 
 ---
 
-## 🐳 Режим 2: PROD (Docker Compose — всё в контейнерах)
+## 🐳 Режим 2: PROD (Docker Compose — продакшен)
+
+Режим для деплоя. Образы собираются из Dockerfile, фронтенд раздаётся через Nginx.
 
 ### Требования
 - Docker Desktop или OrbStack с Docker
 - docker-compose v2+
 
 ### Запуск всей инфраструктуры
+
 ```bash
-# 1. Убедись что .env содержит параметры для Docker
-# POSTGRES_USER=postgres
-# POSTGRES_PASSWORD=<твой_пароль>
-# POSTGRES_DB=portfolio_db
+# 1. Собрать образы и запустить контейнеры
+npm run docker:prod
 
-# 2. Собрать образы
+# Или вручную:
 docker compose build
-
-# 3. Запустить контейнеры
 docker compose up -d
 
-# 4. Заполнить базу данных начальными данными (по желанию)
+# 2. Заполнить базу данных начальными данными (по желанию)
 docker compose exec backend npm run seed
 
-# Фронтенд: http://localhost
+# Фронтенд: http://localhost (Nginx порт 80)
 # Бэкенд API: http://localhost:3000/api
-# База данных: docker-compose service 'db' (порт 5432 на хосте 5433)
+# Админ-панель: http://localhost/admin
 ```
 
 ### Остановка
 ```bash
 # Остановить контейнеры
+npm run docker:prod:down
+
+# Или вручную:
 docker compose down
 
 # Остановить + удалить volumes (осторожно! все данные будут удалены)
@@ -136,50 +137,39 @@ docker compose up -d --build
 
 ## 📋 Сравнение режимов
 
-| Параметр | DEV (локально) | PROD (Docker) |
-|----------|----------------|---------------|
-| API / Загрузки (клиент) | `/api` и `/uploads` (через прокси Vite на порт 3001) | `/api` и `/uploads` (через прокси Nginx на порт 3000) |
-| Frontend URL | `http://localhost:5173` | `http://localhost` (Nginx порт 80) |
-| PostgreSQL | OrbStack (`localhost:5432`) | Docker service `db` (`db:5432`) |
-| Hot-reload | ✅ Да | ❌ Нет (пересборка образа) |
+| Параметр | DEV (Docker) | PROD (Docker) |
+|----------|--------------|---------------|
+| Файлы проекта | `volumes: ./frontend:/app`, `./backend:/app` | Встроены в образ при `docker build` |
+| Frontend URL | `http://localhost:5173` (Vite Dev Server) | `http://localhost` (Nginx порт 80) |
+| Backend URL | `http://localhost:3000/api` | `http://localhost:3000/api` |
+| PostgreSQL | Docker service `db` (`db:5432`, порт 5433) | Docker service `db` (`db:5432`, порт 5433) |
+| Hot-reload | ✅ Да (NestJS --watch, Vite HMR) | ❌ Нет (пересборка образа) |
 | Админ-панель | `http://localhost:5173/admin` | `http://localhost/admin` |
-| Бэкенд порт | 3001 | 3000 (внутри контейнера), 3000 (хост) |
+| Для чего | Разработка, тестирование | Деплой на сервер |
 
 ---
 
 ## 🔧 Полезные команды
 
-### Локальная разработка
+### Docker Compose
 ```bash
-# Backend
-cd backend && npm run start:dev                       # запустить бэкенд
-cd backend && npm run seed                           # заполнить БД
-cd backend && npm run migration:generate -- <путь>   # создать миграцию (например, npm run migration:generate -- src/migrations/InitialSchema)
-cd backend && npm run migration:run                  # применить миграции
-cd backend && npm run migration:revert               # откатить последнюю миграцию
+# DEV режим
+npm run docker:dev              # запустить dev
+npm run docker:dev:down         # остановить
+docker compose -f docker-compose.dev.yml ps   # статус
+docker compose -f docker-compose.dev.yml logs -f backend  # логи
 
-# Frontend
-cd frontend && npm run dev                           # запустить фронтенд
-cd frontend && npm run build                         # собрать production-версию
-```
+# PROD режим
+npm run docker:prod             # запустить prod
+npm run docker:prod:down        # остановить
+docker compose ps               # статус
+docker compose logs -f backend  # логи
 
-
-### Docker
-```bash
-docker compose up -d              # запустить
-docker compose down               # остановить
-docker compose ps                 # статус контейнеров
-docker exec -it portfolio_db psql -U postgres -d portfolio_db  # подключиться к БД через Docker
-docker compose logs -f backend    # логи бэкенда
-```
-
-### PostgreSQL (локально)
-```bash
-# Подключение к OrbStack
-psql -h localhost -U hot_pepper -d portfolio_db
-
-# Создание базы если не существует
-createdb portfolio_db
+# Общие
+docker compose -f docker-compose.dev.yml exec backend npm run seed    # заполнить БД (dev)
+docker compose exec backend npm run seed                              # заполнить БД (prod)
+docker compose -f docker-compose.dev.yml exec db psql -U postgres -d portfolio_db  # подключиться к БД (dev)
+docker compose exec db psql -U postgres -d portfolio_db              # подключиться к БД (prod)
 ```
 
 ---
@@ -207,72 +197,12 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 * **Gzip Сжатие**: Сжатие контента на бэкенде и прокси-сервере Nginx для ускорения загрузки.
 * **CI/CD Автоматизация**: GitHub Actions воркфлоу запускает линтеры, миграции, юнит- и E2E-тесты в контейнере базы данных при каждом push/PR в `main`.
 
-Подробности настройки и деплоя смотрите в [DEPLOYMENT_GUIDE.md](file:///Users/hot_pepper/MyProjectGitHub/MyPortfolio/DEPLOYMENT_GUIDE.md).
+Подробности настройки и деплоя смотрите в [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md).
 
 ---
 
 ## 🐛 Решение проблем
 
-### Порт 5432 уже занят
+### Порт 5433 уже занят
 ```bash
-# Проверить что слушает порт
-lsof -i :5432
-
-# Если конфликт — измени порт в OrbStack (настройки сервиса postgres)
-# и обнови backend/.env.dev: POSTGRES_PORT=<новый_порт>
-```
-
-### Бэкенд не подключается к БД
-```bash
-# Проверь подключение из бэкенда
-docker compose exec backend wget -qO- http://db:5432 || echo "Connection failed"
-
-# Для локального запуска проверь OrbStack
-psql -h localhost -U hot_pepper -d portfolio_db -c "SELECT 1"
-```
-
-### Frontend не видит API
-Убедитесь, что переменная `VITE_API_URL` в файлах `.env.dev` и `.env.docker` настроена на относительный адрес:
-```
-VITE_API_URL=/api
-```
-Перенаправление (проксирование) запросов к API и папке загрузок `/uploads` осуществляется автоматически:
-- В локальной разработке (**DEV**): Vite перенаправляет запросы `/api` и `/uploads` на бэкенд `http://localhost:3001` (настройки в `vite.config.js`).
-- В контейнерах (**PROD**): Nginx проксирует запросы `/api/` и `/uploads/` на бэкенд-контейнер `backend:3000` (настройки в `nginx.conf`).
-
----
-
-## 🧪 Тестирование
-
-Проект покрыт тестами как на бэкенде, так и на фронтенде.
-
-### Запуск всех тестов проекта (из корня)
-```bash
-npm run test
-```
-
-### Запуск тестов бэкенда (NestJS + Jest)
-Вы можете запустить тесты бэкенда либо из корня, либо перейдя в папку бэкенда:
-```bash
-# Из корня:
-npm run test:backend
-
-# Или из папки backend:
-cd backend
-npm run test           # однократный запуск всех тестов
-npm run test:watch     # запуск в режиме отслеживания изменений (watch)
-npm run test:cov       # сбор отчёта о покрытии (coverage)
-```
-
-### Запуск тестов фронтенда (React + Vitest)
-Вы можете запустить тесты фронтенда либо из корня, либо перейдя в папку фронтенда:
-```bash
-# Из корня:
-npm run test:frontend
-
-# Или из папки frontend:
-cd frontend
-npm run test           # запуск в watch-режиме (интерактивный)
-npm run test:run       # однократный запуск всех тестов
-```
-
+# Проверить что слушит порт

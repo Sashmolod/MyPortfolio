@@ -21,7 +21,27 @@ COPY . .
 RUN npm run build
 
 # ============================================
-# Stage 2: Запуск (Production)
+# Stage 2: Development
+# Запускаем Vite dev server для hot reload
+# ============================================
+FROM node:20-alpine AS development
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install --legacy-peer-deps
+COPY . .
+
+# Переменные окружения для HMR и проксирования
+ENV DOCKER_DEV=true
+ENV VITE_API_URL=http://backend:3000/api
+
+EXPOSE 5173
+
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+
+# ============================================
+# Stage 3: Запуск (Production)
 # Отдаваем статику через легковесный Nginx
 # ============================================
 FROM nginx:alpine AS production

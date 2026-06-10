@@ -66,6 +66,7 @@ services:
       # TypeORM также читает DATABASE_URL (приоритет выше)
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-portfolio_db}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in .env file}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET must be set in .env file}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000,http://frontend:80,http://localhost,http://127.0.0.1}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
