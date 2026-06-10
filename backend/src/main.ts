@@ -23,13 +23,18 @@ async function bootstrap() {
   // ==========================================
   // Helmet - безопасные HTTP заголовки и CSP
   // ==========================================
+  const isProd = process.env.NODE_ENV === 'production';
   app.use(
     helmet({
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-          styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+          scriptSrc: isProd
+            ? ["'self'"]
+            : ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+          styleSrc: isProd
+            ? ["'self'", "https://fonts.googleapis.com"]
+            : ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
           fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
           imgSrc: ["'self'", "data:", "https://placehold.co", "https://*.placehold.co", "https://*.gravatar.com"],
           connectSrc: [
