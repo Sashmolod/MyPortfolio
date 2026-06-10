@@ -72,9 +72,6 @@ describe('AuthController', () => {
       expect(mockResponse.json).toHaveBeenCalledWith({
         message: 'Успешный вход',
         user: loginResult.user,
-        accessToken: loginResult.accessToken,
-        refreshToken: loginResult.refreshToken,
-        expiresIn: loginResult.expiresIn,
       });
     });
   });
@@ -125,9 +122,6 @@ describe('AuthController', () => {
       );
       expect(mockResponse.json).toHaveBeenCalledWith({
         message: 'Токены обновлены',
-        accessToken: refreshResult.accessToken,
-        refreshToken: refreshResult.refreshToken,
-        expiresIn: refreshResult.expiresIn,
       });
     });
 

@@ -32,16 +32,26 @@ export class UploadService {
   }
 
   /**
-   * Фильтр файлов — разрешает только изображения
+   * Фильтр файлов — разрешает только изображения (whitelist MIME + расширений)
    */
   imageFileFilter(req: any, file: Express.Multer.File, cb: any) {
-    const allowedTypes = /jpeg|jpg|png|gif|webp|svg/;
-    const ext = allowedTypes.test(extname(file.originalname).toLowerCase());
-    const mime = allowedTypes.test(file.mimetype);
+    const ALLOWED_MIMES = new Set([
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'image/svg+xml',
+    ]);
+    const ALLOWED_EXTS = new Set(['.jpeg', '.jpg', '.png', '.gif', '.webp', '.svg']);
+
+    const ext = ALLOWED_EXTS.has(extname(file.originalname).toLowerCase());
+    const mime = ALLOWED_MIMES.has(file.mimetype);
+
     if (ext && mime) {
       cb(null, true);
     } else {
-      cb(new Error('Только изображения разрешены (jpeg, jpg, png, gif, webp, svg)'), false);
+      cb(new BadRequestException('Только изображения разрешены (jpeg, jpg, png, gif, webp, svg)'), false);
     }
   }
 
@@ -180,7 +190,8 @@ export class UploadService {
             createdAt: stats.mtime,
           };
         })
-        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+        .slice(0, 200); // Ограничиваем вывод до 200 файлов
     } catch (error) {
       console.error('Error reading uploads directory:', error);
       return [];

@@ -65,15 +65,15 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-portfolio_db}
       # TypeORM также читает DATABASE_URL (приоритет выше)
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-portfolio_db}
-      JWT_SECRET: ${JWT_SECRET:-change-this-to-a-secure-value-in-production}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in .env file}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000,http://frontend:80,http://localhost,http://127.0.0.1}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
 
       # Admin User (автоматически создаётся при запуске)
       # ⚠️ В production ОБЯЗАТЕЛЬНО установите ADMIN_PASSWORD через .env файл!
-      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}  # Пустое значение = генерация случайного пароля
+      ADMIN_USERNAME: ${ADMIN_USERNAME:?ADMIN_USERNAME must be set in .env file}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD must be set in .env file}
     ports:
       # Проксируем порт для прямого доступа к API (для разработки)
       - "3000:3000"
@@ -113,8 +113,6 @@ services:
     ports:
       # Проксируем порт 80 на хост
       - "80:80"
-      # Проксируем порт для HTTPS (если нужен)
-      - "443:443"
     networks:
       - portfolio-network
     # Healthcheck: проверяем, что Nginx отвечает (используем 127.0.0.1 вместо localhost из-за Alpine DNS)

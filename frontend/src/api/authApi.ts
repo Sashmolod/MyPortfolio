@@ -30,7 +30,6 @@ export interface LoginResponse {
     username: string;
     isActive: boolean;
   };
-  accessToken: string;
 }
 
 /**

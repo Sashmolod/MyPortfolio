@@ -68,12 +68,10 @@ export class AuthController {
       path: '/api/auth',
     });
 
+    // Возвращаем только данные пользователя — токены уже переданы через HttpOnly cookie
     return res.json({
       message: 'Успешный вход',
       user: result.user,
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken,
-      expiresIn: result.expiresIn,
     });
   }
 
@@ -147,11 +145,9 @@ export class AuthController {
       path: '/api/auth',
     });
 
+    // Возвращаем только подтверждение — новые токены уже переданы через HttpOnly cookie
     return res.json({
       message: 'Токены обновлены',
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken,
-      expiresIn: result.expiresIn,
     });
   }
 

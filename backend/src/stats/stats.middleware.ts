@@ -51,7 +51,8 @@ export class StatsMiddleware {
           const visitData = {
             ipAddress: this.getClientIp(req),
             userAgent: req.headers['user-agent'] || null,
-            path: req.originalUrl || req.url,
+            // Сохраняем только pathname без query string (предотвращает запись токенов/email из URL)
+            path: (req.originalUrl || req.url).split('?')[0],
             referrer: this.getReferrer(req),
             country: null, // TODO: Добавить GeoIP в будущем
             browser: this.extractBrowser(req.headers['user-agent'] || ''),

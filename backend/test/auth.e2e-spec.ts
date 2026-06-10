@@ -97,10 +97,13 @@ describe('AuthController (e2e)', () => {
         .send({ username: 'admin', password: 'securePassword123' })
         .expect(200);
 
-      expect(res.body.accessToken).toBe('mock-access');
+      // Токены не должны возвращаться в body — только через HttpOnly cookie
+      expect(res.body.accessToken).toBeUndefined();
+      expect(res.body.refreshToken).toBeUndefined();
+      expect(res.body.message).toBe('Успешный вход');
       expect(res.headers['set-cookie']).toBeDefined();
-      
-      // Verify cookie properties
+
+      // Токены передаются через HttpOnly cookie
       const cookies = (res.headers['set-cookie'] as unknown as string[]).join(';');
       expect(cookies).toContain('AccessToken=mock-access');
       expect(cookies).toContain('RefreshToken=mock-refresh');
@@ -123,7 +126,9 @@ describe('AuthController (e2e)', () => {
         .set('Cookie', ['RefreshToken=valid-refresh-token'])
         .expect(200);
 
-      expect(res.body.accessToken).toBe('new-access');
+      // Токены не должны возвращаться в body
+      expect(res.body.accessToken).toBeUndefined();
+      expect(res.body.message).toBe('Токены обновлены');
       const cookies = (res.headers['set-cookie'] as unknown as string[]).join(';');
       expect(cookies).toContain('AccessToken=new-access');
       expect(cookies).toContain('RefreshToken=new-refresh');
