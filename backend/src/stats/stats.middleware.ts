@@ -9,14 +9,13 @@ export class StatsMiddleware {
   constructor(private readonly statsService: StatsService) {}
 
   async use(req: Request, res: Response, next: Function) {
-    // Пропускаем админ-панель, авторизацию и внутренние запросы (health checks)
+    // Пропускаем любые API запросы, загрузки и проверки здоровья
     const url = req.originalUrl;
     const cleanUrl = url.split('?')[0];
 
     if (
-      cleanUrl.startsWith('/api/admin') ||
-      cleanUrl.startsWith('/api/auth') ||
-      cleanUrl.startsWith('/api/health') ||
+      cleanUrl.startsWith('/api') ||
+      cleanUrl.startsWith('/uploads') ||
       cleanUrl.startsWith('/health')
     ) {
       next();
