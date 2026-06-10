@@ -71,8 +71,8 @@
 - [x] Добавить индикатор прогресса загрузки файлов
 - [x] Добавить error boundaries для страниц
 - [x] Добавить loading skeletons для компонентов (SkeletonCard в Admin Dashboard)
-- [ ] Добавить улучшения доступности (ARIA-метки, навигация с клавиатуры)
-- [ ] Добавить SEO meta-теги (react-helmet-async)
+- [x] Добавить улучшения доступности (ARIA-метки, навигация с клавиатуры)
+- [x] Добавить SEO meta-теги (react-helmet-async)
 - [x] Добавить сохранение переключателя тёмной темы
 - [ ] Добавить поддержку PWA (service worker)
 - [x] Добавить компоненты: CoffeeCup, DoodleCanvas, DoodleControls, DoodlyHelper
@@ -81,7 +81,7 @@
 
 ### Инфраструктура
 - [x] Добавить health check endpoint'и в docker-compose
-- [ ] Добавить CI/CD пайплайн (GitHub Actions)
+- [x] Добавить CI/CD пайплайн (GitHub Actions)
 - [x] Добавить стратегию резервного копирования базы данных
 - [ ] Добавить мониторинг (Prometheus/Grafana)
 - [x] Добавить управление SSL-сертификатами (задокументировано в DEPLOYMENT_GUIDE.md)
