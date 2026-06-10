@@ -172,11 +172,11 @@ function PublicPage() {
         if (sessionStorage.getItem(sessionKey)) {
           return;
         }
+        sessionStorage.setItem(sessionKey, 'true');
         await api.post('/portfolio/track-visit', {
           path: window.location.pathname,
           referrer: document.referrer || null,
         });
-        sessionStorage.setItem(sessionKey, 'true');
       } catch (err) {
         console.error('Error tracking visit:', err);
       }

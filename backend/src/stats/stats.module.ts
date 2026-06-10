@@ -23,6 +23,7 @@ export class StatsModule implements NestModule {
         { path: 'api/admin/(.*)', method: RequestMethod.ALL },
         { path: 'api/auth/(.*)', method: RequestMethod.ALL },
         { path: 'api/health', method: RequestMethod.ALL },
+        { path: 'api/portfolio/(.*)', method: RequestMethod.ALL },
       )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }
