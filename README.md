@@ -201,6 +201,49 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 
 ---
 
+## 💾 Резерное копирование базы данных
+
+### Скрипт бэкапа
+Проект содержит скрипт `scripts/backup.sh` для автоматического создания сжатых резервных копий БД.
+
+```bash
+# Сделать скрипт исполняемым (один раз)
+chmod +x scripts/backup.sh
+
+# Создать бэкап
+./scripts/backup.sh
+# или
+bash scripts/backup.sh
+```
+
+Бэкапы сохраняются в `backups/portfolio_db_backup_YYYY-MM-DD_HH-MM-SS.sql.gz`
+Автоматически удаляются бэкапы старше 30 дней.
+
+### Бэкап через Docker
+```bash
+# Создать бэкап
+docker exec portfolio_db_dev pg_dump -U postgres -d portfolio_db | gzip > backups/portfolio_db_backup.sql.gz
+
+# Восстановить из бэкапа
+gunzip < backups/portfolio_db_backup.sql.gz | docker exec -i portfolio_db_dev psql -U postgres -d portfolio_db
+```
+
+### Восстановление из файла
+```bash
+# Из .sql.gz
+gunzip < backups/portfolio_db_backup_2026-06-06_23-09-12.sql.gz | docker exec -i portfolio_db_dev psql -U postgres -d portfolio_db
+
+# Из .sql
+cat backups/portfolio_db_backup.sql | docker exec -i portfolio_db_dev psql -U postgres -d portfolio_db
+```
+
+### Просмотр текущих бэкапов
+```bash
+ls -lh backups/
+```
+
+---
+
 ## 🐛 Решение проблем
 
 ### Порт 5433 уже занят
