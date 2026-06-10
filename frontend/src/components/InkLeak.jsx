@@ -97,6 +97,15 @@ export default function InkLeak() {
           <motion.div
             initial={{ x: clickPos.x, y: landingY, scale: 0.1, rotate: 0 }}
             animate={{ scale: 1, rotate: [0, 5, -3, 0] }}
+            role="button"
+            tabIndex={0}
+            aria-label="Ink blot. Click to pop and scatter."
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleBlotClick();
+              }
+            }}
             style={{
               position: 'absolute',
               marginLeft: '-55px',

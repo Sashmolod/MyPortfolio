@@ -5,6 +5,7 @@ import api from '../../api';
 import { usePortfolioSettings } from '../../contexts/SettingsContext';
 import { SketchLockIcon } from '../../components/SvgIllustrations';
 import { statsApi } from '../../api/statsApi';
+import { Helmet } from 'react-helmet-async';
 
 import ConfirmDialog from '../components/ConfirmDialog';
 import MediaTab from '../components/MediaTab';
@@ -323,6 +324,10 @@ export default function AdminDashboard() {
 
   return (
     <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+      <Helmet>
+        <title>Админ-панель | Admin Dashboard</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <ConfirmDialog {...confirmDialog} onCancel={() => setConfirmDialog(null)} isOpen={!!confirmDialog} />
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>

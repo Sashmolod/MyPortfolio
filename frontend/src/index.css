@@ -632,3 +632,17 @@ select:focus-visible {
   outline: 2px dashed var(--accent, #6366f1);
   outline-offset: 4px;
 }
+
+/* Screen Reader Only utility for accessible form labels */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+

@@ -132,6 +132,17 @@ export default function PageTear() {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
+            role="button"
+            tabIndex={0}
+            aria-label="Secret folded paper corner. Click to tear and open game."
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setIsOpen(true);
+                soundSynth.playTear();
+                window.dispatchEvent(new CustomEvent('ttt-start'));
+              }
+            }}
             style={{
               position: 'fixed',
               top: 0,
@@ -297,20 +308,31 @@ export default function PageTear() {
                 }}
               />
 
-              {board.map((cell, idx) => (
-                <div
-                  key={idx}
-                  onClick={() => handleCellClick(idx)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: cell || winner || turn === 'doodly' ? 'default' : 'pointer',
-                    fontSize: '28px',
-                    fontWeight: 'bold',
-                    fontFamily: "'Architects Daughter', cursive",
-                  }}
-                >
+              {board.map((cell, idx) => {
+                const isClickable = !cell && !winner && turn !== 'doodly';
+                return (
+                  <div
+                    key={idx}
+                    role="button"
+                    tabIndex={isClickable ? 0 : -1}
+                    aria-label={`Cell ${idx + 1}, ${cell || 'empty'}`}
+                    onKeyDown={(e) => {
+                      if (isClickable && (e.key === 'Enter' || e.key === ' ')) {
+                        e.preventDefault();
+                        handleCellClick(idx);
+                      }
+                    }}
+                    onClick={() => handleCellClick(idx)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: isClickable ? 'pointer' : 'default',
+                      fontSize: '28px',
+                      fontWeight: 'bold',
+                      fontFamily: "'Architects Daughter', cursive",
+                    }}
+                  >
                   {cell === 'X' && (
                     <motion.span
                       initial={{ scale: 0, rotate: -20 }}
@@ -330,8 +352,9 @@ export default function PageTear() {
                     </motion.span>
                   )}
                 </div>
-              ))}
-            </div>
+              );
+            })}
+          </div>
 
             {/* Game Status & Control */}
             <div style={{ textAlign: 'center', marginTop: '10px' }}>

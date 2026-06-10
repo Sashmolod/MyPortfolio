@@ -1,6 +1,7 @@
 import { useState, FormEvent } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { Helmet } from 'react-helmet-async';
 
 /**
  * Страница логина для админ-панели.
@@ -51,6 +52,10 @@ export function LoginPage() {
       backgroundImage: 'var(--bg-grid)',
       padding: '20px',
     }}>
+      <Helmet>
+        <title>Вход в админку | Admin Panel</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <div className="card" style={{
         width: '100%',
         maxWidth: '400px',
@@ -91,17 +96,22 @@ export function LoginPage() {
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '1.25rem' }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.5rem',
-              fontWeight: 600,
-              fontSize: '0.95rem',
-              color: 'var(--text)',
-              fontFamily: "'Architects Daughter', cursive",
-            }}>
+            <label 
+              htmlFor="login-username"
+              style={{
+                display: 'block',
+                marginBottom: '0.5rem',
+                fontWeight: 600,
+                fontSize: '0.95rem',
+                color: 'var(--text)',
+                fontFamily: "'Architects Daughter', cursive",
+              }}
+            >
               Логин
             </label>
             <input
+              id="login-username"
+              name="username"
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -111,21 +121,27 @@ export function LoginPage() {
           </div>
 
           <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.5rem',
-              fontWeight: 600,
-              fontSize: '0.95rem',
-              color: 'var(--text)',
-              fontFamily: "'Architects Daughter', cursive",
-            }}>
+            <label 
+              htmlFor="login-password"
+              style={{
+                display: 'block',
+                marginBottom: '0.5rem',
+                fontWeight: 600,
+                fontSize: '0.95rem',
+                color: 'var(--text)',
+                fontFamily: "'Architects Daughter', cursive",
+              }}
+            >
               Пароль
             </label>
             <input
+              id="login-password"
+              name="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              autoComplete="current-password"
             />
           </div>
 

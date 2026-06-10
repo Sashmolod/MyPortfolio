@@ -88,6 +88,15 @@ export default function CoffeeCup() {
 
       {/* Coffee Cup Container */}
       <motion.div
+        role="button"
+        tabIndex={0}
+        aria-label={isSpilled ? "Spilled coffee cup. Click to reset." : `Coffee cup. Click to slosh coffee (clicked ${clicks} of 5 times)`}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleClick();
+          }
+        }}
         style={{
           zIndex: 2,
           cursor: 'pointer',

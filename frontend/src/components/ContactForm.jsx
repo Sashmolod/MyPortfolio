@@ -188,7 +188,9 @@ export default function ContactForm() {
                 />
               </div>
 
+              <label htmlFor="contact-name" className="sr-only">Name</label>
               <input
+                id="contact-name"
                 type="text"
                 name="name"
                 placeholder="Name"
@@ -201,7 +203,9 @@ export default function ContactForm() {
               />
               {errMsg('name')}
 
+              <label htmlFor="contact-email" className="sr-only">Email</label>
               <input
+                id="contact-email"
                 type="email"
                 name="email"
                 placeholder="Email"
@@ -214,7 +218,9 @@ export default function ContactForm() {
               />
               {errMsg('email')}
 
+              <label htmlFor="contact-subject" className="sr-only">Subject</label>
               <input
+                id="contact-subject"
                 type="text"
                 name="subject"
                 placeholder="Subject"
@@ -227,7 +233,9 @@ export default function ContactForm() {
               />
               {errMsg('subject')}
 
+              <label htmlFor="contact-message" className="sr-only">Message</label>
               <textarea
+                id="contact-message"
                 name="message"
                 placeholder="Message"
                 value={formData.message}
@@ -279,7 +287,9 @@ export default function ContactForm() {
                   <span style={{ fontWeight: 'bold', fontSize: '1.1rem', letterSpacing: '1px' }}>
                     {captcha.question.replace(' = ?', '')} = 
                   </span>
+                  <label htmlFor="contact-captcha" className="sr-only">Ответ на проверочный вопрос</label>
                   <input
+                    id="contact-captcha"
                     type="text"
                     name="captchaAnswer"
                     placeholder="Ответ"

@@ -1,6 +1,6 @@
 # Deployment Guide — Portfolio Project
 
-This guide provides instructions on how to build, deploy, backup, and secure the Portfolio Project in a production environment.
+This guide provides instructions on how to build, deploy, backup, and secure the Portfolio Project in a production environment (such as a Linux VPS) using Docker Compose, set up secure HTTPS using Nginx and Certbot, and configure automated backups.
 
 ---
 
@@ -63,7 +63,73 @@ The output should show three healthy containers:
 
 ---
 
-## 4. Automated Database Backups
+## 4. Host-Level Nginx Reverse Proxy Setup (Recommended for SSL)
+For full production security, it is recommended to run Nginx on the host machine to proxy requests into the Docker network and manage SSL certificates.
+
+### A. Install Nginx and Certbot
+On Ubuntu/Debian:
+```bash
+sudo apt update
+sudo apt install nginx certbot python3-certbot-nginx -y
+```
+
+### B. Configure Server Block
+Create an Nginx configuration file at `/etc/nginx/sites-available/portfolio` with reverse proxy rules pointing to the Docker services:
+
+```nginx
+server {
+    listen 80;
+    server_name yourportfolio.com www.yourportfolio.com;
+
+    # Backend API proxy
+    location /api {
+        proxy_pass http://127.0.0.1:3000/api;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Uploads folder proxy
+    location /uploads {
+        proxy_pass http://127.0.0.1:3000/uploads;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header Host $host;
+    }
+
+    # Frontend SPA proxy
+    location / {
+        proxy_pass http://127.0.0.1:80;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+Enable the configuration and restart Nginx:
+```bash
+sudo ln -s /etc/nginx/sites-available/portfolio /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl restart nginx
+```
+
+### C. Obtain SSL (HTTPS) Certificates
+Run Certbot to obtain and automatically configure Let's Encrypt certificates:
+```bash
+sudo certbot --nginx -d yourportfolio.com -d www.yourportfolio.com
+```
+Follow the interactive prompts. Certbot will automatically rewrite the Nginx configuration to support secure HTTPS redirects on port 443.
+
+---
+
+## 5. Automated Database Backups
 A backup script is available under [scripts/backup.sh](file:///Users/hot_pepper/MyProjectGitHub/MyPortfolio/scripts/backup.sh). It dumps the database, compresses it with gzip, and deletes backups older than 30 days.
 
 ### Setting up a Cron Job
@@ -75,7 +141,7 @@ sudo crontab -e
 
 Add the following line (adjust path to match your project root folder):
 ```bash
-0 2 * * * /path/to/MyPortfolio/scripts/backup.sh >> /path/to/MyPortfolio/backups/backup.log 2>&1
+0 2 * * * /bin/bash /path/to/MyPortfolio/scripts/backup.sh >> /path/to/MyPortfolio/backups/backup.log 2>&1
 ```
 
 Make sure the script has execute permissions:
@@ -85,29 +151,13 @@ chmod +x /path/to/MyPortfolio/scripts/backup.sh
 
 ---
 
-## 5. SSL & HTTPS Configurations (Let's Encrypt)
-To secure connection with HTTPS (SSL/TLS), we recommend using **Certbot** on the host machine or adding a Let's Encrypt sidecar container.
-
-### Option: Nginx Reverse Proxy with Certbot on the Host
-If you choose to run Certbot on the host:
-1. Install certbot and the Nginx plugin:
-   ```bash
-   sudo apt update
-   sudo apt install certbot python3-certbot-nginx
-   ```
-2. Request a certificate:
-   ```bash
-   sudo certbot --nginx -d yourportfolio.com
-   ```
-3. Map Nginx ports in `docker-compose.yml` to internal ports (e.g. `8080:80`) and let host Nginx handle SSL termination and proxying to the frontend container.
-
----
-
-## 6. Built-in Security Safeguards
+## 6. Built-in Security & Performance Safeguards
 The application includes several production-grade security protections:
 
-* **Account Lockout**: After 5 consecutive failed login attempts, the admin account is locked for **15 minutes**.
+* **Account Lockout**: After 5 consecutive failed login attempts, the admin account is locked for **15 minutes** to prevent brute-force attacks.
+* **Password Complexity**: Admin passwords must satisfy strength requirements (min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special character).
 * **Request Limits**: JSON payload limits are globally restricted to **2MB** in NestJS to prevent memory exhaustion. Nginx supports up to **10MB** only for file uploads (`client_max_body_size 10M`).
-* **CSRF Protection**: All mutating endpoints (POST, PUT, DELETE, PATCH) validate the custom `X-Requested-With: XMLHttpRequest` header.
+* **CSRF Protection**: All mutating endpoints (POST, PUT, DELETE, PATCH) validate the custom `X-Requested-With: XMLHttpRequest` header to reject cross-origin requests.
 * **CSP Headers**: Content-Security-Policy headers are enforced on both the Nginx proxy layer and the NestJS Helmet middleware to prevent XSS.
 * **Gzip Compression**: Backend responses and frontend assets are compressed using Gzip for fast loading.
+* **CI/CD Workflow**: Every pull request and push to the `main` branch triggers an automated test runner (Unit and E2E tests inside a Postgres container) to ensure no regressions.

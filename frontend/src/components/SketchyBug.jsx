@@ -218,6 +218,15 @@ export default function SketchyBug() {
               justifyContent: 'center',
               userSelect: 'none',
             }}
+            role={bug.squashed ? undefined : 'button'}
+            tabIndex={bug.squashed ? -1 : 0}
+            aria-label={bug.squashed ? "Squashed bug" : "Squashable bug crawling on screen"}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleSquash(e);
+              }
+            }}
             onClick={handleSquash}
           >
             {!bug.squashed ? (

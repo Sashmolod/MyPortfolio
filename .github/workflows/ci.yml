@@ -1,0 +1,98 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: hot_pepper
+          POSTGRES_PASSWORD: hot_pepper
+          POSTGRES_DB: portfolio_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Verify Postgres connection
+        run: |
+          sudo apt-get update && sudo apt-get install -y postgresql-client
+          pg_isready -h localhost -p 5432 -U hot_pepper
+
+      # --- Backend Build, Lint, and Test ---
+      - name: Install backend dependencies
+        run: npm ci
+        working-directory: backend
+
+      - name: Lint backend
+        run: npm run lint
+        working-directory: backend
+
+      - name: Run migrations
+        run: npm run migration:run
+        working-directory: backend
+        env:
+          NODE_ENV: development
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_USER: hot_pepper
+          POSTGRES_PASSWORD: hot_pepper
+          POSTGRES_DB: portfolio_db
+          JWT_SECRET: ci-test-secret-key-that-is-very-long-and-secure-1234567890
+
+      - name: Run backend unit tests
+        run: npm run test
+        working-directory: backend
+
+      - name: Run backend E2E tests
+        run: npx jest --config test/jest-e2e.config.js
+        working-directory: backend
+        env:
+          NODE_ENV: test
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_USER: hot_pepper
+          POSTGRES_PASSWORD: hot_pepper
+          POSTGRES_DB: portfolio_db
+          JWT_SECRET: ci-test-secret-key-that-is-very-long-and-secure-1234567890
+
+      - name: Build backend
+        run: npm run build
+        working-directory: backend
+
+      # --- Frontend Build, Lint, and Test ---
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
+
+      - name: Lint frontend
+        run: npm run lint
+        working-directory: frontend
+
+      - name: Run frontend tests
+        run: npm run test:run
+        working-directory: frontend
+
+      - name: Build frontend
+        run: npm run build
+        working-directory: frontend
