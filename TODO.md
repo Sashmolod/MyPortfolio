@@ -62,14 +62,14 @@
 - [x] Добавить rate limiting для endpoint'ов аутентификации (Throttler в AppModule)
 - [x] Добавить логирование в модуль аутентификации (audit-log.interceptor.ts)
 - [x] Написать unit-тесты для сервисов
-- [ ] Написать e2e-тесты для admin модуля
+- [x] Написать e2e-тесты для admin модуля
 - [x] Добавить сущность `social-link.entity.ts` и DTO (create/update)
 
 ### Frontend
 - [x] Обновить admin dashboard под новую структуру DTO (с интеграцией загрузки файлов и корзины)
 - [x] Добавить валидацию форм для контактной формы
-- [ ] Добавить индикатор прогресса загрузки файлов
-- [ ] Добавить error boundaries для страниц
+- [x] Добавить индикатор прогресса загрузки файлов
+- [x] Добавить error boundaries для страниц
 - [x] Добавить loading skeletons для компонентов (SkeletonCard в Admin Dashboard)
 - [ ] Добавить улучшения доступности (ARIA-метки, навигация с клавиатуры)
 - [ ] Добавить SEO meta-теги (react-helmet-async)
