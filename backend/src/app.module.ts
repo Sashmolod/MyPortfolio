@@ -13,7 +13,14 @@ import { StatsModule } from './stats/stats.module';
     // Глобальная конфигурация из .env файла
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: process.env.NODE_ENV === 'production' ? '.env.prod' : '.env.dev',
+      // В Docker-окружении переменные уже доступны через process.env (из docker-compose environment)
+      // envFilePath не нужен, так как volume mount перезаписывает /app
+      envFilePath:
+        !process.env.DOCKER_CONTAINER && process.env.NODE_ENV === 'production'
+          ? '.env.production'
+          : !process.env.DOCKER_CONTAINER
+          ? '.env.development'
+          : undefined,
     }),
     // Глобальный rate limiting
     ThrottlerModule.forRoot({

@@ -7,6 +7,7 @@ import { Request } from 'express';
 import { CreateContactMessageDto } from '../admin/dto/create-contact-message.dto';
 import { Hero } from '../admin/entities/hero.entity';
 import { Skill } from '../admin/entities/skill.entity';
+import { SkillCategory } from '../admin/entities/skill-category.entity';
 import { Project } from '../admin/entities/project.entity';
 import { Settings } from '../admin/entities/settings.entity';
 import {
@@ -51,6 +52,15 @@ export class PortfolioController {
   @Get('skills')
   getAllSkills(): Promise<Skill[]> {
     return this.portfolioService.getAllSkills();
+  }
+
+  @ApiTags('skills')
+  @ApiOperation({ summary: 'Получить все категории навыков (публичный)' })
+  @ApiOkResponse({ description: 'Список категорий успешно получен' })
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
+  @Get('skills/categories')
+  getAllSkillCategories(): Promise<any> {
+    return this.portfolioService.getAllSkillCategories();
   }
 
   // ====== PROJECTS ======

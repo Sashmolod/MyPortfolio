@@ -46,10 +46,13 @@ services:
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev_jwt_refresh_secret_change_in_prod_32}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000,http://frontend:80,http://localhost,http://127.0.0.1}
-      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       CAPTCHA_SECRET: ${CAPTCHA_SECRET:-dev_captcha_secret_change_in_production_min_32_chars}
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
+      DOCKER_CONTAINER: "true"
+    env_file:
+      - path: .env.development
+        required: false
     ports:
       - "3000:3000"
     volumes:

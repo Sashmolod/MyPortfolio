@@ -35,6 +35,26 @@ export interface VisitsResponse {
   totalPages: number;
 }
 
+export interface SkillCategory {
+  id: number;
+  name: string;
+  parentId: number | null;
+  sortOrder: number;
+  skills?: Skill[];
+  subcategories?: SkillCategory[];
+}
+
+export interface Skill {
+  id: number;
+  name: string;
+  icon: string;
+  level: number;
+  description?: string;
+  sortOrder: number;
+  categoryId: number;
+  subcategoryId: number | null;
+}
+
 export const statsApi = {
   /**
    * Получить общую статистику
@@ -72,5 +92,14 @@ export const statsApi = {
       params: { days: daysToKeep },
     });
     return response.data;
+  },
+
+  /**
+    * Получить все категории навыков (включая подкатегории)
+    */
+  getSkillCategories: async (): Promise<SkillCategory[]> => {
+    const response = await api.get('/portfolio/skills/categories');
+    // API возвращает массив напрямую, не обёрнутый в { data: [...] }
+    return Array.isArray(response.data) ? response.data : (response.data.data || []);
   },
 };

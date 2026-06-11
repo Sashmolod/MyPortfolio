@@ -174,6 +174,14 @@ function PublicPage() {
         setProjects(projectsRes.data);
         setHeroData(heroRes.data);
         setHero(heroRes.data?.hero || null);
+        // Сохраняем socialLinks отдельно, так как бэкенд возвращает { hero, socialLinks }
+        if (heroRes.data?.socialLinks) {
+          // Обновляем hero с socialLinks для Hero компонента
+          setHero(prev => ({
+            ...prev,
+            socialLinks: heroRes.data.socialLinks
+          }));
+        }
       } catch (err) {
         console.error('Error fetching data:', err);
       } finally {

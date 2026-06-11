@@ -2,6 +2,7 @@ import { DataSource } from 'typeorm';
 import { User } from './admin/entities/user.entity';
 import { Hero } from './admin/entities/hero.entity';
 import { Skill } from './admin/entities/skill.entity';
+import { SkillCategory } from './admin/entities/skill-category.entity';
 import { Project } from './admin/entities/project.entity';
 import { ContactMessage } from './admin/entities/contact-message.entity';
 import { SocialLink } from './admin/entities/social-link.entity';
@@ -9,11 +10,8 @@ import * as bcrypt from 'bcryptjs';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 
-const envFile = process.env.NODE_ENV === 'production' ? '../.env.prod' : '../.env.dev';
+const envFile = process.env.NODE_ENV === 'production' ? '../.env.production' : '../.env.development';
 dotenv.config({ path: path.resolve(__dirname, envFile) });
-
-
-const SALT_ROUNDS = 10;
 
 async function seed() {
   const dataSource = new DataSource({
@@ -23,155 +21,60 @@ async function seed() {
     username: process.env.POSTGRES_USER || 'postgres',
     password: process.env.POSTGRES_PASSWORD || 'postgres',
     database: process.env.POSTGRES_DB || 'portfolio_db',
-    entities: [User, Hero, Skill, Project, ContactMessage, SocialLink],
-    synchronize: false, // Используем миграции!
+    entities: [User, Hero, Skill, SkillCategory, Project, ContactMessage, SocialLink],
+    synchronize: false,
   });
-
   await dataSource.initialize();
-  console.log('Connected to database:', process.env.POSTGRES_DB);
-
-  const userRepo = dataSource.getRepository(User);
-  const heroRepo = dataSource.getRepository(Hero);
+  const skillCategoryRepo = dataSource.getRepository(SkillCategory);
   const skillRepo = dataSource.getRepository(Skill);
-  const projectRepo = dataSource.getRepository(Project);
-  const contactRepo = dataSource.getRepository(ContactMessage);
-  const socialLinkRepo = dataSource.getRepository(SocialLink);
-
-  // ==================== Seed Users ====================
-  const adminUsername = process.env.ADMIN_USERNAME || 'admin';
-  const existingAdmin = await userRepo.findOne({ where: { username: adminUsername } });
-  
-  if (!existingAdmin) {
-    const adminPassword = process.env.ADMIN_PASSWORD;
-    
-    // Если ADMIN_PASSWORD не установлен — предупреждение и генерация случайного пароля
-    if (!adminPassword || adminPassword.trim() === '') {
-      const randomPassword = Math.random().toString(36).slice(-12);
-      console.warn('⚠️  ADMIN_PASSWORD не установлен. Генерируется случайный пароль:', randomPassword);
-      console.warn('⚠️  Установите ADMIN_PASSWORD в .env файле для production!');
-      const hashedPassword = await bcrypt.hash(randomPassword, SALT_ROUNDS);
-      const admin = userRepo.create({
-        username: adminUsername,
-        password: hashedPassword,
-        isActive: true,
-      });
-      await userRepo.save(admin);
-      console.log('✅ Admin user created with generated password:', adminUsername);
-    } else {
-      const hashedPassword = await bcrypt.hash(adminPassword, SALT_ROUNDS);
-      const admin = userRepo.create({
-        username: adminUsername,
-        password: hashedPassword,
-        isActive: true,
-      });
-      await userRepo.save(admin);
-      console.log('✅ Admin user created:', adminUsername);
-    }
-  } else {
-    console.log('ℹ️  Admin user already exists');
-  }
-
-  // ==================== Seed Hero ====================
-  const existingHero = await heroRepo.findOne({ where: { name: 'Your Name' } });
-  
-  if (!existingHero) {
-    const hero = heroRepo.create({
-      name: 'Your Name',
-      title: 'Full-Stack Developer',
-      bio: 'I build things for the web and beyond.',
-      avatar: '/hero_avatar.png',
-    });
-    await heroRepo.save(hero);
-    console.log('✅ Hero data seeded');
-  } else {
-    console.log('ℹ️  Hero data already exists');
-  }
-
-  // ==================== Seed Social Links ====================
-  const existingSocialLinks = await socialLinkRepo.count();
-  
-  if (existingSocialLinks === 0) {
-    await socialLinkRepo.save([
-      socialLinkRepo.create({ platform: 'GitHub', url: 'https://github.com/yourusername', sortOrder: 1 }),
-      socialLinkRepo.create({ platform: 'LinkedIn', url: 'https://linkedin.com/in/yourusername', sortOrder: 2 }),
-      socialLinkRepo.create({ platform: 'Twitter', url: 'https://twitter.com/yourusername', sortOrder: 3 }),
+  const existingCategories = await skillCategoryRepo.count();
+  let allCategories: SkillCategory[] = [];
+  if (existingCategories === 0) {
+    const roots = await skillCategoryRepo.save([
+      skillCategoryRepo.create({ name: 'Frontend', parentId: null, sortOrder: 1 }),
+      skillCategoryRepo.create({ name: 'Backend', parentId: null, sortOrder: 2 }),
+      skillCategoryRepo.create({ name: 'DevOps', parentId: null, sortOrder: 3 }),
+      skillCategoryRepo.create({ name: 'Languages', parentId: null, sortOrder: 4 }),
     ]);
-    console.log('✅ Social links seeded');
+    await skillCategoryRepo.save([
+      skillCategoryRepo.create({ name: 'React', parentId: roots[0].id, sortOrder: 1 }),
+      skillCategoryRepo.create({ name: 'Vue', parentId: roots[0].id, sortOrder: 2 }),
+      skillCategoryRepo.create({ name: 'Angular', parentId: roots[0].id, sortOrder: 3 }),
+      skillCategoryRepo.create({ name: 'Node.js', parentId: roots[1].id, sortOrder: 1 }),
+      skillCategoryRepo.create({ name: 'NestJS', parentId: roots[1].id, sortOrder: 2 }),
+      skillCategoryRepo.create({ name: 'Express', parentId: roots[1].id, sortOrder: 3 }),
+      skillCategoryRepo.create({ name: 'Docker', parentId: roots[2].id, sortOrder: 1 }),
+      skillCategoryRepo.create({ name: 'Kubernetes', parentId: roots[2].id, sortOrder: 2 }),
+      skillCategoryRepo.create({ name: 'JavaScript', parentId: roots[3].id, sortOrder: 1 }),
+      skillCategoryRepo.create({ name: 'TypeScript', parentId: roots[3].id, sortOrder: 2 }),
+      skillCategoryRepo.create({ name: 'Python', parentId: roots[3].id, sortOrder: 3 }),
+    ]);
+    allCategories = [...roots, ...await skillCategoryRepo.createQueryBuilder().where('parentId IS NOT NULL').getMany()];
   } else {
-    console.log('ℹ️  Social links already exist');
+    allCategories = await skillCategoryRepo.find();
   }
-
-  // ==================== Seed Skills ====================
   const existingSkills = await skillRepo.count();
-  
   if (existingSkills === 0) {
-    await skillRepo.save([
-      skillRepo.create({ name: 'JavaScript', icon: 'js', description: 'ES6+, TypeScript', level: 90, sortOrder: 1 }),
-      skillRepo.create({ name: 'React', icon: 'react', description: 'Hooks, Redux, Context API', level: 85, sortOrder: 2 }),
-      skillRepo.create({ name: 'Node.js', icon: 'node', description: 'Express, NestJS', level: 80, sortOrder: 3 }),
-      skillRepo.create({ name: 'Python', icon: 'python', description: 'Django, Flask', level: 75, sortOrder: 4 }),
-      skillRepo.create({ name: 'SQL', icon: 'sql', description: 'PostgreSQL, MySQL, SQLite', level: 70, sortOrder: 5 }),
-      skillRepo.create({ name: 'Docker', icon: 'docker', description: 'Containerization', level: 65, sortOrder: 6 }),
-    ]);
-    console.log('✅ Skills seeded');
+    const catMap = new Map<string, number>();
+    allCategories.forEach((c) => { catMap.set(c.parentId ? c.parentId + ':' + c.name : c.name, c.id); });
+    const skills = [
+      { n: 'JavaScript', i: 'js', d: 'ES6+, TypeScript', l: 90, s: 1, ci: catMap.get('4:JavaScript'), sci: null },
+      { n: 'TypeScript', i: 'ts', d: 'Type-safe JavaScript', l: 90, s: 2, ci: catMap.get('4:TypeScript'), sci: null },
+      { n: 'React', i: 'react', d: 'Hooks, Redux, Context API', l: 85, s: 3, ci: catMap.get('1:React'), sci: null },
+      { n: 'Vue', i: 'vue', d: 'Vue 3, Composition API', l: 70, s: 4, ci: catMap.get('1:Vue'), sci: null },
+      { n: 'Angular', i: 'angular', d: 'Angular 16+, RxJS', l: 60, s: 5, ci: catMap.get('1:Angular'), sci: null },
+      { n: 'Node.js', i: 'node', d: 'Express, NestJS', l: 80, s: 6, ci: catMap.get('2:Node.js'), sci: null },
+      { n: 'NestJS', i: 'nestjs', d: 'Enterprise-grade backend', l: 75, s: 7, ci: catMap.get('2:NestJS'), sci: null },
+      { n: 'Python', i: 'python', d: 'Django, Flask', l: 75, s: 8, ci: catMap.get('4:Python'), sci: null },
+      { n: 'Docker', i: 'docker', d: 'Containerization', l: 65, s: 9, ci: catMap.get('3:Docker'), sci: null },
+      { n: 'Kubernetes', i: 'k8s', d: 'Container orchestration', l: 50, s: 10, ci: catMap.get('3:Kubernetes'), sci: null },
+    ];
+    await skillRepo.save(skills.map((sk) => skillRepo.create({ name: sk.n, icon: sk.i, description: sk.d, level: sk.l, sortOrder: sk.s, categoryId: sk.ci || null, subcategoryId: sk.sci })));
+    console.log('Skills seeded');
   } else {
-    console.log('ℹ️  Skills already exist');
+    console.log('Skills already exist');
   }
-
-  // ==================== Seed Projects ====================
-  const existingProjects = await projectRepo.count();
-  
-  if (existingProjects === 0) {
-    await projectRepo.save([
-      projectRepo.create({
-        title: 'Portfolio Website',
-        description: 'A personal portfolio website built with React and Vite.',
-        image: '/portfolio.png',
-        link: 'https://github.com/example/portfolio',
-        technologies: 'React, Vite, CSS',
-        sortOrder: 1,
-      }),
-      projectRepo.create({
-        title: 'E-Commerce App',
-        description: 'Full-stack e-commerce application with payment integration.',
-        image: '/ecommerce.png',
-        link: 'https://github.com/example/ecommerce',
-        technologies: 'React, Node.js, MongoDB, Stripe',
-        sortOrder: 2,
-      }),
-      projectRepo.create({
-        title: 'Task Manager API',
-        description: 'RESTful API for task management with authentication.',
-        image: '/taskmanager.png',
-        link: 'https://github.com/example/task-manager',
-        technologies: 'Node.js, Express, PostgreSQL, JWT',
-        sortOrder: 3,
-      }),
-    ]);
-    console.log('✅ Projects seeded');
-  } else {
-    console.log('ℹ️  Projects already exist');
-  }
-
-  // ==================== Seed Contact Messages ====================
-  const existingMessages = await contactRepo.count();
-  
-  if (existingMessages === 0) {
-    await contactRepo.save([
-      contactRepo.create({
-        name: 'Test User',
-        email: 'test@example.com',
-        subject: 'Test Message',
-        message: 'This is a test contact message.',
-      }),
-    ]);
-    console.log('✅ Contact messages seeded');
-  } else {
-    console.log('ℹ️  Contact messages already exist');
-  }
-
   await dataSource.destroy();
-  console.log('🎉 Seed completed successfully!');
+  console.log('Seed completed');
 }
-
 seed().catch(console.error);

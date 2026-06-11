@@ -38,4 +38,24 @@ export class CreateSkillDto {
     return Number(value);
   })
   sortOrder?: number;
+
+  @ApiPropertyOptional({ description: 'Category ID (FK to skill_category)', example: 1, nullable: true })
+  @IsNumber()
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === undefined || value === '' || value === null) return null;
+    const num = Number(value);
+    return isNaN(num) ? null : num;
+  })
+  categoryId?: number | null;
+
+  @ApiPropertyOptional({ description: 'Subcategory ID (FK to skill_category)', example: 2, nullable: true })
+  @IsNumber()
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === undefined || value === '' || value === null) return null;
+    const num = Number(value);
+    return isNaN(num) ? null : num;
+  })
+  subcategoryId?: number | null;
 }

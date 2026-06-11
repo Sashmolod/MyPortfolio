@@ -3,7 +3,7 @@ import * as dotenv from 'dotenv';
 import * as path from 'path';
 
 // Загружаем .env из папки backend
-const envFile = process.env.NODE_ENV === 'production' ? '../.env.prod' : '../.env.dev';
+const envFile = process.env.NODE_ENV === 'production' ? '../.env.production' : '../.env.development';
 dotenv.config({ path: path.resolve(__dirname, envFile) });
 
 const dataSource = new DataSource({

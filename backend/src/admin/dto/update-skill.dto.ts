@@ -1,9 +1,8 @@
-import { IsString, IsOptional, IsNumber, Min, Max } from 'class-validator';
+import { IsString, IsNumber, IsOptional, Min, Max } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { CreateSkillDto } from './create-skill.dto';
 import { Transform } from 'class-transformer';
 
-export class UpdateSkillDto implements Partial<CreateSkillDto> {
+export class UpdateSkillDto {
   @ApiPropertyOptional({ description: 'Skill name', example: 'JavaScript' })
   @IsString()
   @IsOptional()
@@ -39,4 +38,24 @@ export class UpdateSkillDto implements Partial<CreateSkillDto> {
     return Number(value);
   })
   sortOrder?: number;
+
+  @ApiPropertyOptional({ description: 'Category ID (FK to skill_category)', example: 1, nullable: true })
+  @IsNumber()
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === undefined || value === '' || value === null) return undefined;
+    const num = Number(value);
+    return isNaN(num) ? undefined : num;
+  })
+  categoryId?: number | null;
+
+  @ApiPropertyOptional({ description: 'Subcategory ID (FK to skill_category)', example: 2, nullable: true })
+  @IsNumber()
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === undefined || value === '' || value === null) return undefined;
+    const num = Number(value);
+    return isNaN(num) ? undefined : num;
+  })
+  subcategoryId?: number | null;
 }

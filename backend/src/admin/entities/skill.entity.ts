@@ -6,8 +6,11 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   Index,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { SkillCategory } from './skill-category.entity';
 
 @Entity('skills')
 export class Skill {
@@ -35,6 +38,26 @@ export class Skill {
   @Index()
   @Column({ name: 'sort_order', type: 'int', default: 0 })
   sortOrder: number;
+
+  @ApiPropertyOptional({ description: 'ID категории навыка', example: 1, nullable: true })
+  @Column({ name: 'category_id', type: 'int', nullable: true })
+  @Index()
+  categoryId: number;
+
+  @ApiPropertyOptional({ description: 'ID подкатегории навыка', example: 2, nullable: true })
+  @Column({ name: 'subcategory_id', type: 'int', nullable: true })
+  @Index()
+  subcategoryId: number;
+
+  @ApiPropertyOptional({ description: 'Категория навыка', type: 'SkillCategory', nullable: true })
+  @ManyToOne(() => SkillCategory, { nullable: true })
+  @JoinColumn({ name: 'category_id' })
+  category?: SkillCategory;
+
+  @ApiPropertyOptional({ description: 'Подкатегория навыка', type: 'SkillCategory', nullable: true })
+  @ManyToOne(() => SkillCategory, { nullable: true })
+  @JoinColumn({ name: 'subcategory_id' })
+  subcategory?: SkillCategory;
 
   @ApiProperty({ description: 'Дата создания', example: '2026-06-06T12:00:00Z' })
   @Index()

@@ -15,6 +15,7 @@ import ProjectForm from '../components/ProjectForm';
 import HeroForm from '../components/HeroForm';
 import SocialLinkForm from '../components/SocialLinkForm';
 import StatsView from '../components/StatsView';
+import SkillCategoryManager from './SkillCategoryManager';
 
 export default function AdminDashboard() {
   const { logout, changePassword } = useAuth();
@@ -73,7 +74,9 @@ export default function AdminDashboard() {
     setLoading(true);
     setItems([]);
     try {
-      if (activeTab === 'media') {
+      if (activeTab === 'categories') {
+        // Categories are managed by SkillCategoryManager component
+      } else if (activeTab === 'media') {
         const res = await api.get('/upload');
         setItems(res.data);
       } else if (activeTab === 'skills') {
@@ -501,6 +504,7 @@ export default function AdminDashboard() {
       >
         {[
           'skills',
+          'categories',
           'projects',
           'social-links',
           'media',
@@ -529,7 +533,8 @@ export default function AdminDashboard() {
         activeTab !== 'stats' &&
         activeTab !== 'settings' &&
         activeTab !== 'security' &&
-        activeTab !== 'media' && (
+        activeTab !== 'media' &&
+        activeTab !== 'categories' && (
           <button
             className="btn"
             onClick={() => setShowForm(true)}
@@ -622,51 +627,6 @@ export default function AdminDashboard() {
             <p>
               <strong>Avatar:</strong> {heroData.avatar}
             </p>
-            <p>
-              <strong>Social Links:</strong>
-            </p>
-            <ul style={{ paddingLeft: '20px' }}>
-              {Array.isArray(heroData.socialLinks)
-                ? heroData.socialLinks.map((link) => (
-                    <li key={link.id}>
-                      <strong>{link.platform}:</strong>{' '}
-                      <a
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="sketch-link"
-                        style={{
-                          color: 'var(--accent)',
-                          textDecoration: 'underline',
-                          wordBreak: 'break-all',
-                        }}
-                      >
-                        {link.url}
-                      </a>
-                    </li>
-                  ))
-                : Object.entries(heroData.socialLinks || {}).map(
-                    ([key, value]) =>
-                      value ? (
-                        <li key={key}>
-                          <strong>{key}:</strong>{' '}
-                          <a
-                            href={value}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="sketch-link"
-                            style={{
-                              color: 'var(--accent)',
-                              textDecoration: 'underline',
-                              wordBreak: 'break-all',
-                            }}
-                          >
-                            {value}
-                          </a>
-                        </li>
-                      ) : null
-                  )}
-            </ul>
             <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
               <button
                 className="btn"
@@ -708,7 +668,9 @@ export default function AdminDashboard() {
           onRestore={handleRestore}
           onDeletePermanently={handlePermanentDelete}
         />
-      ) : activeTab === 'settings' ? (
+       ) : activeTab === 'categories' ? (
+         <SkillCategoryManager />
+       ) : activeTab === 'settings' ? (
         <div style={{ maxWidth: '520px', margin: '20px auto 0 auto' }}>
           <div className="card">
             <h3

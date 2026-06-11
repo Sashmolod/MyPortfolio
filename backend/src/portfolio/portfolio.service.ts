@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Not } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
-import { Skill, Hero, Project, ContactMessage, SocialLink, Settings } from '../admin/entities';
+import { Skill, Hero, Project, ContactMessage, SocialLink, Settings, SkillCategory } from '../admin/entities';
 import { CreateContactMessageDto } from '../admin/dto/create-contact-message.dto';
 import { createHmac } from 'crypto';
 
@@ -11,6 +11,8 @@ export class PortfolioService {
   constructor(
     @InjectRepository(Skill)
     private skillRepo: Repository<Skill>,
+    @InjectRepository(SkillCategory)
+    private skillCategoryRepo: Repository<SkillCategory>,
     @InjectRepository(Hero)
     private heroRepo: Repository<Hero>,
     @InjectRepository(Project)
@@ -26,6 +28,54 @@ export class PortfolioService {
 
   async getAllSkills() {
     return this.skillRepo.find({ order: { sortOrder: 'ASC' } });
+  }
+
+  async getAllSkillCategories() {
+    // Загружаем корневые категории с подкатегориями (без навыков)
+    const categories = await this.skillCategoryRepo.find({
+      order: { sortOrder: 'ASC' },
+      where: { parentId: null } as any,
+      relations: {
+        subcategories: true,
+      },
+    });
+
+    // Загружаем все навыки
+    const allSkills = await this.skillRepo.find({
+      order: { sortOrder: 'ASC' },
+    });
+
+    // Формируем ответ: распределяем навыки по категориям и подкатегориям
+    return categories.map((cat) => {
+      // Навыки категории (categoryId = cat.id AND subcategoryId IS NULL)
+      const categorySkills = allSkills.filter(
+        (s) => s.categoryId === cat.id && (s.subcategoryId === null || s.subcategoryId === undefined)
+      );
+
+      // Подкатегории с навыками
+      const subcategories = (cat.subcategories || []).map((sub) => {
+        const subSkills = allSkills.filter(
+          (s) => s.subcategoryId === sub.id
+        );
+        return {
+          ...sub,
+          skills: subSkills,
+        };
+      });
+
+      return {
+        ...cat,
+        skills: categorySkills,
+        subcategories,
+      };
+    });
+  }
+
+  async getAllSkillSubcategories() {
+    return this.skillCategoryRepo.find({
+      order: { sortOrder: 'ASC' },
+      where: { parentId: Not(null) },
+    });
   }
 
   async getAllProjects() {
