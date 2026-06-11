@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { soundSynth } from '../utils/audioSynth';
-import { usePortfolioSettings } from '../contexts/SettingsContext';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { soundSynth } from "../utils/audioSynth";
+import { usePortfolioSettings } from "../contexts/SettingsContext";
 
 export default function PageCrumpler() {
   const [isAnimating, setIsAnimating] = useState(false);
@@ -35,8 +35,9 @@ export default function PageCrumpler() {
       setPendingCallback(() => callback);
     };
 
-    window.addEventListener('page-crumple-transition', handleTransition);
-    return () => window.removeEventListener('page-crumple-transition', handleTransition);
+    window.addEventListener("page-crumple-transition", handleTransition);
+    return () =>
+      window.removeEventListener("page-crumple-transition", handleTransition);
   }, [settings, navigate]);
 
   const handleAnimationComplete = () => {
@@ -56,34 +57,34 @@ export default function PageCrumpler() {
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           style={{
-            position: 'fixed',
+            position: "fixed",
             left: 0,
             top: 0,
-            width: '100vw',
-            height: '100vh',
+            width: "100vw",
+            height: "100vh",
             zIndex: 999999, // Sit above everything
-            background: 'rgba(0,0,0,0.06)',
-            pointerEvents: 'auto',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            background: "rgba(0,0,0,0.06)",
+            pointerEvents: "auto",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
           {/* Crumpling sheet paper ball */}
           <motion.div
             initial={{
-              width: '100vw',
-              height: '100vh',
-              borderRadius: '0px',
+              width: "100vw",
+              height: "100vh",
+              borderRadius: "0px",
               scale: 1,
               rotate: 0,
               x: 0,
               y: 0,
             }}
             animate={{
-              width: ['100vw', '180px', '70px', '70px'],
-              height: ['100vh', '180px', '70px', '70px'],
-              borderRadius: ['0px', '30px', '50%', '50%'],
+              width: ["100vw", "180px", "70px", "70px"],
+              height: ["100vh", "180px", "70px", "70px"],
+              borderRadius: ["0px", "30px", "50%", "50%"],
               scale: [1, 0.8, 0.4, 0],
               rotate: [0, 45, 180, 360],
               x: [0, 90, 240, 800],
@@ -92,22 +93,27 @@ export default function PageCrumpler() {
             transition={{
               duration: 1.1,
               times: [0, 0.4, 0.7, 1],
-              ease: 'easeInOut',
+              ease: "easeInOut",
             }}
             onAnimationComplete={handleAnimationComplete}
             style={{
-              background: 'var(--card-bg)',
-              border: 'var(--border-style)',
-              borderStyle: 'solid',
-              boxShadow: 'var(--shadow)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              overflow: 'hidden',
+              background: "var(--card-bg)",
+              border: "var(--border-style)",
+              borderStyle: "solid",
+              boxShadow: "var(--shadow)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              overflow: "hidden",
             }}
           >
             {/* Sketchy crinkled wrinkles inside the paper ball */}
-            <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ opacity: 0.5 }}>
+            <svg
+              viewBox="0 0 100 100"
+              width="100%"
+              height="100%"
+              style={{ opacity: 0.5 }}
+            >
               <path
                 d="M 10 30 Q 30 20, 50 40 T 90 20 M 20 80 Q 40 60, 60 70 T 80 50"
                 fill="none"

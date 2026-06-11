@@ -1,13 +1,21 @@
-import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
-import React from 'react';
-import { MemoryRouter } from 'react-router-dom';
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+  beforeAll,
+  afterAll,
+} from "vitest";
+import { render, screen, fireEvent, act } from "@testing-library/react";
+import React from "react";
+import { MemoryRouter } from "react-router-dom";
 
-import CoffeeCup from './CoffeeCup';
-import InkLeak from './InkLeak';
-import PageCrumpler from './PageCrumpler';
-import PageTear from './PageTear';
-import SketchyBug from './SketchyBug';
+import CoffeeCup from "./CoffeeCup";
+import InkLeak from "./InkLeak";
+import PageCrumpler from "./PageCrumpler";
+import PageTear from "./PageTear";
+import SketchyBug from "./SketchyBug";
 import {
   DeveloperIllustration,
   TechIcon,
@@ -28,15 +36,15 @@ import {
   SketchLockIcon,
   SketchSunIcon,
   SketchMoonIcon,
-  SketchSoundIcon
-} from './SvgIllustrations';
+  SketchSoundIcon,
+} from "./SvgIllustrations";
 
 // Import mocked modules for asserting/spying
-import { soundSynth } from '../utils/audioSynth';
-import { usePortfolioSettings } from '../contexts/SettingsContext';
+import { soundSynth } from "../utils/audioSynth";
+import { usePortfolioSettings } from "../contexts/SettingsContext";
 
 // Mock soundSynth
-vi.mock('../utils/audioSynth', () => ({
+vi.mock("../utils/audioSynth", () => ({
   soundSynth: {
     playPop: vi.fn(),
     playSlosh: vi.fn(),
@@ -54,7 +62,7 @@ vi.mock('../utils/audioSynth', () => ({
 }));
 
 // Mock settings context with standard inline object to avoid TDZ hoisting issues
-vi.mock('../contexts/SettingsContext', () => {
+vi.mock("../contexts/SettingsContext", () => {
   const settings = {
     enableDoodly: true,
     enableSounds: true,
@@ -78,29 +86,34 @@ vi.mock('../contexts/SettingsContext', () => {
 });
 
 // Mock framer-motion to bypass animation lag/async rendering using a Proxy
-vi.mock('framer-motion', () => {
-  const React = require('react');
-  const Dummy = React.forwardRef(({ children, onAnimationComplete, ...props }, ref) => {
-    // Auto-fire onAnimationComplete to advance states instantly in tests
-    React.useEffect(() => {
-      if (onAnimationComplete) {
-        onAnimationComplete();
-      }
-    }, [onAnimationComplete]);
-    return React.createElement('div', { ref, ...props }, children);
-  });
-  const motionProxy = new Proxy({}, {
-    get: (target, key) => {
-      return Dummy;
-    }
-  });
+vi.mock("framer-motion", () => {
+  const React = require("react");
+  const Dummy = React.forwardRef(
+    ({ children, onAnimationComplete, ...props }, ref) => {
+      // Auto-fire onAnimationComplete to advance states instantly in tests
+      React.useEffect(() => {
+        if (onAnimationComplete) {
+          onAnimationComplete();
+        }
+      }, [onAnimationComplete]);
+      return React.createElement("div", { ref, ...props }, children);
+    },
+  );
+  const motionProxy = new Proxy(
+    {},
+    {
+      get: (target, key) => {
+        return Dummy;
+      },
+    },
+  );
   return {
     motion: motionProxy,
     AnimatePresence: ({ children }) => children,
   };
 });
 
-describe('Interactive Components Spec', () => {
+describe("Interactive Components Spec", () => {
   beforeEach(() => {
     const { settings } = usePortfolioSettings();
     settings.enableCrumpledPageTransition = true;
@@ -108,17 +121,17 @@ describe('Interactive Components Spec', () => {
     vi.clearAllMocks();
   });
 
-  describe('CoffeeCup Component', () => {
-    it('renders with initial label', () => {
+  describe("CoffeeCup Component", () => {
+    it("renders with initial label", () => {
       render(<CoffeeCup />);
       expect(screen.getByText(/Coffee break/i)).toBeInTheDocument();
     });
 
-    it('shakes and plays sound on first click, and spills on 5th click', () => {
+    it("shakes and plays sound on first click, and spills on 5th click", () => {
       const sloshSpy = vi.fn();
       const spillSpy = vi.fn();
-      window.addEventListener('coffee-slosh', sloshSpy);
-      window.addEventListener('coffee-spill', spillSpy);
+      window.addEventListener("coffee-slosh", sloshSpy);
+      window.addEventListener("coffee-spill", spillSpy);
 
       const { container } = render(<CoffeeCup />);
       const cupSvg = container.querySelector('svg[viewBox="0 0 80 80"]');
@@ -144,15 +157,17 @@ describe('Interactive Components Spec', () => {
       // Reset click
       fireEvent.click(cupContainer);
       expect(soundSynth.playPop).toHaveBeenCalled();
-      expect(screen.getByText(/Coffee break \(0\/5 clicks\)/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Coffee break \(0\/5 clicks\)/i),
+      ).toBeInTheDocument();
 
-      window.removeEventListener('coffee-slosh', sloshSpy);
-      window.removeEventListener('coffee-spill', spillSpy);
+      window.removeEventListener("coffee-slosh", sloshSpy);
+      window.removeEventListener("coffee-spill", spillSpy);
     });
   });
 
-  describe('InkLeak Component', () => {
-    it('listens to ink-leak-triggered event, transitions stages and shatters on click', async () => {
+  describe("InkLeak Component", () => {
+    it("listens to ink-leak-triggered event, transitions stages and shatters on click", async () => {
       vi.useFakeTimers();
       const { container } = render(<InkLeak />);
 
@@ -162,8 +177,8 @@ describe('Interactive Components Spec', () => {
       });
 
       // Dispatch ink leak event
-      const event = new CustomEvent('ink-leak-triggered', {
-        detail: { x: 300, y: 150 }
+      const event = new CustomEvent("ink-leak-triggered", {
+        detail: { x: 300, y: 150 },
       });
       fireEvent(window, event);
 
@@ -182,14 +197,16 @@ describe('Interactive Components Spec', () => {
         vi.advanceTimersByTime(1200);
         await vi.runAllTicks();
       });
-      expect(container.querySelectorAll('circle[fill="var(--card-bg)"]').length).toBe(0);
+      expect(
+        container.querySelectorAll('circle[fill="var(--card-bg)"]').length,
+      ).toBe(0);
 
       vi.useRealTimers();
     });
   });
 
-  describe('PageCrumpler Component', () => {
-    it('skips transition if disabled in settings', () => {
+  describe("PageCrumpler Component", () => {
+    it("skips transition if disabled in settings", () => {
       const { settings } = usePortfolioSettings();
       settings.enableCrumpledPageTransition = false;
       const actionSpy = vi.fn();
@@ -197,11 +214,11 @@ describe('Interactive Components Spec', () => {
       render(
         <MemoryRouter>
           <PageCrumpler />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
-      const event = new CustomEvent('page-crumple-transition', {
-        detail: { action: actionSpy }
+      const event = new CustomEvent("page-crumple-transition", {
+        detail: { action: actionSpy },
       });
       fireEvent(window, event);
 
@@ -209,18 +226,18 @@ describe('Interactive Components Spec', () => {
       expect(soundSynth.playCrumple).not.toHaveBeenCalled();
     });
 
-    it('plays sound and runs callback when event fires (settings enabled)', async () => {
+    it("plays sound and runs callback when event fires (settings enabled)", async () => {
       vi.useFakeTimers();
       const actionSpy = vi.fn();
 
       render(
         <MemoryRouter>
           <PageCrumpler />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
-      const event = new CustomEvent('page-crumple-transition', {
-        detail: { action: actionSpy }
+      const event = new CustomEvent("page-crumple-transition", {
+        detail: { action: actionSpy },
       });
       fireEvent(window, event);
 
@@ -236,20 +253,20 @@ describe('Interactive Components Spec', () => {
     });
   });
 
-  describe('SketchyBug Component', () => {
+  describe("SketchyBug Component", () => {
     beforeAll(() => {
-      vi.stubGlobal('requestAnimationFrame', (cb) => setTimeout(cb, 16));
-      vi.stubGlobal('cancelAnimationFrame', (id) => clearTimeout(id));
+      vi.stubGlobal("requestAnimationFrame", (cb) => setTimeout(cb, 16));
+      vi.stubGlobal("cancelAnimationFrame", (id) => clearTimeout(id));
     });
 
     afterAll(() => {
       vi.unstubAllGlobals();
     });
 
-    it('spawns a bug, moves it, and squashes it on click', async () => {
+    it("spawns a bug, moves it, and squashes it on click", async () => {
       vi.useFakeTimers();
       const squashSpy = vi.fn();
-      window.addEventListener('bug-squashed', squashSpy);
+      window.addEventListener("bug-squashed", squashSpy);
 
       const { container } = render(<SketchyBug />);
 
@@ -259,7 +276,7 @@ describe('Interactive Components Spec', () => {
       });
 
       // Verify no bug is present initially
-      expect(container.querySelector('svg')).toBeNull();
+      expect(container.querySelector("svg")).toBeNull();
 
       // Advance timers by 12 seconds to spawn the bug
       await act(async () => {
@@ -287,7 +304,7 @@ describe('Interactive Components Spec', () => {
       expect(squashSpy).toHaveBeenCalled();
 
       // Verify it changes to squashed state (splatFilter exists)
-      const splatFilter = container.querySelector('#splatFilter');
+      const splatFilter = container.querySelector("#splatFilter");
       expect(splatFilter).toBeInTheDocument();
 
       // Advance timers by 1500ms to verify bug fades out and is removed
@@ -295,22 +312,22 @@ describe('Interactive Components Spec', () => {
         vi.advanceTimersByTime(1500);
         await vi.runAllTicks();
       });
-      expect(container.querySelector('svg')).toBeNull();
+      expect(container.querySelector("svg")).toBeNull();
 
-      window.removeEventListener('bug-squashed', squashSpy);
+      window.removeEventListener("bug-squashed", squashSpy);
       vi.useRealTimers();
     });
   });
 
-  describe('PageTear Component', () => {
-    it('renders flap initially, opens Tic-Tac-Toe, and plays a full game', async () => {
+  describe("PageTear Component", () => {
+    it("renders flap initially, opens Tic-Tac-Toe, and plays a full game", async () => {
       vi.useFakeTimers();
       const startSpy = vi.fn();
       const winSpy = vi.fn();
       const drawSpy = vi.fn();
-      window.addEventListener('ttt-start', startSpy);
-      window.addEventListener('ttt-win-user', winSpy);
-      window.addEventListener('ttt-draw', drawSpy);
+      window.addEventListener("ttt-start", startSpy);
+      window.addEventListener("ttt-win-user", winSpy);
+      window.addEventListener("ttt-draw", drawSpy);
 
       const { container } = render(<PageTear />);
 
@@ -333,7 +350,7 @@ describe('Interactive Components Spec', () => {
 
       // Find grid cells (last 9 child divs in the 180px width grid container)
       const grid = container.querySelector('div[style*="width: 180px"]');
-      const allDivs = grid.querySelectorAll('div');
+      const allDivs = grid.querySelectorAll("div");
       const cells = Array.from(allDivs).slice(-9);
       expect(cells.length).toBe(9);
 
@@ -354,7 +371,7 @@ describe('Interactive Components Spec', () => {
         vi.advanceTimersByTime(600);
         await vi.runAllTicks();
       });
-      expect(cells[4]).toHaveTextContent('O');
+      expect(cells[4]).toHaveTextContent("O");
 
       // 2. Click 1
       await act(async () => {
@@ -372,7 +389,7 @@ describe('Interactive Components Spec', () => {
         vi.advanceTimersByTime(600);
         await vi.runAllTicks();
       });
-      expect(cells[2]).toHaveTextContent('O');
+      expect(cells[2]).toHaveTextContent("O");
 
       // 3. Click 3
       await act(async () => {
@@ -381,7 +398,7 @@ describe('Interactive Components Spec', () => {
       });
 
       const winDoodlySpy = vi.fn();
-      window.addEventListener('ttt-win-doodly', winDoodlySpy);
+      window.addEventListener("ttt-win-doodly", winDoodlySpy);
 
       // Let effect run
       await act(async () => {
@@ -393,90 +410,90 @@ describe('Interactive Components Spec', () => {
         vi.advanceTimersByTime(600);
         await vi.runAllTicks();
       });
-      expect(cells[6]).toHaveTextContent('O');
+      expect(cells[6]).toHaveTextContent("O");
       expect(winDoodlySpy).toHaveBeenCalled();
       expect(screen.getByText(/Дудли выиграл/i)).toBeInTheDocument();
 
       // Click Reset
-      const resetBtn = screen.getByRole('button', { name: /Сыграть ещё/i });
+      const resetBtn = screen.getByRole("button", { name: /Сыграть ещё/i });
       await act(async () => {
         fireEvent.click(resetBtn);
         await vi.runAllTicks();
       });
 
       // Verify cells are reset
-      expect(cells[0].textContent).toBe('');
-      expect(cells[4].textContent).toBe('');
+      expect(cells[0].textContent).toBe("");
+      expect(cells[4].textContent).toBe("");
 
-      window.removeEventListener('ttt-start', startSpy);
-      window.removeEventListener('ttt-win-user', winSpy);
-      window.removeEventListener('ttt-draw', drawSpy);
-      window.removeEventListener('ttt-win-doodly', winDoodlySpy);
+      window.removeEventListener("ttt-start", startSpy);
+      window.removeEventListener("ttt-win-user", winSpy);
+      window.removeEventListener("ttt-draw", drawSpy);
+      window.removeEventListener("ttt-win-doodly", winDoodlySpy);
       vi.useRealTimers();
     });
   });
 
-  describe('SvgIllustrations Component', () => {
-    it('renders all SVG components without crashing', () => {
+  describe("SvgIllustrations Component", () => {
+    it("renders all SVG components without crashing", () => {
       const { container: c1 } = render(<DeveloperIllustration />);
-      expect(c1.querySelector('svg')).toBeInTheDocument();
+      expect(c1.querySelector("svg")).toBeInTheDocument();
 
       const { container: c2 } = render(<TechIcon />);
-      expect(c2.querySelector('svg')).toBeInTheDocument();
+      expect(c2.querySelector("svg")).toBeInTheDocument();
 
       const { container: c3 } = render(<ReactIcon />);
-      expect(c3.querySelector('svg')).toBeInTheDocument();
+      expect(c3.querySelector("svg")).toBeInTheDocument();
 
       const { container: c4 } = render(<NodeIcon />);
-      expect(c4.querySelector('svg')).toBeInTheDocument();
+      expect(c4.querySelector("svg")).toBeInTheDocument();
 
       const { container: c5 } = render(<PythonIcon />);
-      expect(c5.querySelector('svg')).toBeInTheDocument();
+      expect(c5.querySelector("svg")).toBeInTheDocument();
 
       const { container: c6 } = render(<DatabaseIcon />);
-      expect(c6.querySelector('svg')).toBeInTheDocument();
+      expect(c6.querySelector("svg")).toBeInTheDocument();
 
       const { container: c7 } = render(<DockerIcon />);
-      expect(c7.querySelector('svg')).toBeInTheDocument();
+      expect(c7.querySelector("svg")).toBeInTheDocument();
 
       const { container: c8 } = render(<SqlIcon />);
-      expect(c8.querySelector('svg')).toBeInTheDocument();
+      expect(c8.querySelector("svg")).toBeInTheDocument();
 
       const { container: c9 } = render(<RocketIcon />);
-      expect(c9.querySelector('svg')).toBeInTheDocument();
+      expect(c9.querySelector("svg")).toBeInTheDocument();
 
       const { container: c10 } = render(<MailIcon />);
-      expect(c10.querySelector('svg')).toBeInTheDocument();
+      expect(c10.querySelector("svg")).toBeInTheDocument();
 
       const { container: c11 } = render(<ProjectIcon />);
-      expect(c11.querySelector('svg')).toBeInTheDocument();
+      expect(c11.querySelector("svg")).toBeInTheDocument();
 
       const { container: c12 } = render(<StarIcon />);
-      expect(c12.querySelector('svg')).toBeInTheDocument();
+      expect(c12.querySelector("svg")).toBeInTheDocument();
 
       const { container: c13 } = render(<CodeIcon />);
-      expect(c13.querySelector('svg')).toBeInTheDocument();
+      expect(c13.querySelector("svg")).toBeInTheDocument();
 
       const { container: c14 } = render(<BackgroundParticles />);
-      expect(c14.querySelector('svg')).toBeInTheDocument();
+      expect(c14.querySelector("svg")).toBeInTheDocument();
 
       const { container: c15 } = render(<CheckIcon />);
-      expect(c15.querySelector('svg')).toBeInTheDocument();
+      expect(c15.querySelector("svg")).toBeInTheDocument();
 
       const { container: c16 } = render(<LightningIcon />);
-      expect(c16.querySelector('svg')).toBeInTheDocument();
+      expect(c16.querySelector("svg")).toBeInTheDocument();
 
       const { container: c17 } = render(<SketchLockIcon />);
-      expect(c17.querySelector('svg')).toBeInTheDocument();
+      expect(c17.querySelector("svg")).toBeInTheDocument();
 
       const { container: c18 } = render(<SketchSunIcon />);
-      expect(c18.querySelector('svg')).toBeInTheDocument();
+      expect(c18.querySelector("svg")).toBeInTheDocument();
 
       const { container: c19 } = render(<SketchMoonIcon />);
-      expect(c19.querySelector('svg')).toBeInTheDocument();
+      expect(c19.querySelector("svg")).toBeInTheDocument();
 
       const { container: c20 } = render(<SketchSoundIcon />);
-      expect(c20.querySelector('svg')).toBeInTheDocument();
+      expect(c20.querySelector("svg")).toBeInTheDocument();
     });
   });
 });

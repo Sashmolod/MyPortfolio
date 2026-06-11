@@ -1,11 +1,19 @@
-import { useEffect, useRef, useState } from 'react';
-import { soundSynth } from '../utils/audioSynth';
+import { useEffect, useRef, useState } from "react";
+import { soundSynth } from "../utils/audioSynth";
 
-export default function DoodleCanvas({ active, color, brushWidth, paths, setPaths }) {
+export default function DoodleCanvas({
+  active,
+  color,
+  brushWidth,
+  paths,
+  setPaths,
+}) {
   const resolveColor = (c) => {
-    if (c === 'eraser') {
-      const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
-      return bg || '#fcfaf2';
+    if (c === "eraser") {
+      const bg = getComputedStyle(document.documentElement)
+        .getPropertyValue("--bg")
+        .trim();
+      return bg || "#fcfaf2";
     }
     return c;
   };
@@ -24,10 +32,10 @@ export default function DoodleCanvas({ active, color, brushWidth, paths, setPath
         const { width, height } = entry.target.getBoundingClientRect();
         // Use scrollHeight for height to cover the whole document height
         const scrollHeight = entry.target.scrollHeight;
-        
+
         setDimensions({
           width: width,
-          height: scrollHeight
+          height: scrollHeight,
         });
       }
     };
@@ -43,7 +51,7 @@ export default function DoodleCanvas({ active, color, brushWidth, paths, setPath
     const canvas = canvasRef.current;
     if (!canvas || dimensions.width === 0 || dimensions.height === 0) return;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     const dpr = window.devicePixelRatio || 1;
 
     // Set display size
@@ -58,8 +66,8 @@ export default function DoodleCanvas({ active, color, brushWidth, paths, setPath
     ctx.scale(dpr, dpr);
 
     // Set drawing styles
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
 
     // Clear canvas
     ctx.clearRect(0, 0, dimensions.width, dimensions.height);
@@ -70,10 +78,10 @@ export default function DoodleCanvas({ active, color, brushWidth, paths, setPath
       ctx.beginPath();
       ctx.strokeStyle = resolveColor(path.color);
       ctx.lineWidth = path.width;
-      
+
       const [start, ...rest] = path.points;
       ctx.moveTo(start.x, start.y);
-      
+
       rest.forEach((pt) => {
         ctx.lineTo(pt.x, pt.y);
       });
@@ -87,7 +95,7 @@ export default function DoodleCanvas({ active, color, brushWidth, paths, setPath
     if (!canvas) return { x: 0, y: 0 };
 
     const rect = canvas.getBoundingClientRect();
-    
+
     // For touches
     if (e.touches && e.touches[0]) {
       // clientX/Y are relative to viewport, so we add window scroll coordinates to get page-relative position
@@ -106,16 +114,16 @@ export default function DoodleCanvas({ active, color, brushWidth, paths, setPath
     if (!active) return;
     setIsDrawing(true);
     soundSynth.startScribble();
-    
+
     // Dispatch doodle drawing start event
-    window.dispatchEvent(new CustomEvent('doodle-draw-start'));
-    
+    window.dispatchEvent(new CustomEvent("doodle-draw-start"));
+
     const { x, y } = getCoordinates(e);
     currentPathRef.current = [{ x, y }];
 
     // Draw single dot initially
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     ctx.beginPath();
     ctx.arc(x, y, brushWidth / 2, 0, Math.PI * 2);
     ctx.fillStyle = resolveColor(color);
@@ -124,33 +132,42 @@ export default function DoodleCanvas({ active, color, brushWidth, paths, setPath
 
   const draw = (e) => {
     if (!active || !isDrawing) return;
-    
+
     // Prevent scrolling on mobile touch when drawing
     if (e.cancelable) {
       e.preventDefault();
     }
 
     const { x, y } = getCoordinates(e);
-    
+
     // Check if erasing Doodly Helper in bottom-left viewport
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    
-    if (color === 'eraser' && clientX >= 15 && clientX <= 120 && clientY >= window.innerHeight - 150 && clientY <= window.innerHeight) {
+
+    if (
+      color === "eraser" &&
+      clientX >= 15 &&
+      clientX <= 120 &&
+      clientY >= window.innerHeight - 150 &&
+      clientY <= window.innerHeight
+    ) {
       const now = Date.now();
-      if (!window.lastDoodlyEraseTime || now - window.lastDoodlyEraseTime > 8000) {
+      if (
+        !window.lastDoodlyEraseTime ||
+        now - window.lastDoodlyEraseTime > 8000
+      ) {
         window.lastDoodlyEraseTime = now;
-        window.dispatchEvent(new CustomEvent('doodly-erased'));
+        window.dispatchEvent(new CustomEvent("doodly-erased"));
       }
     }
 
     const prevPoints = currentPathRef.current;
-    
+
     if (prevPoints.length > 0) {
       const lastPoint = prevPoints[prevPoints.length - 1];
-      
+
       const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext("2d");
       ctx.beginPath();
       ctx.strokeStyle = resolveColor(color);
       ctx.lineWidth = brushWidth;
@@ -171,7 +188,7 @@ export default function DoodleCanvas({ active, color, brushWidth, paths, setPath
       const newPath = {
         points: currentPathRef.current,
         color: color,
-        width: brushWidth
+        width: brushWidth,
       };
       setPaths((prev) => [...prev, newPath]);
     }
@@ -189,14 +206,14 @@ export default function DoodleCanvas({ active, color, brushWidth, paths, setPath
       onTouchMove={draw}
       onTouchEnd={stopDrawing}
       style={{
-        position: 'absolute',
+        position: "absolute",
         top: 0,
         left: 0,
         zIndex: active ? 9999 : -1, // Sits above content when active, else completely below
-        pointerEvents: active ? 'auto' : 'none',
-        display: 'block',
-        cursor: active ? 'crosshair' : 'default',
-        touchAction: active ? 'none' : 'auto'
+        pointerEvents: active ? "auto" : "none",
+        display: "block",
+        cursor: active ? "crosshair" : "default",
+        touchAction: active ? "none" : "auto",
       }}
     />
   );

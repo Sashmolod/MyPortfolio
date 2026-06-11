@@ -1,38 +1,47 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { soundSynth } from '../utils/audioSynth';
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { soundSynth } from "../utils/audioSynth";
 
 const WIN_PATTERNS = [
-  [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
-  [0, 3, 6], [1, 4, 7], [2, 5, 8], // cols
-  [0, 4, 8], [2, 4, 6]             // diagonals
+  [0, 1, 2],
+  [3, 4, 5],
+  [6, 7, 8], // rows
+  [0, 3, 6],
+  [1, 4, 7],
+  [2, 5, 8], // cols
+  [0, 4, 8],
+  [2, 4, 6], // diagonals
 ];
 
 export default function PageTear() {
   const [isOpen, setIsOpen] = useState(false);
   const [board, setBoard] = useState(Array(9).fill(null));
-  const [turn, setTurn] = useState('user'); // 'user' or 'doodly'
+  const [turn, setTurn] = useState("user"); // 'user' or 'doodly'
   const [winner, setWinner] = useState(null); // 'X', 'O', 'draw' or null
 
   const checkGameWinner = (tempBoard) => {
     for (let pattern of WIN_PATTERNS) {
       const [a, b, c] = pattern;
-      if (tempBoard[a] && tempBoard[a] === tempBoard[b] && tempBoard[a] === tempBoard[c]) {
+      if (
+        tempBoard[a] &&
+        tempBoard[a] === tempBoard[b] &&
+        tempBoard[a] === tempBoard[c]
+      ) {
         return tempBoard[a];
       }
     }
-    if (tempBoard.every(cell => cell !== null)) {
-      return 'draw';
+    if (tempBoard.every((cell) => cell !== null)) {
+      return "draw";
     }
     return null;
   };
 
   const handleCellClick = (index) => {
-    if (board[index] || turn !== 'user' || winner) return;
+    if (board[index] || turn !== "user" || winner) return;
 
     soundSynth.playTap();
     const newBoard = [...board];
-    newBoard[index] = 'X';
+    newBoard[index] = "X";
     setBoard(newBoard);
 
     const gameWinner = checkGameWinner(newBoard);
@@ -40,13 +49,13 @@ export default function PageTear() {
       setWinner(gameWinner);
       triggerWinnerEvent(gameWinner);
     } else {
-      setTurn('doodly');
+      setTurn("doodly");
     }
   };
 
   // Doodly AI / heuristic turn
   useEffect(() => {
-    if (turn !== 'doodly' || winner) return;
+    if (turn !== "doodly" || winner) return;
 
     const timer = setTimeout(() => {
       // Find Doodly's move
@@ -54,7 +63,7 @@ export default function PageTear() {
       if (move !== null && move !== undefined) {
         soundSynth.playTap();
         const newBoard = [...board];
-        newBoard[move] = 'O';
+        newBoard[move] = "O";
         setBoard(newBoard);
 
         const gameWinner = checkGameWinner(newBoard);
@@ -62,7 +71,7 @@ export default function PageTear() {
           setWinner(gameWinner);
           triggerWinnerEvent(gameWinner);
         } else {
-          setTurn('user');
+          setTurn("user");
         }
       }
     }, 600);
@@ -74,30 +83,36 @@ export default function PageTear() {
     // 1. Can Doodly win?
     for (let pattern of WIN_PATTERNS) {
       const [a, b, c] = pattern;
-      if (tempBoard[a] === 'O' && tempBoard[b] === 'O' && tempBoard[c] === null) return c;
-      if (tempBoard[a] === 'O' && tempBoard[c] === 'O' && tempBoard[b] === null) return b;
-      if (tempBoard[b] === 'O' && tempBoard[c] === 'O' && tempBoard[a] === null) return a;
+      if (tempBoard[a] === "O" && tempBoard[b] === "O" && tempBoard[c] === null)
+        return c;
+      if (tempBoard[a] === "O" && tempBoard[c] === "O" && tempBoard[b] === null)
+        return b;
+      if (tempBoard[b] === "O" && tempBoard[c] === "O" && tempBoard[a] === null)
+        return a;
     }
 
     // 2. Block user
     for (let pattern of WIN_PATTERNS) {
       const [a, b, c] = pattern;
-      if (tempBoard[a] === 'X' && tempBoard[b] === 'X' && tempBoard[c] === null) return c;
-      if (tempBoard[a] === 'X' && tempBoard[c] === 'X' && tempBoard[b] === null) return b;
-      if (tempBoard[b] === 'X' && tempBoard[c] === 'X' && tempBoard[a] === null) return a;
+      if (tempBoard[a] === "X" && tempBoard[b] === "X" && tempBoard[c] === null)
+        return c;
+      if (tempBoard[a] === "X" && tempBoard[c] === "X" && tempBoard[b] === null)
+        return b;
+      if (tempBoard[b] === "X" && tempBoard[c] === "X" && tempBoard[a] === null)
+        return a;
     }
 
     // 3. Take center
     if (tempBoard[4] === null) return 4;
 
     // 4. Take corners
-    const corners = [0, 2, 6, 8].filter(idx => tempBoard[idx] === null);
+    const corners = [0, 2, 6, 8].filter((idx) => tempBoard[idx] === null);
     if (corners.length > 0) {
       return corners[Math.floor(Math.random() * corners.length)];
     }
 
     // 5. Take sides
-    const sides = [1, 3, 5, 7].filter(idx => tempBoard[idx] === null);
+    const sides = [1, 3, 5, 7].filter((idx) => tempBoard[idx] === null);
     if (sides.length > 0) {
       return sides[Math.floor(Math.random() * sides.length)];
     }
@@ -106,12 +121,12 @@ export default function PageTear() {
   };
 
   const triggerWinnerEvent = (result) => {
-    if (result === 'X') {
-      window.dispatchEvent(new CustomEvent('ttt-win-user'));
-    } else if (result === 'O') {
-      window.dispatchEvent(new CustomEvent('ttt-win-doodly'));
-    } else if (result === 'draw') {
-      window.dispatchEvent(new CustomEvent('ttt-draw'));
+    if (result === "X") {
+      window.dispatchEvent(new CustomEvent("ttt-win-user"));
+    } else if (result === "O") {
+      window.dispatchEvent(new CustomEvent("ttt-win-doodly"));
+    } else if (result === "draw") {
+      window.dispatchEvent(new CustomEvent("ttt-draw"));
     }
   };
 
@@ -119,8 +134,8 @@ export default function PageTear() {
     soundSynth.playPageFlip();
     setBoard(Array(9).fill(null));
     setWinner(null);
-    setTurn('user');
-    window.dispatchEvent(new CustomEvent('ttt-start'));
+    setTurn("user");
+    window.dispatchEvent(new CustomEvent("ttt-start"));
   };
 
   return (
@@ -136,28 +151,28 @@ export default function PageTear() {
             tabIndex={0}
             aria-label="Secret folded paper corner. Click to tear and open game."
             onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
+              if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
                 setIsOpen(true);
                 soundSynth.playTear();
-                window.dispatchEvent(new CustomEvent('ttt-start'));
+                window.dispatchEvent(new CustomEvent("ttt-start"));
               }
             }}
             style={{
-              position: 'fixed',
+              position: "fixed",
               top: 0,
               right: 0,
-              width: '65px',
-              height: '65px',
+              width: "65px",
+              height: "65px",
               zIndex: 100000,
-              cursor: 'pointer',
-              pointerEvents: 'auto',
-              userSelect: 'none',
+              cursor: "pointer",
+              pointerEvents: "auto",
+              userSelect: "none",
             }}
             onClick={() => {
               setIsOpen(true);
               soundSynth.playTear();
-              window.dispatchEvent(new CustomEvent('ttt-start'));
+              window.dispatchEvent(new CustomEvent("ttt-start"));
             }}
             whileHover={{ scale: 1.05, rotate: -2 }}
           >
@@ -184,9 +199,26 @@ export default function PageTear() {
                 fill="none"
               />
               <defs>
-                <filter id="wobblyFilterTear" x="-10%" y="-10%" width="120%" height="120%">
-                  <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" result="noise" />
-                  <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" />
+                <filter
+                  id="wobblyFilterTear"
+                  x="-10%"
+                  y="-10%"
+                  width="120%"
+                  height="120%"
+                >
+                  <feTurbulence
+                    type="fractalNoise"
+                    baseFrequency="0.04"
+                    numOctaves="3"
+                    result="noise"
+                  />
+                  <feDisplacementMap
+                    in="SourceGraphic"
+                    in2="noise"
+                    scale="3"
+                    xChannelSelector="R"
+                    yChannelSelector="G"
+                  />
                 </filter>
               </defs>
             </svg>
@@ -201,49 +233,51 @@ export default function PageTear() {
             initial={{ y: -300, opacity: 0, scale: 0.9, rotate: 2 }}
             animate={{ y: 0, opacity: 1, scale: 1, rotate: 0 }}
             exit={{ y: -300, opacity: 0, scale: 0.9, rotate: -2 }}
-            transition={{ type: 'spring', damping: 18, stiffness: 120 }}
+            transition={{ type: "spring", damping: 18, stiffness: 120 }}
             style={{
-              position: 'fixed',
-              top: '20px',
-              right: '20px',
-              width: '250px',
-              background: 'var(--card-bg)',
-              border: 'var(--border-style)',
-              borderStyle: 'solid',
-              borderRadius: 'var(--sketch-radius-2)',
-              padding: '16px',
-              boxShadow: 'var(--shadow)',
+              position: "fixed",
+              top: "20px",
+              right: "20px",
+              width: "250px",
+              background: "var(--card-bg)",
+              border: "var(--border-style)",
+              borderStyle: "solid",
+              borderRadius: "var(--sketch-radius-2)",
+              padding: "16px",
+              boxShadow: "var(--shadow)",
               fontFamily: "'Architects Daughter', cursive",
               zIndex: 100000,
-              color: 'var(--text)',
-              userSelect: 'none',
+              color: "var(--text)",
+              userSelect: "none",
             }}
           >
             {/* Header */}
             <div
               style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '12px',
-                borderBottom: '2px dashed var(--text)',
-                paddingBottom: '6px',
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "12px",
+                borderBottom: "2px dashed var(--text)",
+                paddingBottom: "6px",
               }}
             >
-              <span style={{ fontSize: '13px', fontWeight: 'bold' }}>Крестики-Нолики ✏️</span>
+              <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+                Крестики-Нолики ✏️
+              </span>
               <button
                 onClick={() => {
                   setIsOpen(false);
                   soundSynth.playTear();
                 }}
                 style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  color: 'var(--text)',
-                  padding: '2px 6px',
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                  color: "var(--text)",
+                  padding: "2px 6px",
                 }}
               >
                 ✕
@@ -253,119 +287,133 @@ export default function PageTear() {
             {/* Game Grid */}
             <div
               style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '8px',
-                width: '180px',
-                height: '180px',
-                margin: '12px auto',
-                position: 'relative',
+                display: "grid",
+                gridTemplateColumns: "repeat(3, 1fr)",
+                gap: "8px",
+                width: "180px",
+                height: "180px",
+                margin: "12px auto",
+                position: "relative",
               }}
             >
               {/* Pencil sketch board lines */}
               <div
                 style={{
-                  position: 'absolute',
-                  top: '33%',
+                  position: "absolute",
+                  top: "33%",
                   left: 0,
-                  width: '100%',
-                  height: '2px',
-                  background: 'var(--text)',
+                  width: "100%",
+                  height: "2px",
+                  background: "var(--text)",
                   opacity: 0.7,
                 }}
               />
               <div
                 style={{
-                  position: 'absolute',
-                  top: '66%',
+                  position: "absolute",
+                  top: "66%",
                   left: 0,
-                  width: '100%',
-                  height: '2px',
-                  background: 'var(--text)',
+                  width: "100%",
+                  height: "2px",
+                  background: "var(--text)",
                   opacity: 0.7,
                 }}
               />
               <div
                 style={{
-                  position: 'absolute',
-                  left: '33%',
+                  position: "absolute",
+                  left: "33%",
                   top: 0,
-                  width: '2px',
-                  height: '100%',
-                  background: 'var(--text)',
+                  width: "2px",
+                  height: "100%",
+                  background: "var(--text)",
                   opacity: 0.7,
                 }}
               />
               <div
                 style={{
-                  position: 'absolute',
-                  left: '66%',
+                  position: "absolute",
+                  left: "66%",
                   top: 0,
-                  width: '2px',
-                  height: '100%',
-                  background: 'var(--text)',
+                  width: "2px",
+                  height: "100%",
+                  background: "var(--text)",
                   opacity: 0.7,
                 }}
               />
 
               {board.map((cell, idx) => {
-                const isClickable = !cell && !winner && turn !== 'doodly';
+                const isClickable = !cell && !winner && turn !== "doodly";
                 return (
                   <div
                     key={idx}
                     role="button"
                     tabIndex={isClickable ? 0 : -1}
-                    aria-label={`Cell ${idx + 1}, ${cell || 'empty'}`}
+                    aria-label={`Cell ${idx + 1}, ${cell || "empty"}`}
                     onKeyDown={(e) => {
-                      if (isClickable && (e.key === 'Enter' || e.key === ' ')) {
+                      if (isClickable && (e.key === "Enter" || e.key === " ")) {
                         e.preventDefault();
                         handleCellClick(idx);
                       }
                     }}
                     onClick={() => handleCellClick(idx)}
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: isClickable ? 'pointer' : 'default',
-                      fontSize: '28px',
-                      fontWeight: 'bold',
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: isClickable ? "pointer" : "default",
+                      fontSize: "28px",
+                      fontWeight: "bold",
                       fontFamily: "'Architects Daughter', cursive",
                     }}
                   >
-                  {cell === 'X' && (
-                    <motion.span
-                      initial={{ scale: 0, rotate: -20 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      style={{ color: 'var(--primary)', filter: "url(#wobblyFilterTear)" }}
-                    >
-                      X
-                    </motion.span>
-                  )}
-                  {cell === 'O' && (
-                    <motion.span
-                      initial={{ scale: 0, rotate: 20 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      style={{ color: 'var(--secondary)', filter: "url(#wobblyFilterTear)" }}
-                    >
-                      O
-                    </motion.span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                    {cell === "X" && (
+                      <motion.span
+                        initial={{ scale: 0, rotate: -20 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        style={{
+                          color: "var(--primary)",
+                          filter: "url(#wobblyFilterTear)",
+                        }}
+                      >
+                        X
+                      </motion.span>
+                    )}
+                    {cell === "O" && (
+                      <motion.span
+                        initial={{ scale: 0, rotate: 20 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        style={{
+                          color: "var(--secondary)",
+                          filter: "url(#wobblyFilterTear)",
+                        }}
+                      >
+                        O
+                      </motion.span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
 
             {/* Game Status & Control */}
-            <div style={{ textAlign: 'center', marginTop: '10px' }}>
+            <div style={{ textAlign: "center", marginTop: "10px" }}>
               {winner && (
-                <div style={{ marginBottom: '8px', fontSize: '13px', fontWeight: 'bold' }}>
-                  {winner === 'draw' ? (
+                <div
+                  style={{
+                    marginBottom: "8px",
+                    fontSize: "13px",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {winner === "draw" ? (
                     <span>Ничья! 🤝</span>
-                  ) : winner === 'X' ? (
-                    <span style={{ color: 'var(--primary)' }}>Победа! 🎉</span>
+                  ) : winner === "X" ? (
+                    <span style={{ color: "var(--primary)" }}>Победа! 🎉</span>
                   ) : (
-                    <span style={{ color: 'var(--secondary)' }}>Дудли выиграл! 🦉</span>
+                    <span style={{ color: "var(--secondary)" }}>
+                      Дудли выиграл! 🦉
+                    </span>
                   )}
                 </div>
               )}
@@ -374,10 +422,10 @@ export default function PageTear() {
                 className="btn"
                 onClick={handleReset}
                 style={{
-                  fontSize: '11px',
-                  padding: '4px 12px',
+                  fontSize: "11px",
+                  padding: "4px 12px",
                   fontFamily: "'Architects Daughter', cursive",
-                  width: '100%',
+                  width: "100%",
                 }}
               >
                 {winner ? "Сыграть ещё" : "Сбросить"}

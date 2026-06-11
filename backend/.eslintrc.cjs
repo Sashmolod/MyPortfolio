@@ -29,7 +29,7 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
     '@typescript-eslint/no-misused-promises': [
       'error',
-      { checks: { returns: true, void: true } },
+      { checksVoidReturn: false },
     ],
     '@typescript-eslint/no-floating-promises': ['error'],
     '@typescript-eslint/no-unsafe-assignment': 'off',
@@ -45,4 +45,21 @@ module.exports = {
     'prefer-const': 'error',
     'object-shorthand': 'error',
   },
+  overrides: [
+    {
+      // Тестові файли не входять в tsconfig.json — вимикаємо type-aware правила
+      files: ['**/*.spec.ts', '**/*.e2e-spec.ts', 'test/**/*.ts'],
+      parserOptions: {
+        project: null,
+      },
+      rules: {
+        '@typescript-eslint/no-misused-promises': 'off',
+        '@typescript-eslint/no-floating-promises': 'off',
+        '@typescript-eslint/no-unsafe-assignment': 'off',
+        '@typescript-eslint/no-unsafe-call': 'off',
+        '@typescript-eslint/no-unsafe-member-access': 'off',
+        '@typescript-eslint/require-await': 'off',
+      },
+    },
+  ],
 };

@@ -1,36 +1,37 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { soundSynth } from '../utils/audioSynth';
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { soundSynth } from "../utils/audioSynth";
 
 export default function InkLeak() {
-  const [stage, setStage] = useState('idle'); // 'idle', 'falling', 'blot', 'scattering'
+  const [stage, setStage] = useState("idle"); // 'idle', 'falling', 'blot', 'scattering'
   const [clickPos, setClickPos] = useState({ x: 0, y: 0 });
   const [shatterDots, setShatterDots] = useState([]);
 
   useEffect(() => {
     const handleInkLeakTriggered = (e) => {
-      if (stage !== 'idle') return;
+      if (stage !== "idle") return;
 
       const x = e.detail?.x || window.innerWidth / 2;
       const y = e.detail?.y || 50;
 
       setClickPos({ x, y });
-      setStage('falling');
+      setStage("falling");
     };
 
-    window.addEventListener('ink-leak-triggered', handleInkLeakTriggered);
-    return () => window.removeEventListener('ink-leak-triggered', handleInkLeakTriggered);
+    window.addEventListener("ink-leak-triggered", handleInkLeakTriggered);
+    return () =>
+      window.removeEventListener("ink-leak-triggered", handleInkLeakTriggered);
   }, [stage]);
 
   // When droplet hits landing Y, turn into blot
   const handleFallComplete = () => {
     soundSynth.playSplat();
-    setStage('blot');
+    setStage("blot");
   };
 
   const handleBlotClick = () => {
     soundSynth.playPop();
-    
+
     // Generate scatter vectors
     const dots = Array.from({ length: 7 }).map((_, i) => {
       const angle = (i * 360) / 7 + Math.random() * 15;
@@ -44,11 +45,11 @@ export default function InkLeak() {
     });
 
     setShatterDots(dots);
-    setStage('scattering');
+    setStage("scattering");
 
     // Return to idle after animation
     setTimeout(() => {
-      setStage('idle');
+      setStage("idle");
       setShatterDots([]);
     }, 1200);
   };
@@ -58,18 +59,18 @@ export default function InkLeak() {
   return (
     <div
       style={{
-        position: 'fixed',
+        position: "fixed",
         left: 0,
         top: 0,
-        width: '100vw',
-        height: '100vh',
-        pointerEvents: stage === 'idle' ? 'none' : 'auto',
+        width: "100vw",
+        height: "100vh",
+        pointerEvents: stage === "idle" ? "none" : "auto",
         zIndex: 99999, // very high layer
       }}
     >
       <AnimatePresence>
         {/* 1. Falling Droplet */}
-        {stage === 'falling' && (
+        {stage === "falling" && (
           <motion.div
             initial={{ x: clickPos.x, y: clickPos.y, scaleY: 1.4, scaleX: 0.8 }}
             animate={{
@@ -79,21 +80,21 @@ export default function InkLeak() {
             }}
             exit={{ scale: 0 }}
             onAnimationComplete={handleFallComplete}
-            transition={{ duration: 0.5, ease: 'easeIn' }}
+            transition={{ duration: 0.5, ease: "easeIn" }}
             style={{
-              position: 'absolute',
-              width: '16px',
-              height: '22px',
-              background: 'var(--text)',
-              borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%',
-              marginLeft: '-8px',
-              marginTop: '-11px',
+              position: "absolute",
+              width: "16px",
+              height: "22px",
+              background: "var(--text)",
+              borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",
+              marginLeft: "-8px",
+              marginTop: "-11px",
             }}
           />
         )}
 
         {/* 2. Ink Blot */}
-        {stage === 'blot' && (
+        {stage === "blot" && (
           <motion.div
             initial={{ x: clickPos.x, y: landingY, scale: 0.1, rotate: 0 }}
             animate={{ scale: 1, rotate: [0, 5, -3, 0] }}
@@ -101,16 +102,16 @@ export default function InkLeak() {
             tabIndex={0}
             aria-label="Ink blot. Click to pop and scatter."
             onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
+              if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
                 handleBlotClick();
               }
             }}
             style={{
-              position: 'absolute',
-              marginLeft: '-55px',
-              marginTop: '-55px',
-              cursor: 'pointer',
+              position: "absolute",
+              marginLeft: "-55px",
+              marginTop: "-55px",
+              cursor: "pointer",
             }}
             onClick={handleBlotClick}
           >
@@ -138,9 +139,26 @@ export default function InkLeak() {
               <circle cx="60" cy="50" r="1.5" fill="var(--text)" />
 
               <defs>
-                <filter id="wobblyFilterInk" x="-20%" y="-20%" width="140%" height="140%">
-                  <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="3" result="noise" />
-                  <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G" />
+                <filter
+                  id="wobblyFilterInk"
+                  x="-20%"
+                  y="-20%"
+                  width="140%"
+                  height="140%"
+                >
+                  <feTurbulence
+                    type="fractalNoise"
+                    baseFrequency="0.06"
+                    numOctaves="3"
+                    result="noise"
+                  />
+                  <feDisplacementMap
+                    in="SourceGraphic"
+                    in2="noise"
+                    scale="5"
+                    xChannelSelector="R"
+                    yChannelSelector="G"
+                  />
                 </filter>
               </defs>
             </svg>
@@ -148,8 +166,10 @@ export default function InkLeak() {
         )}
 
         {/* 3. Scattering Droplets */}
-        {stage === 'scattering' && (
-          <div style={{ position: 'absolute', left: clickPos.x, top: landingY }}>
+        {stage === "scattering" && (
+          <div
+            style={{ position: "absolute", left: clickPos.x, top: landingY }}
+          >
             {shatterDots.map((dot) => (
               <motion.div
                 key={dot.id}
@@ -160,25 +180,39 @@ export default function InkLeak() {
                   scale: [1, 0.8, 0],
                   opacity: [1, 1, 0],
                 }}
-                transition={{ duration: 1.0, ease: 'easeOut' }}
+                transition={{ duration: 1.0, ease: "easeOut" }}
                 style={{
-                  position: 'absolute',
+                  position: "absolute",
                   width: `${dot.size}px`,
                   height: `${dot.size}px`,
-                  background: 'var(--text)',
-                  borderRadius: '50%',
+                  background: "var(--text)",
+                  borderRadius: "50%",
                   marginLeft: `-${dot.size / 2}px`,
                   marginTop: `-${dot.size / 2}px`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
                 {/* Micro eyes on flying droplets */}
                 {dot.size > 10 && (
-                  <div style={{ display: 'flex', gap: '1px' }}>
-                    <div style={{ width: '2.5px', height: '2.5px', background: 'var(--card-bg)', borderRadius: '50%' }} />
-                    <div style={{ width: '2.5px', height: '2.5px', background: 'var(--card-bg)', borderRadius: '50%' }} />
+                  <div style={{ display: "flex", gap: "1px" }}>
+                    <div
+                      style={{
+                        width: "2.5px",
+                        height: "2.5px",
+                        background: "var(--card-bg)",
+                        borderRadius: "50%",
+                      }}
+                    />
+                    <div
+                      style={{
+                        width: "2.5px",
+                        height: "2.5px",
+                        background: "var(--card-bg)",
+                        borderRadius: "50%",
+                      }}
+                    />
                   </div>
                 )}
               </motion.div>

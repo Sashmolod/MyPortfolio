@@ -1,14 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import React from 'react';
-import DoodleCanvas from './DoodleCanvas';
-import DoodleControls from './DoodleControls';
-import DoodlyHelper from './DoodlyHelper';
-import { SettingsProvider } from '../contexts/SettingsContext';
-import { ThemeProvider } from '../contexts/ThemeContext';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import React from "react";
+import DoodleCanvas from "./DoodleCanvas";
+import DoodleControls from "./DoodleControls";
+import DoodlyHelper from "./DoodlyHelper";
+import { SettingsProvider } from "../contexts/SettingsContext";
+import { ThemeProvider } from "../contexts/ThemeContext";
 
 // Mock audioSynth and api
-vi.mock('../utils/audioSynth', () => ({
+vi.mock("../utils/audioSynth", () => ({
   soundSynth: {
     startScribble: vi.fn(),
     stopScribble: vi.fn(),
@@ -17,7 +17,7 @@ vi.mock('../utils/audioSynth', () => ({
   },
 }));
 
-vi.mock('../api', () => ({
+vi.mock("../api", () => ({
   default: {
     get: vi.fn().mockResolvedValue({
       data: {
@@ -38,16 +38,19 @@ vi.mock('../api', () => ({
 }));
 
 // Mock framer-motion to bypass animation lag/async rendering using a Proxy
-vi.mock('framer-motion', () => {
-  const React = require('react');
+vi.mock("framer-motion", () => {
+  const React = require("react");
   const Dummy = React.forwardRef(({ children, ...props }, ref) => {
-    return React.createElement('div', { ref, ...props }, children);
+    return React.createElement("div", { ref, ...props }, children);
   });
-  const motionProxy = new Proxy({}, {
-    get: (target, key) => {
-      return Dummy;
-    }
-  });
+  const motionProxy = new Proxy(
+    {},
+    {
+      get: (target, key) => {
+        return Dummy;
+      },
+    },
+  );
   return {
     motion: motionProxy,
     AnimatePresence: ({ children }) => children,
@@ -61,13 +64,13 @@ global.ResizeObserver = class ResizeObserver {
   disconnect() {}
 };
 
-describe('Doodle Feature Components', () => {
+describe("Doodle Feature Components", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  describe('DoodleCanvas', () => {
-    it('does not draw when not active', () => {
+  describe("DoodleCanvas", () => {
+    it("does not draw when not active", () => {
       const setPaths = vi.fn();
       render(
         <DoodleCanvas
@@ -76,24 +79,25 @@ describe('Doodle Feature Components', () => {
           brushWidth={4}
           paths={[]}
           setPaths={setPaths}
-        />
+        />,
       );
 
-      const canvas = document.querySelector('canvas');
+      const canvas = document.querySelector("canvas");
       expect(canvas).toBeInTheDocument();
-      expect(canvas.style.pointerEvents).toBe('none');
+      expect(canvas.style.pointerEvents).toBe("none");
 
       fireEvent.mouseDown(canvas, { clientX: 10, clientY: 10 });
       expect(setPaths).not.toHaveBeenCalled();
     });
 
-    it('draws and records path when active', async () => {
+    it("draws and records path when active", async () => {
       const setPaths = vi.fn();
       const drawStartSpy = vi.fn();
-      window.addEventListener('doodle-draw-start', drawStartSpy);
+      window.addEventListener("doodle-draw-start", drawStartSpy);
 
       // Mock getBoundingClientRect
-      const originalGetBoundingClientRect = HTMLCanvasElement.prototype.getBoundingClientRect;
+      const originalGetBoundingClientRect =
+        HTMLCanvasElement.prototype.getBoundingClientRect;
       HTMLCanvasElement.prototype.getBoundingClientRect = () => ({
         left: 0,
         top: 0,
@@ -128,11 +132,11 @@ describe('Doodle Feature Components', () => {
           brushWidth={4}
           paths={[]}
           setPaths={setPaths}
-        />
+        />,
       );
 
-      const canvas = document.querySelector('canvas');
-      expect(canvas.style.pointerEvents).toBe('auto');
+      const canvas = document.querySelector("canvas");
+      expect(canvas.style.pointerEvents).toBe("auto");
 
       // 1. Mouse down triggers drawing start & dot drawing
       fireEvent.mouseDown(canvas, { clientX: 50, clientY: 50 });
@@ -149,13 +153,14 @@ describe('Doodle Feature Components', () => {
       fireEvent.mouseUp(canvas);
       expect(setPaths).toHaveBeenCalled();
 
-      HTMLCanvasElement.prototype.getBoundingClientRect = originalGetBoundingClientRect;
-      window.removeEventListener('doodle-draw-start', drawStartSpy);
+      HTMLCanvasElement.prototype.getBoundingClientRect =
+        originalGetBoundingClientRect;
+      window.removeEventListener("doodle-draw-start", drawStartSpy);
     });
   });
 
-  describe('DoodleControls', () => {
-    it('renders in minimized state and allows expanding', () => {
+  describe("DoodleControls", () => {
+    it("renders in minimized state and allows expanding", () => {
       render(
         <SettingsProvider>
           <DoodleControls
@@ -170,23 +175,23 @@ describe('Doodle Feature Components', () => {
             onGuessDrawing={vi.fn()}
             isGuessing={false}
           />
-        </SettingsProvider>
+        </SettingsProvider>,
       );
 
       // Default should be expanded, click minimize button
-      const minimizeBtn = screen.getByTitle('Minimize toolbar');
+      const minimizeBtn = screen.getByTitle("Minimize toolbar");
       fireEvent.click(minimizeBtn);
 
       // Minimized button appears
-      const openBtn = screen.getByTitle('Open drawing panel');
+      const openBtn = screen.getByTitle("Open drawing panel");
       expect(openBtn).toBeInTheDocument();
 
       // Click open -> expands again
       fireEvent.click(openBtn);
-      expect(screen.getByText('🎨 Doodles / Рисование')).toBeInTheDocument();
+      expect(screen.getByText("🎨 Doodles / Рисование")).toBeInTheDocument();
     });
 
-    it('triggers color/tool switches and clear/undo clicks', () => {
+    it("triggers color/tool switches and clear/undo clicks", () => {
       const setActive = vi.fn();
       const setColor = vi.fn();
       const setBrushWidth = vi.fn();
@@ -208,23 +213,23 @@ describe('Doodle Feature Components', () => {
             onGuessDrawing={onGuess}
             isGuessing={false}
           />
-        </SettingsProvider>
+        </SettingsProvider>,
       );
 
       // Toggle active
-      const toggleBtn = screen.getByText('📴 Disable Drawing / Навигация');
+      const toggleBtn = screen.getByText("📴 Disable Drawing / Навигация");
       fireEvent.click(toggleBtn);
       expect(setActive).toHaveBeenCalledWith(false);
 
       // Change tool preset
-      const redPenBtn = screen.getByText('🖊️ Red Pen');
+      const redPenBtn = screen.getByText("🖊️ Red Pen");
       fireEvent.click(redPenBtn);
-      expect(setColor).toHaveBeenCalledWith('rgba(229, 62, 62, 0.9)');
+      expect(setColor).toHaveBeenCalledWith("rgba(229, 62, 62, 0.9)");
       expect(setBrushWidth).toHaveBeenCalledWith(3);
 
       // Undo & Clear clicks
-      const undoBtn = screen.getByTitle('Remove last stroke');
-      const clearBtn = screen.getByTitle('Clear all doodles');
+      const undoBtn = screen.getByTitle("Remove last stroke");
+      const clearBtn = screen.getByTitle("Clear all doodles");
       fireEvent.click(undoBtn);
       fireEvent.click(clearBtn);
 
@@ -238,7 +243,7 @@ describe('Doodle Feature Components', () => {
     });
   });
 
-  describe('DoodlyHelper', () => {
+  describe("DoodlyHelper", () => {
     let originalSetTimeout;
     beforeEach(() => {
       originalSetTimeout = global.setTimeout;
@@ -252,16 +257,18 @@ describe('Doodle Feature Components', () => {
       global.setTimeout = originalSetTimeout;
     });
 
-    it('greets user and responds to document copy/custom events', async () => {
+    it("greets user and responds to document copy/custom events", async () => {
       render(
         <ThemeProvider>
           <DoodlyHelper />
-        </ThemeProvider>
+        </ThemeProvider>,
       );
 
       // Greeting message should render immediately
       await waitFor(() => {
-        expect(screen.getByText(/Привет! Нажми на меня, чтобы поболтать/)).toBeInTheDocument();
+        expect(
+          screen.getByText(/Привет! Нажми на меня, чтобы поболтать/),
+        ).toBeInTheDocument();
       });
 
       // Trigger copy event
@@ -271,20 +278,22 @@ describe('Doodle Feature Components', () => {
       });
 
       // Trigger coffee slosh event
-      window.dispatchEvent(new CustomEvent('coffee-slosh'));
+      window.dispatchEvent(new CustomEvent("coffee-slosh"));
       await waitFor(() => {
         expect(screen.getByText(/Осторожнее с кофе!/)).toBeInTheDocument();
       });
 
       // Trigger tic-tac-toe win event
-      window.dispatchEvent(new CustomEvent('ttt-win-doodly'));
+      window.dispatchEvent(new CustomEvent("ttt-win-doodly"));
       await waitFor(() => {
-        expect(screen.getByText(/Умная скрепка побеждает человека!/)).toBeInTheDocument();
+        expect(
+          screen.getByText(/Умная скрепка побеждает человека!/),
+        ).toBeInTheDocument();
       });
     });
 
-    it('submits query to chatbot and displays response', async () => {
-      const mockChatResponse = { response: 'Привет, я скрепка!' };
+    it("submits query to chatbot and displays response", async () => {
+      const mockChatResponse = { response: "Привет, я скрепка!" };
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve(mockChatResponse),
@@ -293,23 +302,23 @@ describe('Doodle Feature Components', () => {
       render(
         <ThemeProvider>
           <DoodlyHelper />
-        </ThemeProvider>
+        </ThemeProvider>,
       );
 
       // Helper character element
-      const clipSvg = document.querySelector('.doodly-character');
+      const clipSvg = document.querySelector(".doodly-character");
       fireEvent.click(clipSvg);
 
       // Chat input form
-      const input = screen.getByPlaceholderText('Спроси меня...');
-      const form = input.closest('form');
+      const input = screen.getByPlaceholderText("Спроси меня...");
+      const form = input.closest("form");
 
-      fireEvent.change(input, { target: { value: 'Как дела?' } });
+      fireEvent.change(input, { target: { value: "Как дела?" } });
       fireEvent.submit(form);
 
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalled();
-        expect(screen.getByText('Привет, я скрепка!')).toBeInTheDocument();
+        expect(screen.getByText("Привет, я скрепка!")).toBeInTheDocument();
       });
     });
   });

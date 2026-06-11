@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { soundSynth } from '../utils/audioSynth';
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { soundSynth } from "../utils/audioSynth";
 
 export default function SketchyBug() {
   const [bug, setBug] = useState(null);
@@ -12,7 +12,7 @@ export default function SketchyBug() {
   const spawnBug = () => {
     if (bug) return; // Only one bug at a time
 
-    const sides = ['left', 'right', 'top', 'bottom'];
+    const sides = ["left", "right", "top", "bottom"];
     const startSide = sides[Math.floor(Math.random() * sides.length)];
     let x = 0;
     let y = 0;
@@ -21,13 +21,13 @@ export default function SketchyBug() {
     const width = window.innerWidth;
     const height = window.innerHeight;
 
-    if (startSide === 'left') {
+    if (startSide === "left") {
       x = -padding;
       y = Math.random() * (height - 100) + 50;
-    } else if (startSide === 'right') {
+    } else if (startSide === "right") {
       x = width + padding;
       y = Math.random() * (height - 100) + 50;
-    } else if (startSide === 'top') {
+    } else if (startSide === "top") {
       x = Math.random() * (width - 100) + 50;
       y = -padding;
     } else {
@@ -80,7 +80,18 @@ export default function SketchyBug() {
       const current = stateRef.current;
       if (!current || current.squashed) return;
 
-      let { x, y, vx, vy, angle, targetX, targetY, speed, stepsLeft, turningCooldown } = current;
+      let {
+        x,
+        y,
+        vx,
+        vy,
+        angle,
+        targetX,
+        targetY,
+        speed,
+        stepsLeft,
+        turningCooldown,
+      } = current;
 
       // Increment frame for leg animation
       setFrame((prev) => prev + 1);
@@ -120,7 +131,13 @@ export default function SketchyBug() {
 
       // If leaving and completely off-screen, remove bug
       const padding = 100;
-      if (stepsLeft <= 0 && (x < -padding || x > width + padding || y < -padding || y > height + padding)) {
+      if (
+        stepsLeft <= 0 &&
+        (x < -padding ||
+          x > width + padding ||
+          y < -padding ||
+          y > height + padding)
+      ) {
         setBug(null);
         stateRef.current = null;
         return;
@@ -159,7 +176,7 @@ export default function SketchyBug() {
     if (!bug || bug.squashed) return;
 
     soundSynth.playTap();
-    window.dispatchEvent(new CustomEvent('bug-squashed'));
+    window.dispatchEvent(new CustomEvent("bug-squashed"));
 
     const squashedBug = {
       ...bug,
@@ -179,19 +196,20 @@ export default function SketchyBug() {
 
   if (!bug) return null;
 
-  const legPath = frame % 6 < 3
-    ? "M 4 8 L 15 15 L 26 8 M 2 15 L 15 15 L 28 15 M 4 22 L 15 15 L 26 22"
-    : "M 4 12 L 15 15 L 26 12 M 4 15 L 15 15 L 26 15 M 4 18 L 15 15 L 26 18";
+  const legPath =
+    frame % 6 < 3
+      ? "M 4 8 L 15 15 L 26 8 M 2 15 L 15 15 L 28 15 M 4 22 L 15 15 L 26 22"
+      : "M 4 12 L 15 15 L 26 12 M 4 15 L 15 15 L 26 15 M 4 18 L 15 15 L 26 18";
 
   return (
     <div
       style={{
-        position: 'fixed',
+        position: "fixed",
         left: 0,
         top: 0,
-        width: '100vw',
-        height: '100vh',
-        pointerEvents: 'none',
+        width: "100vw",
+        height: "100vh",
+        pointerEvents: "none",
         zIndex: 9998, // just under drawing controls, above standard UI
       }}
     >
@@ -200,29 +218,36 @@ export default function SketchyBug() {
           <motion.div
             key="bug-element"
             initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: bug.squashed ? [1, 1, 0] : 1, scale: bug.squashed ? 1.1 : 1 }}
+            animate={{
+              opacity: bug.squashed ? [1, 1, 0] : 1,
+              scale: bug.squashed ? 1.1 : 1,
+            }}
             exit={{ opacity: 0 }}
             transition={{ duration: bug.squashed ? 1.5 : 0.2 }}
             style={{
-              position: 'absolute',
+              position: "absolute",
               left: bug.x,
               top: bug.y,
-              width: '40px',
-              height: '40px',
-              marginLeft: '-20px',
-              marginTop: '-20px',
-              pointerEvents: 'auto',
-              cursor: bug.squashed ? 'default' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              userSelect: 'none',
+              width: "40px",
+              height: "40px",
+              marginLeft: "-20px",
+              marginTop: "-20px",
+              pointerEvents: "auto",
+              cursor: bug.squashed ? "default" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              userSelect: "none",
             }}
-            role={bug.squashed ? undefined : 'button'}
+            role={bug.squashed ? undefined : "button"}
             tabIndex={bug.squashed ? -1 : 0}
-            aria-label={bug.squashed ? "Squashed bug" : "Squashable bug crawling on screen"}
+            aria-label={
+              bug.squashed
+                ? "Squashed bug"
+                : "Squashable bug crawling on screen"
+            }
             onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
+              if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
                 handleSquash(e);
               }
@@ -236,7 +261,7 @@ export default function SketchyBug() {
                 height="34"
                 style={{
                   transform: `rotate(${bug.angle}deg)`,
-                  transition: 'transform 0.15s linear',
+                  transition: "transform 0.15s linear",
                 }}
               >
                 {/* Wiggle Legs */}
@@ -269,9 +294,26 @@ export default function SketchyBug() {
                   strokeLinecap="round"
                 />
                 <defs>
-                  <filter id="wobblyFilterBug" x="-10%" y="-10%" width="120%" height="120%">
-                    <feTurbulence type="fractalNoise" baseFrequency="0.08" numOctaves="2" result="noise" />
-                    <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.5" xChannelSelector="R" yChannelSelector="G" />
+                  <filter
+                    id="wobblyFilterBug"
+                    x="-10%"
+                    y="-10%"
+                    width="120%"
+                    height="120%"
+                  >
+                    <feTurbulence
+                      type="fractalNoise"
+                      baseFrequency="0.08"
+                      numOctaves="2"
+                      result="noise"
+                    />
+                    <feDisplacementMap
+                      in="SourceGraphic"
+                      in2="noise"
+                      scale="1.5"
+                      xChannelSelector="R"
+                      yChannelSelector="G"
+                    />
                   </filter>
                 </defs>
               </svg>
@@ -286,18 +328,63 @@ export default function SketchyBug() {
                 />
                 {/* Splash droplets */}
                 <circle cx="7" cy="8" r="2" fill="var(--text)" opacity="0.8" />
-                <circle cx="23" cy="22" r="1.5" fill="var(--text)" opacity="0.8" />
-                <circle cx="12" cy="27" r="1" fill="var(--text)" opacity="0.8" />
-                <circle cx="25" cy="6" r="1.8" fill="var(--text)" opacity="0.8" />
-                
+                <circle
+                  cx="23"
+                  cy="22"
+                  r="1.5"
+                  fill="var(--text)"
+                  opacity="0.8"
+                />
+                <circle
+                  cx="12"
+                  cy="27"
+                  r="1"
+                  fill="var(--text)"
+                  opacity="0.8"
+                />
+                <circle
+                  cx="25"
+                  cy="6"
+                  r="1.8"
+                  fill="var(--text)"
+                  opacity="0.8"
+                />
+
                 {/* Cute X eyes to indicate squashed bug */}
-                <path d="M 12 13 L 15 16 M 15 13 L 12 16" stroke="var(--card-bg)" strokeWidth="1.2" strokeLinecap="round" />
-                <path d="M 17 13 L 20 16 M 20 13 L 17 16" stroke="var(--card-bg)" strokeWidth="1.2" strokeLinecap="round" />
+                <path
+                  d="M 12 13 L 15 16 M 15 13 L 12 16"
+                  stroke="var(--card-bg)"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M 17 13 L 20 16 M 20 13 L 17 16"
+                  stroke="var(--card-bg)"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                />
 
                 <defs>
-                  <filter id="splatFilter" x="-20%" y="-20%" width="140%" height="140%">
-                    <feTurbulence type="fractalNoise" baseFrequency="0.1" numOctaves="3" result="noise" />
-                    <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" />
+                  <filter
+                    id="splatFilter"
+                    x="-20%"
+                    y="-20%"
+                    width="140%"
+                    height="140%"
+                  >
+                    <feTurbulence
+                      type="fractalNoise"
+                      baseFrequency="0.1"
+                      numOctaves="3"
+                      result="noise"
+                    />
+                    <feDisplacementMap
+                      in="SourceGraphic"
+                      in2="noise"
+                      scale="3"
+                      xChannelSelector="R"
+                      yChannelSelector="G"
+                    />
                   </filter>
                 </defs>
               </svg>

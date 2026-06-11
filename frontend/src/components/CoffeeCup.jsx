@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { soundSynth } from '../utils/audioSynth';
-import { usePortfolioSettings } from '../contexts/SettingsContext';
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { soundSynth } from "../utils/audioSynth";
+import { usePortfolioSettings } from "../contexts/SettingsContext";
 
 export default function CoffeeCup() {
   const [clicks, setClicks] = useState(0);
@@ -26,28 +26,28 @@ export default function CoffeeCup() {
     if (nextClicks >= 5) {
       soundSynth.playSplat();
       setIsSpilled(true);
-      window.dispatchEvent(new CustomEvent('coffee-spill'));
+      window.dispatchEvent(new CustomEvent("coffee-spill"));
     } else {
       soundSynth.playSlosh();
       setIsShaking(true);
       setTimeout(() => setIsShaking(false), 500);
-      window.dispatchEvent(new CustomEvent('coffee-slosh'));
+      window.dispatchEvent(new CustomEvent("coffee-slosh"));
     }
   };
 
   return (
     <div
       style={{
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        margin: '40px auto 20px auto',
-        width: '180px',
-        height: '120px',
-        userSelect: 'none',
-        zIndex: 100
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        margin: "40px auto 20px auto",
+        width: "180px",
+        height: "120px",
+        userSelect: "none",
+        zIndex: 100,
       }}
     >
       {/* Coffee Puddle SVG (appears when spilled) */}
@@ -62,11 +62,11 @@ export default function CoffeeCup() {
             width="150"
             height="60"
             style={{
-              position: 'absolute',
-              left: '45px',
-              top: '50px',
+              position: "absolute",
+              left: "45px",
+              top: "50px",
               zIndex: 1,
-              pointerEvents: 'none'
+              pointerEvents: "none",
             }}
           >
             {/* Sketchy Coffee Puddle */}
@@ -90,26 +90,30 @@ export default function CoffeeCup() {
       <motion.div
         role="button"
         tabIndex={0}
-        aria-label={isSpilled ? "Spilled coffee cup. Click to reset." : `Coffee cup. Click to slosh coffee (clicked ${clicks} of 5 times)`}
+        aria-label={
+          isSpilled
+            ? "Spilled coffee cup. Click to reset."
+            : `Coffee cup. Click to slosh coffee (clicked ${clicks} of 5 times)`
+        }
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
+          if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             handleClick();
           }
         }}
         style={{
           zIndex: 2,
-          cursor: 'pointer',
+          cursor: "pointer",
           originX: 0.5,
-          originY: 0.8
+          originY: 0.8,
         }}
         onClick={handleClick}
         animate={
           isSpilled
             ? { rotate: -75, x: -35, y: 15 }
             : isShaking
-            ? { x: [0, -6, 6, -6, 6, 0], y: [0, -3, 0, -3, 0] }
-            : { y: 0 }
+              ? { x: [0, -6, 6, -6, 6, 0], y: [0, -3, 0, -3, 0] }
+              : { y: 0 }
         }
         transition={isShaking ? { duration: 0.4 } : { duration: 0.3 }}
         whileHover={{ scale: isSpilled ? 1 : 1.08 }}
@@ -122,12 +126,27 @@ export default function CoffeeCup() {
         >
           {/* Steam (animates when upright) */}
           {!isSpilled && (
-            <g opacity="0.65" stroke="var(--text)" strokeWidth="1.5" fill="none">
+            <g
+              opacity="0.65"
+              stroke="var(--text)"
+              strokeWidth="1.5"
+              fill="none"
+            >
               <path d="M 32 15 Q 35 8, 32 2">
-                <animate attributeName="d" values="M 32 15 Q 35 8, 32 2;M 32 15 Q 29 8, 32 2;M 32 15 Q 35 8, 32 2" dur="2s" repeatCount="indefinite" />
+                <animate
+                  attributeName="d"
+                  values="M 32 15 Q 35 8, 32 2;M 32 15 Q 29 8, 32 2;M 32 15 Q 35 8, 32 2"
+                  dur="2s"
+                  repeatCount="indefinite"
+                />
               </path>
               <path d="M 42 16 Q 45 9, 42 3">
-                <animate attributeName="d" values="M 42 16 Q 45 9, 42 3;M 42 16 Q 39 9, 42 3;M 42 16 Q 45 9, 42 3" dur="2.3s" repeatCount="indefinite" />
+                <animate
+                  attributeName="d"
+                  values="M 42 16 Q 45 9, 42 3;M 42 16 Q 39 9, 42 3;M 42 16 Q 45 9, 42 3"
+                  dur="2.3s"
+                  repeatCount="indefinite"
+                />
               </path>
             </g>
           )}
@@ -191,8 +210,19 @@ export default function CoffeeCup() {
       </motion.div>
 
       {/* Label Helper */}
-      <span style={{ fontSize: '11px', opacity: 0.6, marginTop: '8px', pointerEvents: 'none', textAlign: 'center', fontFamily: "'Comic Neue', cursive" }}>
-        {isSpilled ? "Oops! Spilled (Click to Reset)" : `☕ Coffee break (${clicks}/5 clicks)`}
+      <span
+        style={{
+          fontSize: "11px",
+          opacity: 0.6,
+          marginTop: "8px",
+          pointerEvents: "none",
+          textAlign: "center",
+          fontFamily: "'Comic Neue', cursive",
+        }}
+      >
+        {isSpilled
+          ? "Oops! Spilled (Click to Reset)"
+          : `☕ Coffee break (${clicks}/5 clicks)`}
       </span>
     </div>
   );
