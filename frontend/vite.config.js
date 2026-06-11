@@ -15,20 +15,13 @@ export default defineConfig({
     port: 5173,
     host: '0.0.0.0',
     strictPort: true,
-    // HMR: в Docker браузер подключается к localhost на хост-машине (через проброс порта),
-    // локально — просто localhost:5173
+    // HMR WebSocket конфигурация:
+    // НЕ ставим hmr.host — иначе Vite привязывает WS к 127.0.0.1 внутри контейнера,
+    // и Docker маппинг портов его не достаёт. Без host — наследует server.host (0.0.0.0).
+    // clientPort говорит браузеру использовать правильный внешний порт.
     hmr: isDockerDev
-      ? {
-          host: 'localhost',   // адрес с точки зрения БРАУЗЕРА (хост-машина)
-          port: 5173,          // проброшенный порт
-          protocol: 'ws',
-          clientPort: 5173,    // явно указываем порт для WS-клиента в браузере
-        }
-      : {
-          host: 'localhost',
-          port: 5173,
-          protocol: 'ws',
-        },
+      ? { clientPort: 5173 }  // браузер → localhost:5173, сервер слушает 0.0.0.0:5173
+      : true,                 // локально — стандартное поведение Vite
     fs: {
       allow: ['..'],
     },
