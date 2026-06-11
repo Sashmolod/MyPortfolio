@@ -9,7 +9,7 @@ function getAudioContext() {
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   }
-  if (audioCtx.state === "suspended") {
+  if (audioCtx.state === 'suspended') {
     audioCtx.resume();
   }
   return audioCtx;
@@ -50,7 +50,7 @@ export const soundSynth = {
     noise.buffer = this.createNoiseBuffer(ctx, 0.3);
 
     const filter = ctx.createBiquadFilter();
-    filter.type = "bandpass";
+    filter.type = 'bandpass';
     filter.frequency.setValueAtTime(800, ctx.currentTime);
     filter.Q.setValueAtTime(1.5, ctx.currentTime);
 
@@ -78,7 +78,7 @@ export const soundSynth = {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
-    osc.type = "sine";
+    osc.type = 'sine';
     // Frequency sweep from 200Hz up to 500Hz
     osc.frequency.setValueAtTime(200, ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(500, ctx.currentTime + 0.08);
@@ -106,7 +106,7 @@ export const soundSynth = {
 
     // Filter to capture high frequency scratch (around 2500Hz)
     const filter = ctx.createBiquadFilter();
-    filter.type = "bandpass";
+    filter.type = 'bandpass';
     filter.frequency.setValueAtTime(2200, ctx.currentTime);
     filter.Q.setValueAtTime(2.0, ctx.currentTime);
 
@@ -115,7 +115,7 @@ export const soundSynth = {
 
     // LFO/amplitude modulation to make it sound like active strokes rather than static noise
     const lfo = ctx.createOscillator();
-    lfo.type = "sine";
+    lfo.type = 'sine';
     lfo.frequency.setValueAtTime(8, ctx.currentTime); // 8Hz mod
 
     const lfoGain = ctx.createGain();
@@ -139,11 +139,11 @@ export const soundSynth = {
         // Fade out slightly to avoid a pop sound on stop
         scribbleGain.gain.setValueAtTime(
           scribbleGain.gain.value,
-          ctx.currentTime,
+          ctx.currentTime
         );
         scribbleGain.gain.exponentialRampToValueAtTime(
           0.001,
-          ctx.currentTime + 0.05,
+          ctx.currentTime + 0.05
         );
 
         const node = scribbleNode;
@@ -166,7 +166,7 @@ export const soundSynth = {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
-    osc.type = "triangle";
+    osc.type = 'triangle';
     // Frequency sweep down
     osc.frequency.setValueAtTime(300, ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.15);
@@ -192,7 +192,7 @@ export const soundSynth = {
     noise.buffer = this.createNoiseBuffer(ctx, 0.4);
 
     const filter = ctx.createBiquadFilter();
-    filter.type = "lowpass";
+    filter.type = 'lowpass';
     filter.frequency.setValueAtTime(1000, ctx.currentTime);
     filter.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.4);
 
@@ -218,7 +218,7 @@ export const soundSynth = {
     noise.buffer = this.createNoiseBuffer(ctx, 0.6);
 
     const filter = ctx.createBiquadFilter();
-    filter.type = "bandpass";
+    filter.type = 'bandpass';
     filter.Q.setValueAtTime(2.0, ctx.currentTime);
     filter.frequency.setValueAtTime(200, ctx.currentTime);
     filter.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.25);
@@ -248,10 +248,10 @@ export const soundSynth = {
       noise.buffer = this.createNoiseBuffer(ctx, 0.15);
 
       const filter = ctx.createBiquadFilter();
-      filter.type = "highpass";
+      filter.type = 'highpass';
       filter.frequency.setValueAtTime(
         2500 + Math.random() * 1000,
-        ctx.currentTime + delay,
+        ctx.currentTime + delay
       );
 
       const gain = ctx.createGain();
@@ -259,7 +259,7 @@ export const soundSynth = {
       gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + delay + 0.01);
       gain.gain.exponentialRampToValueAtTime(
         0.001,
-        ctx.currentTime + delay + 0.12,
+        ctx.currentTime + delay + 0.12
       );
 
       noise.connect(filter);
@@ -279,7 +279,7 @@ export const soundSynth = {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
-    osc.type = "triangle";
+    osc.type = 'triangle';
     osc.frequency.setValueAtTime(150, ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 0.08);
 
@@ -305,10 +305,10 @@ export const soundSynth = {
       noise.buffer = this.createNoiseBuffer(ctx, 0.12);
 
       const filter = ctx.createBiquadFilter();
-      filter.type = "bandpass";
+      filter.type = 'bandpass';
       filter.frequency.setValueAtTime(
         1400 + Math.random() * 600,
-        ctx.currentTime + delay,
+        ctx.currentTime + delay
       );
       filter.Q.setValueAtTime(4.0, ctx.currentTime + delay);
 
@@ -317,7 +317,7 @@ export const soundSynth = {
       gain.gain.linearRampToValueAtTime(0.14, ctx.currentTime + delay + 0.01);
       gain.gain.exponentialRampToValueAtTime(
         0.001,
-        ctx.currentTime + delay + 0.09,
+        ctx.currentTime + delay + 0.09
       );
 
       noise.connect(filter);

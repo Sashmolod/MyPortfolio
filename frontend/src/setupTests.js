@@ -1,8 +1,8 @@
-import "@testing-library/jest-dom";
-import { vi } from "vitest";
+import '@testing-library/jest-dom';
+import { vi } from 'vitest';
 
-vi.mock("react-helmet-async", () => {
-  const React = require("react");
+vi.mock('react-helmet-async', () => {
+  const React = require('react');
   return {
     Helmet: ({ children }) =>
       React.createElement(React.Fragment, null, children),
@@ -29,6 +29,6 @@ const mockIntersectionObserver = class IntersectionObserver {
 
 global.IntersectionObserver = mockIntersectionObserver;
 globalThis.IntersectionObserver = mockIntersectionObserver;
-if (typeof window !== "undefined") {
+if (typeof window !== 'undefined') {
   window.IntersectionObserver = mockIntersectionObserver;
 }

@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { soundSynth } from "../utils/audioSynth";
-import { usePortfolioSettings } from "../contexts/SettingsContext";
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { soundSynth } from '../utils/audioSynth';
+import { usePortfolioSettings } from '../contexts/SettingsContext';
 
 export default function CoffeeCup() {
   const [clicks, setClicks] = useState(0);
@@ -26,27 +26,27 @@ export default function CoffeeCup() {
     if (nextClicks >= 5) {
       soundSynth.playSplat();
       setIsSpilled(true);
-      window.dispatchEvent(new CustomEvent("coffee-spill"));
+      window.dispatchEvent(new CustomEvent('coffee-spill'));
     } else {
       soundSynth.playSlosh();
       setIsShaking(true);
       setTimeout(() => setIsShaking(false), 500);
-      window.dispatchEvent(new CustomEvent("coffee-slosh"));
+      window.dispatchEvent(new CustomEvent('coffee-slosh'));
     }
   };
 
   return (
     <div
       style={{
-        position: "relative",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        margin: "40px auto 20px auto",
-        width: "180px",
-        height: "120px",
-        userSelect: "none",
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        margin: '40px auto 20px auto',
+        width: '180px',
+        height: '120px',
+        userSelect: 'none',
         zIndex: 100,
       }}
     >
@@ -62,11 +62,11 @@ export default function CoffeeCup() {
             width="150"
             height="60"
             style={{
-              position: "absolute",
-              left: "45px",
-              top: "50px",
+              position: 'absolute',
+              left: '45px',
+              top: '50px',
               zIndex: 1,
-              pointerEvents: "none",
+              pointerEvents: 'none',
             }}
           >
             {/* Sketchy Coffee Puddle */}
@@ -76,7 +76,7 @@ export default function CoffeeCup() {
               stroke="rgba(139, 92, 26, 0.7)"
               strokeWidth="2"
               strokeDasharray="4 3"
-              style={{ filter: "url(#wobblyFilter)" }}
+              style={{ filter: 'url(#wobblyFilter)' }}
             />
             {/* Small Splats */}
             <circle cx="120" cy="18" r="2.5" fill="rgba(139, 92, 26, 0.5)" />
@@ -92,18 +92,18 @@ export default function CoffeeCup() {
         tabIndex={0}
         aria-label={
           isSpilled
-            ? "Spilled coffee cup. Click to reset."
+            ? 'Spilled coffee cup. Click to reset.'
             : `Coffee cup. Click to slosh coffee (clicked ${clicks} of 5 times)`
         }
         onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
+          if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             handleClick();
           }
         }}
         style={{
           zIndex: 2,
-          cursor: "pointer",
+          cursor: 'pointer',
           originX: 0.5,
           originY: 0.8,
         }}
@@ -158,7 +158,7 @@ export default function CoffeeCup() {
             stroke="var(--text)"
             strokeWidth="3.5"
             strokeLinejoin="round"
-            style={{ filter: "url(#wobblyFilter)" }}
+            style={{ filter: 'url(#wobblyFilter)' }}
           />
 
           {/* Coffee liquid inside (rim) */}
@@ -181,7 +181,7 @@ export default function CoffeeCup() {
             stroke="var(--text)"
             strokeWidth="3"
             strokeLinecap="round"
-            style={{ filter: "url(#wobblyFilter)" }}
+            style={{ filter: 'url(#wobblyFilter)' }}
           />
 
           {/* Plate / Saucer */}
@@ -192,7 +192,7 @@ export default function CoffeeCup() {
               stroke="var(--text)"
               strokeWidth="3"
               strokeLinejoin="round"
-              style={{ filter: "url(#wobblyFilter)" }}
+              style={{ filter: 'url(#wobblyFilter)' }}
             />
           )}
 
@@ -212,16 +212,16 @@ export default function CoffeeCup() {
       {/* Label Helper */}
       <span
         style={{
-          fontSize: "11px",
+          fontSize: '11px',
           opacity: 0.6,
-          marginTop: "8px",
-          pointerEvents: "none",
-          textAlign: "center",
+          marginTop: '8px',
+          pointerEvents: 'none',
+          textAlign: 'center',
           fontFamily: "'Comic Neue', cursive",
         }}
       >
         {isSpilled
-          ? "Oops! Spilled (Click to Reset)"
+          ? 'Oops! Spilled (Click to Reset)'
           : `☕ Coffee break (${clicks}/5 clicks)`}
       </span>
     </div>

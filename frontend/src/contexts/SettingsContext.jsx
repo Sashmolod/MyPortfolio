@@ -1,6 +1,6 @@
-import { createContext, useContext, useState, useEffect } from "react";
-import api from "../api";
-import { soundSynth } from "../utils/audioSynth";
+import { createContext, useContext, useState, useEffect } from 'react';
+import api from '../api';
+import { soundSynth } from '../utils/audioSynth';
 
 const SettingsContext = createContext();
 
@@ -29,10 +29,10 @@ export function SettingsProvider({ children }) {
   const fetchSettings = async () => {
     try {
       // Use portfolio endpoint for public settings fetching
-      const res = await api.get("/portfolio/settings");
+      const res = await api.get('/portfolio/settings');
       setSettings(res.data);
     } catch (err) {
-      console.error("Failed to load settings:", err);
+      console.error('Failed to load settings:', err);
     } finally {
       setLoading(false);
     }
@@ -65,7 +65,7 @@ export function usePortfolioSettings() {
   const context = useContext(SettingsContext);
   if (!context) {
     throw new Error(
-      "usePortfolioSettings must be used within a SettingsProvider",
+      'usePortfolioSettings must be used within a SettingsProvider'
     );
   }
   return context;

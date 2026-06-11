@@ -1,27 +1,27 @@
-import { motion } from "framer-motion";
-import { RocketIcon, ProjectIcon } from "./SvgIllustrations";
-import api from "../api";
+import { motion } from 'framer-motion';
+import { RocketIcon, ProjectIcon } from './SvgIllustrations';
+import api from '../api';
 
 export default function Projects({ projects = [] }) {
   const defaultProjects = [
     {
-      title: "Portfolio Website",
-      description: "A personal portfolio website built with React and Vite.",
-      technologies: "React, Vite, CSS",
-      link: "#",
+      title: 'Portfolio Website',
+      description: 'A personal portfolio website built with React and Vite.',
+      technologies: 'React, Vite, CSS',
+      link: '#',
     },
     {
-      title: "E-Commerce App",
+      title: 'E-Commerce App',
       description:
-        "Full-stack e-commerce application with payment integration.",
-      technologies: "React, Node.js, MongoDB, Stripe",
-      link: "#",
+        'Full-stack e-commerce application with payment integration.',
+      technologies: 'React, Node.js, MongoDB, Stripe',
+      link: '#',
     },
     {
-      title: "Task Manager API",
-      description: "RESTful API for task management with authentication.",
-      technologies: "Node.js, Express, PostgreSQL, JWT",
-      link: "#",
+      title: 'Task Manager API',
+      description: 'RESTful API for task management with authentication.',
+      technologies: 'Node.js, Express, PostgreSQL, JWT',
+      link: '#',
     },
   ];
 
@@ -47,39 +47,39 @@ export default function Projects({ projects = [] }) {
               ) {
                 window.lastProjectHoverTime = now;
                 window.dispatchEvent(
-                  new CustomEvent("project-hover", {
+                  new CustomEvent('project-hover', {
                     detail: { title: project.title },
-                  }),
+                  })
                 );
               }
             }}
           >
             <div
               style={{
-                display: "flex",
-                justifyContent: "center",
-                marginBottom: "1rem",
-                height: "160px",
-                overflow: "hidden",
-                borderRadius: "var(--sketch-radius-3)",
-                border: "var(--border-style)",
-                background: "var(--card-bg)",
+                display: 'flex',
+                justifyContent: 'center',
+                marginBottom: '1rem',
+                height: '160px',
+                overflow: 'hidden',
+                borderRadius: 'var(--sketch-radius-3)',
+                border: 'var(--border-style)',
+                background: 'var(--card-bg)',
               }}
             >
               {project.image ? (
                 <img
                   src={project.image}
                   alt={project.title}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               ) : (
                 <div
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    height: "100%",
-                    width: "100%",
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '100%',
+                    width: '100%',
                   }}
                 >
                   <RocketIcon size={56} />
@@ -87,17 +87,17 @@ export default function Projects({ projects = [] }) {
               )}
             </div>
             <h3>{project.title}</h3>
-            <p style={{ minHeight: "60px", margin: "0.5rem 0" }}>
+            <p style={{ minHeight: '60px', margin: '0.5rem 0' }}>
               {project.description}
             </p>
-            <div className="tags" style={{ marginBottom: "auto" }}>
+            <div className="tags" style={{ marginBottom: 'auto' }}>
               {(Array.isArray(project.technologies)
                 ? project.technologies
-                : typeof project.technologies === "string"
-                  ? project.technologies.split(",")
+                : typeof project.technologies === 'string'
+                  ? project.technologies.split(',')
                   : []
               ).map((tech) => {
-                const trimmed = tech ? String(tech).trim() : "";
+                const trimmed = tech ? String(tech).trim() : '';
                 if (!trimmed) return null;
                 return (
                   <span key={trimmed} className="tag sketch-link">
@@ -110,14 +110,14 @@ export default function Projects({ projects = [] }) {
               <a
                 href={project.link}
                 className="btn"
-                style={{ marginTop: "12px", display: "inline-block" }}
+                style={{ marginTop: '12px', display: 'inline-block' }}
                 aria-label={`View Project: ${project.title}`}
                 onClick={async () => {
                   if (project.id) {
                     try {
                       await api.post(`/portfolio/projects/${project.id}/view`);
                     } catch (err) {
-                      console.error("Failed to track project view:", err);
+                      console.error('Failed to track project view:', err);
                     }
                   }
                 }}

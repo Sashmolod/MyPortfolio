@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { soundSynth } from "../utils/audioSynth";
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { soundSynth } from '../utils/audioSynth';
 
 export default function SketchyBug() {
   const [bug, setBug] = useState(null);
@@ -12,7 +12,7 @@ export default function SketchyBug() {
   const spawnBug = () => {
     if (bug) return; // Only one bug at a time
 
-    const sides = ["left", "right", "top", "bottom"];
+    const sides = ['left', 'right', 'top', 'bottom'];
     const startSide = sides[Math.floor(Math.random() * sides.length)];
     let x = 0;
     let y = 0;
@@ -21,13 +21,13 @@ export default function SketchyBug() {
     const width = window.innerWidth;
     const height = window.innerHeight;
 
-    if (startSide === "left") {
+    if (startSide === 'left') {
       x = -padding;
       y = Math.random() * (height - 100) + 50;
-    } else if (startSide === "right") {
+    } else if (startSide === 'right') {
       x = width + padding;
       y = Math.random() * (height - 100) + 50;
-    } else if (startSide === "top") {
+    } else if (startSide === 'top') {
       x = Math.random() * (width - 100) + 50;
       y = -padding;
     } else {
@@ -176,7 +176,7 @@ export default function SketchyBug() {
     if (!bug || bug.squashed) return;
 
     soundSynth.playTap();
-    window.dispatchEvent(new CustomEvent("bug-squashed"));
+    window.dispatchEvent(new CustomEvent('bug-squashed'));
 
     const squashedBug = {
       ...bug,
@@ -198,18 +198,18 @@ export default function SketchyBug() {
 
   const legPath =
     frame % 6 < 3
-      ? "M 4 8 L 15 15 L 26 8 M 2 15 L 15 15 L 28 15 M 4 22 L 15 15 L 26 22"
-      : "M 4 12 L 15 15 L 26 12 M 4 15 L 15 15 L 26 15 M 4 18 L 15 15 L 26 18";
+      ? 'M 4 8 L 15 15 L 26 8 M 2 15 L 15 15 L 28 15 M 4 22 L 15 15 L 26 22'
+      : 'M 4 12 L 15 15 L 26 12 M 4 15 L 15 15 L 26 15 M 4 18 L 15 15 L 26 18';
 
   return (
     <div
       style={{
-        position: "fixed",
+        position: 'fixed',
         left: 0,
         top: 0,
-        width: "100vw",
-        height: "100vh",
-        pointerEvents: "none",
+        width: '100vw',
+        height: '100vh',
+        pointerEvents: 'none',
         zIndex: 9998, // just under drawing controls, above standard UI
       }}
     >
@@ -225,29 +225,29 @@ export default function SketchyBug() {
             exit={{ opacity: 0 }}
             transition={{ duration: bug.squashed ? 1.5 : 0.2 }}
             style={{
-              position: "absolute",
+              position: 'absolute',
               left: bug.x,
               top: bug.y,
-              width: "40px",
-              height: "40px",
-              marginLeft: "-20px",
-              marginTop: "-20px",
-              pointerEvents: "auto",
-              cursor: bug.squashed ? "default" : "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              userSelect: "none",
+              width: '40px',
+              height: '40px',
+              marginLeft: '-20px',
+              marginTop: '-20px',
+              pointerEvents: 'auto',
+              cursor: bug.squashed ? 'default' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              userSelect: 'none',
             }}
-            role={bug.squashed ? undefined : "button"}
+            role={bug.squashed ? undefined : 'button'}
             tabIndex={bug.squashed ? -1 : 0}
             aria-label={
               bug.squashed
-                ? "Squashed bug"
-                : "Squashable bug crawling on screen"
+                ? 'Squashed bug'
+                : 'Squashable bug crawling on screen'
             }
             onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
+              if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 handleSquash(e);
               }
@@ -261,7 +261,7 @@ export default function SketchyBug() {
                 height="34"
                 style={{
                   transform: `rotate(${bug.angle}deg)`,
-                  transition: "transform 0.15s linear",
+                  transition: 'transform 0.15s linear',
                 }}
               >
                 {/* Wiggle Legs */}
@@ -281,7 +281,7 @@ export default function SketchyBug() {
                   fill="var(--card-bg)"
                   stroke="var(--text)"
                   strokeWidth="2"
-                  style={{ filter: "url(#wobblyFilterBug)" }}
+                  style={{ filter: 'url(#wobblyFilterBug)' }}
                 />
                 {/* Head */}
                 <circle cx="15" cy="6.5" r="2.8" fill="var(--text)" />
@@ -324,7 +324,7 @@ export default function SketchyBug() {
                   d="M 15 5 C 19 3, 24 7, 26 12 C 28 17, 23 23, 17 25 C 12 27, 6 24, 4 18 C 2 12, 10 7, 15 5 Z"
                   fill="var(--text)"
                   opacity="0.8"
-                  style={{ filter: "url(#splatFilter)" }}
+                  style={{ filter: 'url(#splatFilter)' }}
                 />
                 {/* Splash droplets */}
                 <circle cx="7" cy="8" r="2" fill="var(--text)" opacity="0.8" />

@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { soundSynth } from "../utils/audioSynth";
+import { useEffect, useRef, useState } from 'react';
+import { soundSynth } from '../utils/audioSynth';
 
 export default function DoodleCanvas({
   active,
@@ -9,11 +9,11 @@ export default function DoodleCanvas({
   setPaths,
 }) {
   const resolveColor = (c) => {
-    if (c === "eraser") {
+    if (c === 'eraser') {
       const bg = getComputedStyle(document.documentElement)
-        .getPropertyValue("--bg")
+        .getPropertyValue('--bg')
         .trim();
-      return bg || "#fcfaf2";
+      return bg || '#fcfaf2';
     }
     return c;
   };
@@ -51,7 +51,7 @@ export default function DoodleCanvas({
     const canvas = canvasRef.current;
     if (!canvas || dimensions.width === 0 || dimensions.height === 0) return;
 
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext('2d');
     const dpr = window.devicePixelRatio || 1;
 
     // Set display size
@@ -66,8 +66,8 @@ export default function DoodleCanvas({
     ctx.scale(dpr, dpr);
 
     // Set drawing styles
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
 
     // Clear canvas
     ctx.clearRect(0, 0, dimensions.width, dimensions.height);
@@ -116,14 +116,14 @@ export default function DoodleCanvas({
     soundSynth.startScribble();
 
     // Dispatch doodle drawing start event
-    window.dispatchEvent(new CustomEvent("doodle-draw-start"));
+    window.dispatchEvent(new CustomEvent('doodle-draw-start'));
 
     const { x, y } = getCoordinates(e);
     currentPathRef.current = [{ x, y }];
 
     // Draw single dot initially
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext('2d');
     ctx.beginPath();
     ctx.arc(x, y, brushWidth / 2, 0, Math.PI * 2);
     ctx.fillStyle = resolveColor(color);
@@ -145,7 +145,7 @@ export default function DoodleCanvas({
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
     if (
-      color === "eraser" &&
+      color === 'eraser' &&
       clientX >= 15 &&
       clientX <= 120 &&
       clientY >= window.innerHeight - 150 &&
@@ -157,7 +157,7 @@ export default function DoodleCanvas({
         now - window.lastDoodlyEraseTime > 8000
       ) {
         window.lastDoodlyEraseTime = now;
-        window.dispatchEvent(new CustomEvent("doodly-erased"));
+        window.dispatchEvent(new CustomEvent('doodly-erased'));
       }
     }
 
@@ -167,7 +167,7 @@ export default function DoodleCanvas({
       const lastPoint = prevPoints[prevPoints.length - 1];
 
       const canvas = canvasRef.current;
-      const ctx = canvas.getContext("2d");
+      const ctx = canvas.getContext('2d');
       ctx.beginPath();
       ctx.strokeStyle = resolveColor(color);
       ctx.lineWidth = brushWidth;
@@ -206,14 +206,14 @@ export default function DoodleCanvas({
       onTouchMove={draw}
       onTouchEnd={stopDrawing}
       style={{
-        position: "absolute",
+        position: 'absolute',
         top: 0,
         left: 0,
         zIndex: active ? 9999 : -1, // Sits above content when active, else completely below
-        pointerEvents: active ? "auto" : "none",
-        display: "block",
-        cursor: active ? "crosshair" : "default",
-        touchAction: active ? "none" : "auto",
+        pointerEvents: active ? 'auto' : 'none',
+        display: 'block',
+        cursor: active ? 'crosshair' : 'default',
+        touchAction: active ? 'none' : 'auto',
       }}
     />
   );

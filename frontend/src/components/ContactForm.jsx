@@ -1,19 +1,19 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import api from "../api";
-import { MailIcon } from "./SvgIllustrations";
-import { soundSynth } from "../utils/audioSynth";
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import api from '../api';
+import { MailIcon } from './SvgIllustrations';
+import { soundSynth } from '../utils/audioSynth';
 
 const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 export default function ContactForm() {
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    subject: "",
-    message: "",
-    nickname: "",
-    captchaAnswer: "",
+    name: '',
+    email: '',
+    subject: '',
+    message: '',
+    nickname: '',
+    captchaAnswer: '',
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -26,10 +26,10 @@ export default function ContactForm() {
     setCaptchaLoading(true);
     setCaptchaError(false);
     try {
-      const res = await api.get("/portfolio/captcha");
+      const res = await api.get('/portfolio/captcha');
       setCaptcha(res.data);
     } catch (err) {
-      console.error("Failed to fetch captcha:", err);
+      console.error('Failed to fetch captcha:', err);
       setCaptchaError(true);
     } finally {
       setCaptchaLoading(false);
@@ -42,34 +42,34 @@ export default function ContactForm() {
 
   const validate = (field, value) => {
     switch (field) {
-      case "name":
+      case 'name':
         return !value.trim()
-          ? "Name is required"
+          ? 'Name is required'
           : value.trim().length < 2
-            ? "Name must be at least 2 characters"
-            : "";
-      case "email":
+            ? 'Name must be at least 2 characters'
+            : '';
+      case 'email':
         return !value.trim()
-          ? "Email is required"
+          ? 'Email is required'
           : !validateEmail(value)
-            ? "Invalid email format"
-            : "";
-      case "subject":
+            ? 'Invalid email format'
+            : '';
+      case 'subject':
         return !value.trim()
-          ? "Subject is required"
+          ? 'Subject is required'
           : value.trim().length < 3
-            ? "Subject must be at least 3 characters"
-            : "";
-      case "message":
+            ? 'Subject must be at least 3 characters'
+            : '';
+      case 'message':
         return !value.trim()
-          ? "Message is required"
+          ? 'Message is required'
           : value.trim().length < 10
-            ? "Message must be at least 10 characters"
-            : "";
-      case "captchaAnswer":
-        return !value.trim() ? "Please solve the math puzzle" : "";
+            ? 'Message must be at least 10 characters'
+            : '';
+      case 'captchaAnswer':
+        return !value.trim() ? 'Please solve the math puzzle' : '';
       default:
-        return "";
+        return '';
     }
   };
 
@@ -84,7 +84,7 @@ export default function ContactForm() {
 
   const handleBlur = (e) => {
     const { name, value } = e.target;
-    if (name !== "nickname") {
+    if (name !== 'nickname') {
       setErrors((prev) => ({ ...prev, [name]: validate(name, value) }));
     }
   };
@@ -93,7 +93,7 @@ export default function ContactForm() {
     const now = Date.now();
     if (!window.lastFormFocusTime || now - window.lastFormFocusTime > 15000) {
       window.lastFormFocusTime = now;
-      window.dispatchEvent(new CustomEvent("form-focus"));
+      window.dispatchEvent(new CustomEvent('form-focus'));
     }
   };
 
@@ -101,14 +101,14 @@ export default function ContactForm() {
     e.preventDefault();
     const newErrors = {};
     const fieldsToValidate = [
-      "name",
-      "email",
-      "subject",
-      "message",
-      "captchaAnswer",
+      'name',
+      'email',
+      'subject',
+      'message',
+      'captchaAnswer',
     ];
     for (const field of fieldsToValidate) {
-      const error = validate(field, formData[field] || "");
+      const error = validate(field, formData[field] || '');
       if (error) newErrors[field] = error;
     }
     setErrors(newErrors);
@@ -117,7 +117,7 @@ export default function ContactForm() {
     setIsSubmitting(true);
     setIsFlying(true);
     soundSynth.playWhoosh();
-    window.dispatchEvent(new CustomEvent("form-airplane-sent"));
+    window.dispatchEvent(new CustomEvent('form-airplane-sent'));
 
     try {
       const payload = {
@@ -129,16 +129,16 @@ export default function ContactForm() {
         captchaAnswer: formData.captchaAnswer,
         captchaToken: captcha?.token,
       };
-      await api.post("/portfolio/message", payload);
+      await api.post('/portfolio/message', payload);
       setTimeout(() => {
-        window.toast?.("Message sent successfully!", "success");
+        window.toast?.('Message sent successfully!', 'success');
         setFormData({
-          name: "",
-          email: "",
-          subject: "",
-          message: "",
-          nickname: "",
-          captchaAnswer: "",
+          name: '',
+          email: '',
+          subject: '',
+          message: '',
+          nickname: '',
+          captchaAnswer: '',
         });
         setErrors({});
         setIsFlying(false);
@@ -148,15 +148,15 @@ export default function ContactForm() {
     } catch (err) {
       const serverMsg =
         err.response?.data?.message ||
-        "Failed to send message. Please try again.";
-      window.toast?.(serverMsg, "error");
+        'Failed to send message. Please try again.';
+      window.toast?.(serverMsg, 'error');
       setIsFlying(false);
       setIsSubmitting(false);
       fetchCaptcha();
-      if (serverMsg.toLowerCase().includes("captcha")) {
+      if (serverMsg.toLowerCase().includes('captcha')) {
         setErrors((prev) => ({
           ...prev,
-          captchaAnswer: "Неверный ответ на капчу",
+          captchaAnswer: 'Неверный ответ на капчу',
         }));
       }
     }
@@ -168,9 +168,9 @@ export default function ContactForm() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         style={{
-          color: "var(--danger)",
-          fontSize: "12px",
-          margin: "2px 0 10px",
+          color: 'var(--danger)',
+          fontSize: '12px',
+          margin: '2px 0 10px',
           fontFamily: "'Architects Daughter', cursive",
         }}
       >
@@ -180,13 +180,13 @@ export default function ContactForm() {
 
   return (
     <section id="contact">
-      <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
+      <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
         <motion.div
           initial={{ scale: 0 }}
           whileInView={{ scale: 1 }}
-          transition={{ duration: 0.4, type: "Spring" }}
+          transition={{ duration: 0.4, type: 'Spring' }}
           viewport={{ once: true }}
-          style={{ display: "inline-block", marginBottom: "0.5rem" }}
+          style={{ display: 'inline-block', marginBottom: '0.5rem' }}
         >
           <MailIcon size={64} />
         </motion.div>
@@ -195,10 +195,10 @@ export default function ContactForm() {
       <div
         className="contact-form-container"
         style={{
-          minHeight: "300px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+          minHeight: '300px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
       >
         <AnimatePresence mode="wait">
@@ -212,18 +212,18 @@ export default function ContactForm() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8, y: -20 }}
               transition={{ duration: 0.4 }}
-              style={{ width: "100%" }}
+              style={{ width: '100%' }}
             >
               {/* Невидимое поле для ботов (Honeypot) */}
               <div
                 style={{
-                  position: "absolute",
-                  left: "-9999px",
-                  top: "-9999px",
+                  position: 'absolute',
+                  left: '-9999px',
+                  top: '-9999px',
                   opacity: 0,
                   height: 0,
                   width: 0,
-                  overflow: "hidden",
+                  overflow: 'hidden',
                 }}
                 aria-hidden="true"
               >
@@ -253,10 +253,10 @@ export default function ContactForm() {
                 onChange={handleChange}
                 onBlur={handleBlur}
                 onFocus={handleFocus}
-                className={errors.name ? "input-error" : ""}
+                className={errors.name ? 'input-error' : ''}
                 required
               />
-              {errMsg("name")}
+              {errMsg('name')}
 
               <label htmlFor="contact-email" className="sr-only">
                 Email
@@ -270,10 +270,10 @@ export default function ContactForm() {
                 onChange={handleChange}
                 onBlur={handleBlur}
                 onFocus={handleFocus}
-                className={errors.email ? "input-error" : ""}
+                className={errors.email ? 'input-error' : ''}
                 required
               />
-              {errMsg("email")}
+              {errMsg('email')}
 
               <label htmlFor="contact-subject" className="sr-only">
                 Subject
@@ -287,10 +287,10 @@ export default function ContactForm() {
                 onChange={handleChange}
                 onBlur={handleBlur}
                 onFocus={handleFocus}
-                className={errors.subject ? "input-error" : ""}
+                className={errors.subject ? 'input-error' : ''}
                 required
               />
-              {errMsg("subject")}
+              {errMsg('subject')}
 
               <label htmlFor="contact-message" className="sr-only">
                 Message
@@ -303,20 +303,20 @@ export default function ContactForm() {
                 onChange={handleChange}
                 onBlur={handleBlur}
                 onFocus={handleFocus}
-                className={errors.message ? "input-error" : ""}
+                className={errors.message ? 'input-error' : ''}
                 required
               />
-              {errMsg("message")}
+              {errMsg('message')}
 
               {/* Математическая скетч-капча с обработкой ошибок загрузки */}
               {captchaLoading ? (
                 <div
                   style={{
-                    marginBottom: "15px",
+                    marginBottom: '15px',
                     opacity: 0.6,
                     fontFamily: "'Architects Daughter', cursive",
-                    fontSize: "0.95rem",
-                    color: "var(--text)",
+                    fontSize: '0.95rem',
+                    color: 'var(--text)',
                   }}
                 >
                   Загрузка проверочного кода...
@@ -324,24 +324,24 @@ export default function ContactForm() {
               ) : captchaError ? (
                 <div
                   style={{
-                    color: "var(--danger)",
-                    marginBottom: "15px",
+                    color: 'var(--danger)',
+                    marginBottom: '15px',
                     fontFamily: "'Architects Daughter', cursive",
-                    fontSize: "0.95rem",
+                    fontSize: '0.95rem',
                   }}
                 >
-                  Не удалось загрузить проверочный код.{" "}
+                  Не удалось загрузить проверочный код.{' '}
                   <button
                     type="button"
                     onClick={fetchCaptcha}
                     style={{
-                      textDecoration: "underline",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      color: "var(--text)",
+                      textDecoration: 'underline',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: 'var(--text)',
                       fontFamily: "'Architects Daughter', cursive",
-                      fontSize: "0.95rem",
+                      fontSize: '0.95rem',
                       padding: 0,
                     }}
                   >
@@ -351,25 +351,25 @@ export default function ContactForm() {
               ) : captcha ? (
                 <div
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    marginBottom: "15px",
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    marginBottom: '15px',
                     fontFamily: "'Architects Daughter', cursive",
-                    fontSize: "0.95rem",
-                    color: "var(--text)",
-                    userSelect: "none",
+                    fontSize: '0.95rem',
+                    color: 'var(--text)',
+                    userSelect: 'none',
                   }}
                 >
                   <span>Решите пример:</span>
                   <span
                     style={{
-                      fontWeight: "bold",
-                      fontSize: "1.1rem",
-                      letterSpacing: "1px",
+                      fontWeight: 'bold',
+                      fontSize: '1.1rem',
+                      letterSpacing: '1px',
                     }}
                   >
-                    {captcha.question.replace(" = ?", "")} =
+                    {captcha.question.replace(' = ?', '')} =
                   </span>
                   <label htmlFor="contact-captcha" className="sr-only">
                     Ответ на проверочный вопрос
@@ -379,21 +379,21 @@ export default function ContactForm() {
                     type="text"
                     name="captchaAnswer"
                     placeholder="Ответ"
-                    value={formData.captchaAnswer || ""}
+                    value={formData.captchaAnswer || ''}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={errors.captchaAnswer ? "input-error" : ""}
+                    className={errors.captchaAnswer ? 'input-error' : ''}
                     style={{
-                      width: "60px",
-                      padding: "6px",
-                      textAlign: "center",
+                      width: '60px',
+                      padding: '6px',
+                      textAlign: 'center',
                       margin: 0,
-                      borderRadius: "6px",
+                      borderRadius: '6px',
                       fontFamily: "'Architects Daughter', cursive",
-                      fontSize: "1rem",
-                      border: "var(--border-style)",
-                      background: "var(--input-bg)",
-                      color: "var(--text)",
+                      fontSize: '1rem',
+                      border: 'var(--border-style)',
+                      background: 'var(--input-bg)',
+                      color: 'var(--text)',
                     }}
                     required
                   />
@@ -401,32 +401,32 @@ export default function ContactForm() {
                     type="button"
                     onClick={fetchCaptcha}
                     style={{
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      fontSize: "1.25rem",
-                      padding: "4px",
-                      color: "var(--text)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      transition: "transform 0.2s ease",
-                      outline: "none",
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '1.25rem',
+                      padding: '4px',
+                      color: 'var(--text)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'transform 0.2s ease',
+                      outline: 'none',
                     }}
                     title="Обновить пример"
                     aria-label="Обновить проверочный код"
                     onMouseEnter={(e) =>
-                      (e.currentTarget.style.transform = "rotate(45deg)")
+                      (e.currentTarget.style.transform = 'rotate(45deg)')
                     }
                     onMouseLeave={(e) =>
-                      (e.currentTarget.style.transform = "rotate(0deg)")
+                      (e.currentTarget.style.transform = 'rotate(0deg)')
                     }
                   >
                     ↻
                   </button>
                 </div>
               ) : null}
-              {errMsg("captchaAnswer")}
+              {errMsg('captchaAnswer')}
 
               <button
                 type="submit"
@@ -434,7 +434,7 @@ export default function ContactForm() {
                 disabled={isSubmitting}
                 style={{ opacity: isSubmitting ? 0.7 : 1 }}
               >
-                {isSubmitting ? "Sending..." : "Send"}
+                {isSubmitting ? 'Sending...' : 'Send'}
               </button>
             </motion.form>
           ) : (
@@ -451,14 +451,14 @@ export default function ContactForm() {
               transition={{
                 duration: 1.5,
                 times: [0, 0.3, 0.6, 1],
-                ease: "easeInOut",
+                ease: 'easeInOut',
               }}
               style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                height: "250px",
-                width: "100%",
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '250px',
+                width: '100%',
               }}
             >
               <svg
@@ -473,7 +473,7 @@ export default function ContactForm() {
                   stroke="var(--text)"
                   strokeWidth="2.5"
                   strokeLinejoin="round"
-                  style={{ filter: "url(#wobblyFilter)" }}
+                  style={{ filter: 'url(#wobblyFilter)' }}
                 />
                 <path
                   d="M 90 10 L 45 50"

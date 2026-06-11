@@ -1,22 +1,22 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import React from "react";
-import AdminDashboard from "./AdminDashboard";
-import { useAuth } from "../../contexts/AuthContext";
-import { usePortfolioSettings } from "../../contexts/SettingsContext";
-import api from "../../api";
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import React from 'react';
+import AdminDashboard from './AdminDashboard';
+import { useAuth } from '../../contexts/AuthContext';
+import { usePortfolioSettings } from '../../contexts/SettingsContext';
+import api from '../../api';
 
 // Mock contexts
-vi.mock("../../contexts/AuthContext", () => ({
+vi.mock('../../contexts/AuthContext', () => ({
   useAuth: vi.fn(),
 }));
 
-vi.mock("../../contexts/SettingsContext", () => ({
+vi.mock('../../contexts/SettingsContext', () => ({
   usePortfolioSettings: vi.fn(),
 }));
 
 // Mock API
-vi.mock("../../api", () => ({
+vi.mock('../../api', () => ({
   default: {
     get: vi.fn(),
     post: vi.fn(),
@@ -26,36 +26,36 @@ vi.mock("../../api", () => ({
 }));
 
 // Mock Subcomponents
-vi.mock("../components/ConfirmDialog", () => ({
+vi.mock('../components/ConfirmDialog', () => ({
   default: () => <div data-testid="mock-confirm" />,
 }));
-vi.mock("../components/MediaTab", () => ({
+vi.mock('../components/MediaTab', () => ({
   default: () => <div data-testid="mock-media" />,
 }));
-vi.mock("../components/TrashView", () => ({
+vi.mock('../components/TrashView', () => ({
   default: () => <div data-testid="mock-trash" />,
 }));
-vi.mock("../components/SkillForm", () => ({
+vi.mock('../components/SkillForm', () => ({
   default: () => <div data-testid="mock-skill-form" />,
 }));
-vi.mock("../components/ProjectForm", () => ({
+vi.mock('../components/ProjectForm', () => ({
   default: () => <div data-testid="mock-project-form" />,
 }));
-vi.mock("../components/HeroForm", () => ({
+vi.mock('../components/HeroForm', () => ({
   default: () => <div data-testid="mock-hero-form" />,
 }));
-vi.mock("../components/SocialLinkForm", () => ({
+vi.mock('../components/SocialLinkForm', () => ({
   default: () => <div data-testid="mock-social-link" />,
 }));
-vi.mock("../components/StatsView", () => ({
+vi.mock('../components/StatsView', () => ({
   default: () => <div data-testid="mock-stats" />,
 }));
 
 // Mock framer-motion
-vi.mock("framer-motion", () => {
-  const React = require("react");
+vi.mock('framer-motion', () => {
+  const React = require('react');
   const DummyDiv = React.forwardRef(({ children, ...props }, ref) => {
-    return React.createElement("div", { ref, ...props }, children);
+    return React.createElement('div', { ref, ...props }, children);
   });
   return {
     motion: {
@@ -65,7 +65,7 @@ vi.mock("framer-motion", () => {
   };
 });
 
-describe("AdminDashboard Page", () => {
+describe('AdminDashboard Page', () => {
   const mockLogout = vi.fn();
   const mockChangePassword = vi.fn();
   const mockUpdateSettingsLocally = vi.fn();
@@ -83,7 +83,7 @@ describe("AdminDashboard Page", () => {
     window.toast = vi.fn();
 
     vi.mocked(useAuth).mockReturnValue({
-      user: { username: "admin" },
+      user: { username: 'admin' },
       isAuthenticated: true,
       isLoading: false,
       login: vi.fn(),
@@ -101,53 +101,53 @@ describe("AdminDashboard Page", () => {
 
     // Default GET response for skills
     vi.mocked(api.get).mockImplementation((url) => {
-      if (url === "/admin/skills") {
+      if (url === '/admin/skills') {
         return Promise.resolve({
           data: [
-            { id: 1, name: "CSS", level: 90 },
-            { id: 2, name: "Node.js", level: 80 },
+            { id: 1, name: 'CSS', level: 90 },
+            { id: 2, name: 'Node.js', level: 80 },
           ],
         });
       }
-      if (url === "/admin/projects") {
+      if (url === '/admin/projects') {
         return Promise.resolve({
-          data: [{ id: 1, title: "Storefront", description: "Store" }],
+          data: [{ id: 1, title: 'Storefront', description: 'Store' }],
         });
       }
       return Promise.resolve({ data: [] });
     });
   });
 
-  it("renders initial dashboard structure and fetches default tab (skills)", async () => {
+  it('renders initial dashboard structure and fetches default tab (skills)', async () => {
     render(<AdminDashboard />);
 
     // Header dashboard metadata
-    expect(screen.getByText("Admin Dashboard")).toBeInTheDocument();
+    expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
 
     // Loading transition state to skills fetch completion
     await waitFor(() => {
-      expect(api.get).toHaveBeenCalledWith("/admin/skills");
-      expect(screen.getByText("CSS")).toBeInTheDocument();
-      expect(screen.getByText("Node.js")).toBeInTheDocument();
+      expect(api.get).toHaveBeenCalledWith('/admin/skills');
+      expect(screen.getByText('CSS')).toBeInTheDocument();
+      expect(screen.getByText('Node.js')).toBeInTheDocument();
     });
   });
 
-  it("switches tabs and fetches projects data", async () => {
+  it('switches tabs and fetches projects data', async () => {
     render(<AdminDashboard />);
 
-    const projectsTabBtn = screen.getByRole("button", { name: "Projects" });
+    const projectsTabBtn = screen.getByRole('button', { name: 'Projects' });
     fireEvent.click(projectsTabBtn);
 
     await waitFor(() => {
-      expect(api.get).toHaveBeenCalledWith("/admin/projects");
-      expect(screen.getByText("Storefront")).toBeInTheDocument();
+      expect(api.get).toHaveBeenCalledWith('/admin/projects');
+      expect(screen.getByText('Storefront')).toBeInTheDocument();
     });
   });
 
-  it("toggles settings via PUT request", async () => {
+  it('toggles settings via PUT request', async () => {
     render(<AdminDashboard />);
 
-    const settingsTabBtn = screen.getByRole("button", { name: "Settings" });
+    const settingsTabBtn = screen.getByRole('button', { name: 'Settings' });
     fireEvent.click(settingsTabBtn);
 
     const checkBug = screen.getByLabelText(/Ползающий жучок/i);
@@ -157,30 +157,30 @@ describe("AdminDashboard Page", () => {
       expect(mockUpdateSettingsLocally).toHaveBeenCalledWith({
         enableBug: true,
       });
-      expect(api.put).toHaveBeenCalledWith("/admin/settings", {
+      expect(api.put).toHaveBeenCalledWith('/admin/settings', {
         enableBug: true,
       });
       expect(window.toast).toHaveBeenCalledWith(
-        "Настройки обновлены / Settings updated",
-        "success",
+        'Настройки обновлены / Settings updated',
+        'success'
       );
     });
   });
 
-  it("calls auth logout on exit click", () => {
+  it('calls auth logout on exit click', () => {
     const transitionSpy = vi.fn((e) => {
       e.detail.action();
     });
-    window.addEventListener("page-crumple-transition", transitionSpy);
+    window.addEventListener('page-crumple-transition', transitionSpy);
 
     render(<AdminDashboard />);
 
-    const logoutBtn = screen.getByRole("button", { name: "Logout" });
+    const logoutBtn = screen.getByRole('button', { name: 'Logout' });
     fireEvent.click(logoutBtn);
 
     expect(transitionSpy).toHaveBeenCalled();
     expect(mockLogout).toHaveBeenCalled();
 
-    window.removeEventListener("page-crumple-transition", transitionSpy);
+    window.removeEventListener('page-crumple-transition', transitionSpy);
   });
 });

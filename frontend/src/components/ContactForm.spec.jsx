@@ -1,15 +1,15 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   render,
   screen,
   fireEvent,
   waitFor,
   act,
-} from "@testing-library/react";
-import ContactForm from "./ContactForm";
+} from '@testing-library/react';
+import ContactForm from './ContactForm';
 
 // Mock the API client
-vi.mock("../api", () => {
+vi.mock('../api', () => {
   return {
     default: {
       get: vi.fn(),
@@ -19,7 +19,7 @@ vi.mock("../api", () => {
 });
 
 // Mock soundSynth
-vi.mock("../utils/audioSynth", () => {
+vi.mock('../utils/audioSynth', () => {
   return {
     soundSynth: {
       playWhoosh: vi.fn(),
@@ -28,8 +28,8 @@ vi.mock("../utils/audioSynth", () => {
 });
 
 // Mock framer-motion to render plain HTML elements in tests
-vi.mock("framer-motion", () => {
-  const React = require("react");
+vi.mock('framer-motion', () => {
+  const React = require('react');
 
   const DummyDiv = React.forwardRef(
     (
@@ -43,10 +43,10 @@ vi.mock("framer-motion", () => {
         viewport,
         ...props
       },
-      ref,
+      ref
     ) => {
-      return React.createElement("div", { ref, ...props }, children);
-    },
+      return React.createElement('div', { ref, ...props }, children);
+    }
   );
 
   const DummyForm = React.forwardRef(
@@ -61,10 +61,10 @@ vi.mock("framer-motion", () => {
         viewport,
         ...props
       },
-      ref,
+      ref
     ) => {
-      return React.createElement("form", { ref, ...props }, children);
-    },
+      return React.createElement('form', { ref, ...props }, children);
+    }
   );
 
   const DummyP = React.forwardRef(
@@ -79,10 +79,10 @@ vi.mock("framer-motion", () => {
         viewport,
         ...props
       },
-      ref,
+      ref
     ) => {
-      return React.createElement("p", { ref, ...props }, children);
-    },
+      return React.createElement('p', { ref, ...props }, children);
+    }
   );
 
   return {
@@ -95,12 +95,12 @@ vi.mock("framer-motion", () => {
   };
 });
 
-import api from "../api";
+import api from '../api';
 
-describe("ContactForm Component", () => {
+describe('ContactForm Component', () => {
   const mockCaptcha = {
-    question: "5 + 3 = ?",
-    token: "test-token-123",
+    question: '5 + 3 = ?',
+    token: 'test-token-123',
   };
 
   beforeEach(() => {
@@ -116,63 +116,63 @@ describe("ContactForm Component", () => {
     vi.useRealTimers();
   });
 
-  it("renders fields and fetches captcha on load", async () => {
+  it('renders fields and fetches captcha on load', async () => {
     render(<ContactForm />);
 
-    expect(screen.getByText("Contact")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Name")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Email")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Subject")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Message")).toBeInTheDocument();
+    expect(screen.getByText('Contact')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Name')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Email')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Subject')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Message')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(api.get).toHaveBeenCalledWith("/portfolio/captcha");
-      expect(screen.getByText("5 + 3 =")).toBeInTheDocument();
+      expect(api.get).toHaveBeenCalledWith('/portfolio/captcha');
+      expect(screen.getByText('5 + 3 =')).toBeInTheDocument();
     });
   });
 
-  it("displays validation errors on empty submission", async () => {
+  it('displays validation errors on empty submission', async () => {
     render(<ContactForm />);
 
     // Wait for captcha to load
     await waitFor(() => {
-      expect(screen.getByText("5 + 3 =")).toBeInTheDocument();
+      expect(screen.getByText('5 + 3 =')).toBeInTheDocument();
     });
 
-    const submitBtn = screen.getByRole("button", { name: /Send/i });
+    const submitBtn = screen.getByRole('button', { name: /Send/i });
     fireEvent.click(submitBtn);
 
     await waitFor(() => {
-      expect(screen.getByText("Name is required")).toBeInTheDocument();
-      expect(screen.getByText("Email is required")).toBeInTheDocument();
-      expect(screen.getByText("Subject is required")).toBeInTheDocument();
-      expect(screen.getByText("Message is required")).toBeInTheDocument();
+      expect(screen.getByText('Name is required')).toBeInTheDocument();
+      expect(screen.getByText('Email is required')).toBeInTheDocument();
+      expect(screen.getByText('Subject is required')).toBeInTheDocument();
+      expect(screen.getByText('Message is required')).toBeInTheDocument();
       expect(
-        screen.getByText("Please solve the math puzzle"),
+        screen.getByText('Please solve the math puzzle')
       ).toBeInTheDocument();
     });
 
     expect(api.post).not.toHaveBeenCalled();
   });
 
-  it("validates invalid email format and length requirements", async () => {
+  it('validates invalid email format and length requirements', async () => {
     render(<ContactForm />);
 
     await waitFor(() => {
-      expect(screen.getByText("5 + 3 =")).toBeInTheDocument();
+      expect(screen.getByText('5 + 3 =')).toBeInTheDocument();
     });
 
-    const nameInput = screen.getByPlaceholderText("Name");
-    const emailInput = screen.getByPlaceholderText("Email");
-    const subjectInput = screen.getByPlaceholderText("Subject");
-    const messageInput = screen.getByPlaceholderText("Message");
-    const captchaInput = screen.getByPlaceholderText("Ответ");
+    const nameInput = screen.getByPlaceholderText('Name');
+    const emailInput = screen.getByPlaceholderText('Email');
+    const subjectInput = screen.getByPlaceholderText('Subject');
+    const messageInput = screen.getByPlaceholderText('Message');
+    const captchaInput = screen.getByPlaceholderText('Ответ');
 
-    fireEvent.change(nameInput, { target: { value: "A" } }); // < 2 chars
-    fireEvent.change(emailInput, { target: { value: "invalid-email" } });
-    fireEvent.change(subjectInput, { target: { value: "Hi" } }); // < 3 chars
-    fireEvent.change(messageInput, { target: { value: "Short" } }); // < 10 chars
-    fireEvent.change(captchaInput, { target: { value: "8" } });
+    fireEvent.change(nameInput, { target: { value: 'A' } }); // < 2 chars
+    fireEvent.change(emailInput, { target: { value: 'invalid-email' } });
+    fireEvent.change(subjectInput, { target: { value: 'Hi' } }); // < 3 chars
+    fireEvent.change(messageInput, { target: { value: 'Short' } }); // < 10 chars
+    fireEvent.change(captchaInput, { target: { value: '8' } });
 
     fireEvent.blur(nameInput);
     fireEvent.blur(emailInput);
@@ -181,74 +181,74 @@ describe("ContactForm Component", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText("Name must be at least 2 characters"),
+        screen.getByText('Name must be at least 2 characters')
       ).toBeInTheDocument();
-      expect(screen.getByText("Invalid email format")).toBeInTheDocument();
+      expect(screen.getByText('Invalid email format')).toBeInTheDocument();
       expect(
-        screen.getByText("Subject must be at least 3 characters"),
+        screen.getByText('Subject must be at least 3 characters')
       ).toBeInTheDocument();
       expect(
-        screen.getByText("Message must be at least 10 characters"),
+        screen.getByText('Message must be at least 10 characters')
       ).toBeInTheDocument();
     });
   });
 
-  it("triggers form-focus event on focusing inputs", async () => {
+  it('triggers form-focus event on focusing inputs', async () => {
     const focusSpy = vi.fn();
-    window.addEventListener("form-focus", focusSpy);
+    window.addEventListener('form-focus', focusSpy);
 
     render(<ContactForm />);
 
     await waitFor(() => {
-      expect(screen.getByText("5 + 3 =")).toBeInTheDocument();
+      expect(screen.getByText('5 + 3 =')).toBeInTheDocument();
     });
 
-    const nameInput = screen.getByPlaceholderText("Name");
+    const nameInput = screen.getByPlaceholderText('Name');
     fireEvent.focus(nameInput);
 
     expect(focusSpy).toHaveBeenCalled();
-    window.removeEventListener("form-focus", focusSpy);
+    window.removeEventListener('form-focus', focusSpy);
   });
 
-  it("submits successfully with valid data and calls post API", async () => {
+  it('submits successfully with valid data and calls post API', async () => {
     api.post.mockResolvedValue({});
 
     render(<ContactForm />);
 
     await waitFor(() => {
-      expect(screen.getByText("5 + 3 =")).toBeInTheDocument();
+      expect(screen.getByText('5 + 3 =')).toBeInTheDocument();
     });
 
-    const nameInput = screen.getByPlaceholderText("Name");
-    const emailInput = screen.getByPlaceholderText("Email");
-    const subjectInput = screen.getByPlaceholderText("Subject");
-    const messageInput = screen.getByPlaceholderText("Message");
-    const captchaInput = screen.getByPlaceholderText("Ответ");
+    const nameInput = screen.getByPlaceholderText('Name');
+    const emailInput = screen.getByPlaceholderText('Email');
+    const subjectInput = screen.getByPlaceholderText('Subject');
+    const messageInput = screen.getByPlaceholderText('Message');
+    const captchaInput = screen.getByPlaceholderText('Ответ');
 
-    fireEvent.change(nameInput, { target: { value: "John Doe" } });
-    fireEvent.change(emailInput, { target: { value: "john@example.com" } });
-    fireEvent.change(subjectInput, { target: { value: "Test Subject" } });
+    fireEvent.change(nameInput, { target: { value: 'John Doe' } });
+    fireEvent.change(emailInput, { target: { value: 'john@example.com' } });
+    fireEvent.change(subjectInput, { target: { value: 'Test Subject' } });
     fireEvent.change(messageInput, {
-      target: { value: "This is a long message for testing." },
+      target: { value: 'This is a long message for testing.' },
     });
-    fireEvent.change(captchaInput, { target: { value: "8" } });
+    fireEvent.change(captchaInput, { target: { value: '8' } });
 
-    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
 
-    const form = nameInput.closest("form");
+    const form = nameInput.closest('form');
     await act(async () => {
       fireEvent.submit(form);
       await vi.runAllTicks();
     });
 
-    expect(api.post).toHaveBeenCalledWith("/portfolio/message", {
-      name: "John Doe",
-      email: "john@example.com",
-      subject: "Test Subject",
-      message: "This is a long message for testing.",
-      nickname: "",
-      captchaAnswer: "8",
-      captchaToken: "test-token-123",
+    expect(api.post).toHaveBeenCalledWith('/portfolio/message', {
+      name: 'John Doe',
+      email: 'john@example.com',
+      subject: 'Test Subject',
+      message: 'This is a long message for testing.',
+      nickname: '',
+      captchaAnswer: '8',
+      captchaToken: 'test-token-123',
     });
 
     // Fast-forward timers for the success timeout in ContactForm (1500ms)
@@ -258,17 +258,17 @@ describe("ContactForm Component", () => {
     });
 
     expect(window.toast).toHaveBeenCalledWith(
-      "Message sent successfully!",
-      "success",
+      'Message sent successfully!',
+      'success'
     );
-    expect(screen.getByPlaceholderText("Name").value).toBe("");
+    expect(screen.getByPlaceholderText('Name').value).toBe('');
   });
 
-  it("handles submission errors and displays server captcha errors", async () => {
+  it('handles submission errors and displays server captcha errors', async () => {
     api.post.mockRejectedValue({
       response: {
         data: {
-          message: "Incorrect captcha answer",
+          message: 'Incorrect captcha answer',
         },
       },
     });
@@ -276,34 +276,34 @@ describe("ContactForm Component", () => {
     render(<ContactForm />);
 
     await waitFor(() => {
-      expect(screen.getByText("5 + 3 =")).toBeInTheDocument();
+      expect(screen.getByText('5 + 3 =')).toBeInTheDocument();
     });
 
-    fireEvent.change(screen.getByPlaceholderText("Name"), {
-      target: { value: "John Doe" },
+    fireEvent.change(screen.getByPlaceholderText('Name'), {
+      target: { value: 'John Doe' },
     });
-    fireEvent.change(screen.getByPlaceholderText("Email"), {
-      target: { value: "john@example.com" },
+    fireEvent.change(screen.getByPlaceholderText('Email'), {
+      target: { value: 'john@example.com' },
     });
-    fireEvent.change(screen.getByPlaceholderText("Subject"), {
-      target: { value: "Test Subject" },
+    fireEvent.change(screen.getByPlaceholderText('Subject'), {
+      target: { value: 'Test Subject' },
     });
-    fireEvent.change(screen.getByPlaceholderText("Message"), {
-      target: { value: "This is a long message for testing." },
+    fireEvent.change(screen.getByPlaceholderText('Message'), {
+      target: { value: 'This is a long message for testing.' },
     });
-    fireEvent.change(screen.getByPlaceholderText("Ответ"), {
-      target: { value: "9" },
+    fireEvent.change(screen.getByPlaceholderText('Ответ'), {
+      target: { value: '9' },
     });
 
-    const form = screen.getByPlaceholderText("Name").closest("form");
+    const form = screen.getByPlaceholderText('Name').closest('form');
     fireEvent.submit(form);
 
     await waitFor(() => {
       expect(window.toast).toHaveBeenCalledWith(
-        "Incorrect captcha answer",
-        "error",
+        'Incorrect captcha answer',
+        'error'
       );
-      expect(screen.getByText("Неверный ответ на капчу")).toBeInTheDocument();
+      expect(screen.getByText('Неверный ответ на капчу')).toBeInTheDocument();
     });
   });
 });

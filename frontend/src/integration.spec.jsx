@@ -6,29 +6,29 @@ import {
   beforeEach,
   afterEach,
   beforeAll,
-} from "vitest";
+} from 'vitest';
 import {
   render,
   screen,
   fireEvent,
   waitFor,
   act,
-} from "@testing-library/react";
-import React, { useState } from "react";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import { SettingsProvider } from "./contexts/SettingsContext";
-import { ThemeProvider } from "./contexts/ThemeContext";
-import { LoginPage } from "./pages/LoginPage";
-import AdminDashboard from "./admin/pages/AdminDashboard";
-import DoodlyHelper from "./components/DoodlyHelper";
-import CoffeeCup from "./components/CoffeeCup";
-import SketchyBug from "./components/SketchyBug";
-import PageTear from "./components/PageTear";
-import * as authApi from "./api/authApi";
-import api from "./api";
+} from '@testing-library/react';
+import React, { useState } from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { SettingsProvider } from './contexts/SettingsContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { LoginPage } from './pages/LoginPage';
+import AdminDashboard from './admin/pages/AdminDashboard';
+import DoodlyHelper from './components/DoodlyHelper';
+import CoffeeCup from './components/CoffeeCup';
+import SketchyBug from './components/SketchyBug';
+import PageTear from './components/PageTear';
+import * as authApi from './api/authApi';
+import api from './api';
 
 // Mock contexts and apis
-vi.mock("./utils/audioSynth", () => ({
+vi.mock('./utils/audioSynth', () => ({
   soundSynth: {
     playPop: vi.fn(),
     playSlosh: vi.fn(),
@@ -45,7 +45,7 @@ vi.mock("./utils/audioSynth", () => ({
   },
 }));
 
-vi.mock("./api", () => ({
+vi.mock('./api', () => ({
   default: {
     get: vi.fn().mockResolvedValue({ data: [] }),
     put: vi.fn(),
@@ -53,7 +53,7 @@ vi.mock("./api", () => ({
   },
 }));
 
-vi.mock("./api/authApi", () => ({
+vi.mock('./api/authApi', () => ({
   getMe: vi.fn(),
   login: vi.fn(),
   logout: vi.fn(),
@@ -61,15 +61,15 @@ vi.mock("./api/authApi", () => ({
 
 // Mock react-router-dom hooks
 const mockNavigate = vi.fn();
-vi.mock("react-router-dom", () => ({
+vi.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
-  useLocation: () => ({ pathname: "/login", state: null }),
+  useLocation: () => ({ pathname: '/login', state: null }),
   useSearchParams: () => [new URLSearchParams(), vi.fn()],
 }));
 
 // Mock framer-motion to bypass animation lag/async rendering using a Proxy (supports all tag types)
-vi.mock("framer-motion", () => {
-  const React = require("react");
+vi.mock('framer-motion', () => {
+  const React = require('react');
   const Dummy = React.forwardRef(
     ({ children, onAnimationComplete, ...props }, ref) => {
       React.useEffect(() => {
@@ -77,8 +77,8 @@ vi.mock("framer-motion", () => {
           onAnimationComplete();
         }
       }, [onAnimationComplete]);
-      return React.createElement("div", { ref, ...props }, children);
-    },
+      return React.createElement('div', { ref, ...props }, children);
+    }
   );
   const motionProxy = new Proxy(
     {},
@@ -86,7 +86,7 @@ vi.mock("framer-motion", () => {
       get: (target, key) => {
         return Dummy;
       },
-    },
+    }
   );
   return {
     motion: motionProxy,
@@ -95,21 +95,21 @@ vi.mock("framer-motion", () => {
 });
 
 // Mock nested dashboard subcomponents to keep test clean
-vi.mock("./admin/components/ConfirmDialog", () => ({ default: () => null }));
-vi.mock("./admin/components/MediaTab", () => ({ default: () => null }));
-vi.mock("./admin/components/TrashView", () => ({ default: () => null }));
-vi.mock("./admin/components/SkillForm", () => ({ default: () => null }));
-vi.mock("./admin/components/ProjectForm", () => ({ default: () => null }));
-vi.mock("./admin/components/HeroForm", () => ({ default: () => null }));
-vi.mock("./admin/components/SocialLinkForm", () => ({ default: () => null }));
-vi.mock("./admin/components/StatsView", () => ({ default: () => null }));
+vi.mock('./admin/components/ConfirmDialog', () => ({ default: () => null }));
+vi.mock('./admin/components/MediaTab', () => ({ default: () => null }));
+vi.mock('./admin/components/TrashView', () => ({ default: () => null }));
+vi.mock('./admin/components/SkillForm', () => ({ default: () => null }));
+vi.mock('./admin/components/ProjectForm', () => ({ default: () => null }));
+vi.mock('./admin/components/HeroForm', () => ({ default: () => null }));
+vi.mock('./admin/components/SocialLinkForm', () => ({ default: () => null }));
+vi.mock('./admin/components/StatsView', () => ({ default: () => null }));
 
-describe("Frontend Login-to-Dashboard Integration Flow", () => {
+describe('Frontend Login-to-Dashboard Integration Flow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Dynamically mock api.get to return valid settings
     vi.mocked(api.get).mockImplementation((url) => {
-      if (url === "/portfolio/settings") {
+      if (url === '/portfolio/settings') {
         return Promise.resolve({
           data: {
             enableDoodly: true,
@@ -140,14 +140,14 @@ describe("Frontend Login-to-Dashboard Integration Flow", () => {
     return isAuthenticated ? <AdminDashboard /> : <LoginPage />;
   }
 
-  it("navigates the user from LoginPage to AdminDashboard upon successful login", async () => {
+  it('navigates the user from LoginPage to AdminDashboard upon successful login', async () => {
     // 1. Initial auth check returns null (not authenticated)
-    vi.mocked(authApi.getMe).mockRejectedValueOnce(new Error("No token"));
+    vi.mocked(authApi.getMe).mockRejectedValueOnce(new Error('No token'));
     // 2. Successful login credentials check
     vi.mocked(authApi.login).mockResolvedValueOnce(undefined);
     // 3. Post-login getMe profile retrieval returns the user details
     vi.mocked(authApi.getMe).mockResolvedValueOnce({
-      user: { id: 1, username: "administrator", isActive: true },
+      user: { id: 1, username: 'administrator', isActive: true },
     });
 
     const { container } = render(
@@ -155,38 +155,38 @@ describe("Frontend Login-to-Dashboard Integration Flow", () => {
         <SettingsProvider>
           <AppIntegrationWrapper />
         </SettingsProvider>
-      </AuthProvider>,
+      </AuthProvider>
     );
 
     // Initial check: LoginPage is rendered
     await waitFor(() => {
-      expect(screen.getByText("Войти в систему")).toBeInTheDocument();
+      expect(screen.getByText('Войти в систему')).toBeInTheDocument();
     });
 
     const usernameInput = container.querySelector('input[type="text"]');
     const passwordInput = container.querySelector('input[type="password"]');
-    const submitBtn = screen.getByRole("button", { name: "Войти" });
+    const submitBtn = screen.getByRole('button', { name: 'Войти' });
 
     // Enter valid details and submit
-    fireEvent.change(usernameInput, { target: { value: "administrator" } });
-    fireEvent.change(passwordInput, { target: { value: "correct-pass" } });
+    fireEvent.change(usernameInput, { target: { value: 'administrator' } });
+    fireEvent.change(passwordInput, { target: { value: 'correct-pass' } });
     fireEvent.click(submitBtn);
 
     // Assert transitions into the AdminDashboard layout
     await waitFor(() => {
       expect(authApi.login).toHaveBeenCalledWith({
-        username: "administrator",
-        password: "correct-pass",
+        username: 'administrator',
+        password: 'correct-pass',
       });
-      expect(screen.getByText("Admin Dashboard")).toBeInTheDocument();
-      expect(screen.queryByText("Войти в систему")).not.toBeInTheDocument();
+      expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
+      expect(screen.queryByText('Войти в систему')).not.toBeInTheDocument();
     });
   });
 
-  it("allows switching dashboard tabs and toggling settings", async () => {
+  it('allows switching dashboard tabs and toggling settings', async () => {
     // Mock getMe to return user details immediately so integration starts logged in
     vi.mocked(authApi.getMe).mockResolvedValue({
-      user: { id: 1, username: "administrator", isActive: true },
+      user: { id: 1, username: 'administrator', isActive: true },
     });
 
     render(
@@ -194,25 +194,25 @@ describe("Frontend Login-to-Dashboard Integration Flow", () => {
         <SettingsProvider>
           <AppIntegrationWrapper />
         </SettingsProvider>
-      </AuthProvider>,
+      </AuthProvider>
     );
 
     // Should load straight to AdminDashboard
     await waitFor(() => {
-      expect(screen.getByText("Admin Dashboard")).toBeInTheDocument();
+      expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
     });
 
     // Switch to Settings tab
-    const settingsTabBtn = screen.getByRole("button", { name: "Settings" });
+    const settingsTabBtn = screen.getByRole('button', { name: 'Settings' });
     fireEvent.click(settingsTabBtn);
 
     // Settings title should be visible
     expect(
-      screen.getByText("Интерактивные функции и анимации"),
+      screen.getByText('Интерактивные функции и анимации')
     ).toBeInTheDocument();
 
     // Toggle sounds setting
-    const checkbox = screen.getByLabelText("Звуковые эффекты (Web Audio API)");
+    const checkbox = screen.getByLabelText('Звуковые эффекты (Web Audio API)');
     expect(checkbox).toBeChecked(); // default is true
 
     // Mock API put request
@@ -221,23 +221,23 @@ describe("Frontend Login-to-Dashboard Integration Flow", () => {
     fireEvent.click(checkbox);
 
     await waitFor(() => {
-      expect(api.put).toHaveBeenCalledWith("/admin/settings", {
+      expect(api.put).toHaveBeenCalledWith('/admin/settings', {
         enableSounds: false,
       });
     });
   });
 
-  describe("Doodly Helper and Interactive Components Integration", () => {
+  describe('Doodly Helper and Interactive Components Integration', () => {
     beforeEach(() => {
-      vi.stubGlobal("requestAnimationFrame", (cb) => setTimeout(cb, 16));
-      vi.stubGlobal("cancelAnimationFrame", (id) => clearTimeout(id));
+      vi.stubGlobal('requestAnimationFrame', (cb) => setTimeout(cb, 16));
+      vi.stubGlobal('cancelAnimationFrame', (id) => clearTimeout(id));
     });
 
     afterEach(() => {
       vi.unstubAllGlobals();
     });
 
-    it("updates Doodly Helper bubble when coffee is spilled", async () => {
+    it('updates Doodly Helper bubble when coffee is spilled', async () => {
       vi.useFakeTimers();
       render(
         <ThemeProvider>
@@ -245,7 +245,7 @@ describe("Frontend Login-to-Dashboard Integration Flow", () => {
             <DoodlyHelper />
             <CoffeeCup />
           </SettingsProvider>
-        </ThemeProvider>,
+        </ThemeProvider>
       );
 
       // Let mount effects run
@@ -277,7 +277,7 @@ describe("Frontend Login-to-Dashboard Integration Flow", () => {
       vi.useRealTimers();
     });
 
-    it("updates Doodly Helper bubble when a bug is squashed", async () => {
+    it('updates Doodly Helper bubble when a bug is squashed', async () => {
       vi.useFakeTimers();
       render(
         <ThemeProvider>
@@ -285,7 +285,7 @@ describe("Frontend Login-to-Dashboard Integration Flow", () => {
             <DoodlyHelper />
             <SketchyBug />
           </SettingsProvider>
-        </ThemeProvider>,
+        </ThemeProvider>
       );
 
       await act(async () => {
@@ -313,7 +313,7 @@ describe("Frontend Login-to-Dashboard Integration Flow", () => {
       vi.useRealTimers();
     });
 
-    it("updates Doodly Helper bubble during Tic-Tac-Toe game events", async () => {
+    it('updates Doodly Helper bubble during Tic-Tac-Toe game events', async () => {
       vi.useFakeTimers();
       render(
         <ThemeProvider>
@@ -321,7 +321,7 @@ describe("Frontend Login-to-Dashboard Integration Flow", () => {
             <DoodlyHelper />
             <PageTear />
           </SettingsProvider>
-        </ThemeProvider>,
+        </ThemeProvider>
       );
 
       await act(async () => {
@@ -340,7 +340,7 @@ describe("Frontend Login-to-Dashboard Integration Flow", () => {
 
       // Get cells
       const grid = document.querySelector('div[style*="width: 180px"]');
-      const allDivs = grid.querySelectorAll("div");
+      const allDivs = grid.querySelectorAll('div');
       const cells = Array.from(allDivs).slice(-9);
 
       // Play moves to let Doodly win
@@ -387,7 +387,7 @@ describe("Frontend Login-to-Dashboard Integration Flow", () => {
 
       // Doodly Helper should react to ttt-win-doodly
       expect(
-        screen.getByText(/Умная скрепка побеждает человека/),
+        screen.getByText(/Умная скрепка побеждает человека/)
       ).toBeInTheDocument();
       vi.useRealTimers();
     });

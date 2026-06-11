@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion } from 'framer-motion';
 
 export default function ConfirmDialog({
   message,
@@ -13,14 +13,14 @@ export default function ConfirmDialog({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       style={{
-        position: "fixed",
+        position: 'fixed',
         inset: 0,
-        background: "rgba(0,0,0,0.4)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
+        background: 'rgba(0,0,0,0.4)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
         zIndex: 9998,
-        backdropFilter: "blur(3px)",
+        backdropFilter: 'blur(3px)',
       }}
       onClick={onCancel}
     >
@@ -33,16 +33,16 @@ export default function ConfirmDialog({
       >
         <p
           style={{
-            marginBottom: "24px",
-            fontSize: "1.2rem",
+            marginBottom: '24px',
+            fontSize: '1.2rem',
             fontFamily: "'Architects Daughter', cursive",
-            fontWeight: "bold",
+            fontWeight: 'bold',
           }}
         >
           {message}
         </p>
         <div
-          style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}
+          style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}
         >
           <button className="btn" onClick={onCancel}>
             Cancel

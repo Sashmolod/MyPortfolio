@@ -1,27 +1,27 @@
-import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { soundSynth } from "../utils/audioSynth";
-import { useTheme } from "../contexts/ThemeContext";
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { soundSynth } from '../utils/audioSynth';
+import { useTheme } from '../contexts/ThemeContext';
 
 const DOODLY_QUOTES = [
-  "Привет! Я скрепка-интеллектуал Дудли. 🎓 Помогу настроить работу и поделюсь знаниями!",
-  "Попробуй покликать на кружку кофе в самом низу страницы... Только осторожно! ☕",
-  "Если включить карандаш, можно нарисовать усы разработчику на аватаре! 🥸",
-  "Слышишь этот шуршащий звук карандаша? Чистый релакс... ✏️",
-  "Когда режим рисования включен, клики по ссылкам отключены. Выключи его, чтобы ходить по сайту!",
-  "А вы знали, что баги в коде боятся щекотки? 🪱",
-  "CSS Grid — это как тетрадь в клеточку, размечать страницы одно удовольствие!",
-  "Кстати, в админке появилась полноценная галерея картинок! Удобно, правда?",
-  "Не забудьте заглянуть в раздел Projects, там спрятаны скриншоты проектов в стиле набросков!",
-  "Ого, какой отличный результат на листе! Заслуживает твердой A+! 📝",
-  "Программирование — это на 10% написание кода и на 90% разглядывание монитора. 🖥️",
+  'Привет! Я скрепка-интеллектуал Дудли. 🎓 Помогу настроить работу и поделюсь знаниями!',
+  'Попробуй покликать на кружку кофе в самом низу страницы... Только осторожно! ☕',
+  'Если включить карандаш, можно нарисовать усы разработчику на аватаре! 🥸',
+  'Слышишь этот шуршащий звук карандаша? Чистый релакс... ✏️',
+  'Когда режим рисования включен, клики по ссылкам отключены. Выключи его, чтобы ходить по сайту!',
+  'А вы знали, что баги в коде боятся щекотки? 🪱',
+  'CSS Grid — это как тетрадь в клеточку, размечать страницы одно удовольствие!',
+  'Кстати, в админке появилась полноценная галерея картинок! Удобно, правда?',
+  'Не забудьте заглянуть в раздел Projects, там спрятаны скриншоты проектов в стиле набросков!',
+  'Ого, какой отличный результат на листе! Заслуживает твердой A+! 📝',
+  'Программирование — это на 10% написание кода и на 90% разглядывание монитора. 🖥️',
 ];
 
 export default function DoodlyHelper() {
-  const [bubbleText, setBubbleText] = useState("");
+  const [bubbleText, setBubbleText] = useState('');
   const [isWaving, setIsWaving] = useState(false);
   const [activeSpeech, setActiveSpeech] = useState(false);
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const { theme } = useTheme();
@@ -31,7 +31,7 @@ export default function DoodlyHelper() {
   useEffect(() => {
     const timer = setTimeout(() => {
       showQuote(
-        "Привет! Нажми на меня, чтобы поболтать или услышать шутку! 🎓",
+        'Привет! Нажми на меня, чтобы поболтать или услышать шутку! 🎓'
       );
     }, 3000);
     return () => clearTimeout(timer);
@@ -43,19 +43,19 @@ export default function DoodlyHelper() {
       isFirstRender.current = false;
       return;
     }
-    if (theme === "dark") {
+    if (theme === 'dark') {
       showQuote(
-        "Ого, включили синьку (чертёж)! Всё светится, как на доске инженера! 📐",
+        'Ого, включили синьку (чертёж)! Всё светится, как на доске инженера! 📐'
       );
     } else {
-      showQuote("Кремовая бумага — классика! Глазам сразу приятнее. 📄");
+      showQuote('Кремовая бумага — классика! Глазам сразу приятнее. 📄');
     }
   }, [theme]);
 
   // Listen to canvas guess events
   useEffect(() => {
     const handleGuessStart = () => {
-      setBubbleText("Так-так-так... Посмотрим на твой шедевр! Угадываю... 🎨");
+      setBubbleText('Так-так-так... Посмотрим на твой шедевр! Угадываю... 🎨');
       setActiveSpeech(true);
       setIsLoading(true);
       setIsWaving(true);
@@ -63,17 +63,17 @@ export default function DoodlyHelper() {
 
     const handleGuessResult = (e) => {
       setIsLoading(false);
-      setBubbleText(e.detail.guess || "Хм-м, не могу распознать рисунок...");
+      setBubbleText(e.detail.guess || 'Хм-м, не могу распознать рисунок...');
       setIsWaving(true);
       setTimeout(() => setIsWaving(false), 800);
     };
 
-    window.addEventListener("doodly-guess-start", handleGuessStart);
-    window.addEventListener("doodly-guess-result", handleGuessResult);
+    window.addEventListener('doodly-guess-start', handleGuessStart);
+    window.addEventListener('doodly-guess-result', handleGuessResult);
 
     return () => {
-      window.removeEventListener("doodly-guess-start", handleGuessStart);
-      window.removeEventListener("doodly-guess-result", handleGuessResult);
+      window.removeEventListener('doodly-guess-start', handleGuessStart);
+      window.removeEventListener('doodly-guess-result', handleGuessResult);
     };
   }, []);
 
@@ -81,118 +81,118 @@ export default function DoodlyHelper() {
   useEffect(() => {
     const handleDrawStart = () => {
       showQuote(
-        "О, рисуешь на полях? Рисуй-рисуй, а потом нажми «Дудли, угадай!» — я попробую отгадать твой шедевр! 🎨",
+        'О, рисуешь на полях? Рисуй-рисуй, а потом нажми «Дудли, угадай!» — я попробую отгадать твой шедевр! 🎨'
       );
     };
 
     const handleCoffeeSlosh = () => {
-      showQuote("Осторожнее с кофе! ☕ Я же бумажный, размокну мигом!");
+      showQuote('Осторожнее с кофе! ☕ Я же бумажный, размокну мигом!');
     };
 
     const handleCoffeeSpill = () => {
       showQuote(
-        "А-а-а! Кофе пролился! ☕ Бумага промокла! Быстрее кликни по кружке, чтобы всё вытереть!",
+        'А-а-а! Кофе пролился! ☕ Бумага промокла! Быстрее кликни по кружке, чтобы всё вытереть!'
       );
     };
 
     const handleBugSquashed = () => {
       showQuote(
-        "Бедный жучок! Он просто хотел почитать про твои навыки в React... 🪲",
+        'Бедный жучок! Он просто хотел почитать про твои навыки в React... 🪲'
       );
     };
 
     const handleTttStart = () => {
-      showQuote("Сыграем в крестики-нолики? Мой ход! Ставлю нолик... 🎓");
+      showQuote('Сыграем в крестики-нолики? Мой ход! Ставлю нолик... 🎓');
     };
 
     const handleTttWinDoodly = () => {
-      showQuote("Ха-ха! Умная скрепка побеждает человека! 🏆 Сыграем ещё?");
+      showQuote('Ха-ха! Умная скрепка побеждает человека! 🏆 Сыграем ещё?');
     };
 
     const handleTttWinUser = () => {
       showQuote(
-        "Ладно, твоя победа. Но это потому, что у меня нет пальцев держать карандаш! 😅",
+        'Ладно, твоя победа. Но это потому, что у меня нет пальцев держать карандаш! 😅'
       );
     };
 
     const handleTttDraw = () => {
       showQuote(
-        "Ничья! Дружба победила... или бумага на полях закончилась! 🤝",
+        'Ничья! Дружба победила... или бумага на полях закончилась! 🤝'
       );
     };
 
     const handleProjectHover = (e) => {
-      const title = e.detail?.title || "проектом";
+      const title = e.detail?.title || 'проектом';
       showQuote(
-        `Интересуешься проектом «${title}»? У него очень крутой стек, загляни внутрь! 💻`,
+        `Интересуешься проектом «${title}»? У него очень крутой стек, загляни внутрь! 💻`
       );
     };
 
     const handleCopy = () => {
       showQuote(
-        "Опа, копируешь? Надеюсь, это для твоего резюме, а не плагиат! 😉",
+        'Опа, копируешь? Надеюсь, это для твоего резюме, а не плагиат! 😉'
       );
     };
 
     const handleFormFocus = () => {
       showQuote(
-        "Пишешь письмо? Напиши что-нибудь приятное, а я лично доставлю его самолётиком! ✈️",
+        'Пишешь письмо? Напиши что-нибудь приятное, а я лично доставлю его самолётиком! ✈️'
       );
     };
 
     const handleFormSent = () => {
       showQuote(
-        "Полетел самолётик! ✈️ Надеюсь, попутный ветер донесёт его до почты!",
+        'Полетел самолётик! ✈️ Надеюсь, попутный ветер донесёт его до почты!'
       );
     };
 
     const handleInkLeak = () => {
       showQuote(
-        "Ой-ой! Ручка протекла! 🖋️ Быстрее тыкни по кляксе, пока чернила не залили всё портфолио!",
+        'Ой-ой! Ручка протекла! 🖋️ Быстрее тыкни по кляксе, пока чернила не залили всё портфолио!'
       );
     };
 
     const handleDoodlyErased = () => {
-      showQuote("Эй! Не стирай меня! Я же бумажный, исчезну мигом! 😱");
+      showQuote('Эй! Не стирай меня! Я же бумажный, исчезну мигом! 😱');
     };
 
-    window.addEventListener("doodle-draw-start", handleDrawStart);
-    window.addEventListener("coffee-slosh", handleCoffeeSlosh);
-    window.addEventListener("coffee-spill", handleCoffeeSpill);
-    window.addEventListener("bug-squashed", handleBugSquashed);
-    window.addEventListener("ttt-start", handleTttStart);
-    window.addEventListener("ttt-win-doodly", handleTttWinDoodly);
-    window.addEventListener("ttt-win-user", handleTttWinUser);
-    window.addEventListener("ttt-draw", handleTttDraw);
-    window.addEventListener("project-hover", handleProjectHover);
-    window.addEventListener("form-focus", handleFormFocus);
-    window.addEventListener("form-airplane-sent", handleFormSent);
-    window.addEventListener("ink-leak-triggered", handleInkLeak);
-    window.addEventListener("doodly-erased", handleDoodlyErased);
-    document.addEventListener("copy", handleCopy);
+    window.addEventListener('doodle-draw-start', handleDrawStart);
+    window.addEventListener('coffee-slosh', handleCoffeeSlosh);
+    window.addEventListener('coffee-spill', handleCoffeeSpill);
+    window.addEventListener('bug-squashed', handleBugSquashed);
+    window.addEventListener('ttt-start', handleTttStart);
+    window.addEventListener('ttt-win-doodly', handleTttWinDoodly);
+    window.addEventListener('ttt-win-user', handleTttWinUser);
+    window.addEventListener('ttt-draw', handleTttDraw);
+    window.addEventListener('project-hover', handleProjectHover);
+    window.addEventListener('form-focus', handleFormFocus);
+    window.addEventListener('form-airplane-sent', handleFormSent);
+    window.addEventListener('ink-leak-triggered', handleInkLeak);
+    window.addEventListener('doodly-erased', handleDoodlyErased);
+    document.addEventListener('copy', handleCopy);
 
     return () => {
-      window.removeEventListener("doodle-draw-start", handleDrawStart);
-      window.removeEventListener("coffee-slosh", handleCoffeeSlosh);
-      window.removeEventListener("coffee-spill", handleCoffeeSpill);
-      window.removeEventListener("bug-squashed", handleBugSquashed);
-      window.removeEventListener("ttt-start", handleTttStart);
-      window.removeEventListener("ttt-win-doodly", handleTttWinDoodly);
-      window.removeEventListener("ttt-win-user", handleTttWinUser);
-      window.removeEventListener("ttt-draw", handleTttDraw);
-      window.removeEventListener("project-hover", handleProjectHover);
-      window.removeEventListener("form-focus", handleFormFocus);
-      window.removeEventListener("form-airplane-sent", handleFormSent);
-      window.removeEventListener("ink-leak-triggered", handleInkLeak);
-      window.removeEventListener("doodly-erased", handleDoodlyErased);
-      document.removeEventListener("copy", handleCopy);
+      window.removeEventListener('doodle-draw-start', handleDrawStart);
+      window.removeEventListener('coffee-slosh', handleCoffeeSlosh);
+      window.removeEventListener('coffee-spill', handleCoffeeSpill);
+      window.removeEventListener('bug-squashed', handleBugSquashed);
+      window.removeEventListener('ttt-start', handleTttStart);
+      window.removeEventListener('ttt-win-doodly', handleTttWinDoodly);
+      window.removeEventListener('ttt-win-user', handleTttWinUser);
+      window.removeEventListener('ttt-draw', handleTttDraw);
+      window.removeEventListener('project-hover', handleProjectHover);
+      window.removeEventListener('form-focus', handleFormFocus);
+      window.removeEventListener('form-airplane-sent', handleFormSent);
+      window.removeEventListener('ink-leak-triggered', handleInkLeak);
+      window.removeEventListener('doodly-erased', handleDoodlyErased);
+      document.removeEventListener('copy', handleCopy);
     };
   }, []);
 
   const showQuote = (text) => {
     soundSynth.playPop();
     setBubbleText(
-      text || DOODLY_QUOTES[Math.floor(Math.random() * DOODLY_QUOTES.length)],
+      text || DOODLY_QUOTES[Math.floor(Math.random() * DOODLY_QUOTES.length)]
     );
     setActiveSpeech(true);
     setIsWaving(true);
@@ -200,7 +200,7 @@ export default function DoodlyHelper() {
   };
 
   const handleClick = () => {
-    setInputValue("");
+    setInputValue('');
     showQuote(null);
   };
 
@@ -209,27 +209,27 @@ export default function DoodlyHelper() {
     if (!inputValue.trim() || isLoading) return;
 
     const userMsg = inputValue.trim();
-    setInputValue("");
+    setInputValue('');
     setIsLoading(true);
     soundSynth.playPop();
 
     try {
-      const response = await fetch("/api/portfolio/doodly/chat", {
-        method: "POST",
+      const response = await fetch('/api/portfolio/doodly/chat', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ message: userMsg }),
       });
 
-      if (!response.ok) throw new Error("API error");
+      if (!response.ok) throw new Error('API error');
       const data = await response.json();
       setBubbleText(data.response);
       soundSynth.playPop();
     } catch (err) {
       console.error(err);
       setBubbleText(
-        "Ой, у меня карандаш сломался во время размышлений... Попробуй еще раз! ✏️",
+        'Ой, у меня карандаш сломался во время размышлений... Попробуй еще раз! ✏️'
       );
     } finally {
       setIsLoading(false);
@@ -241,19 +241,19 @@ export default function DoodlyHelper() {
   return (
     <div
       style={{
-        position: "fixed",
-        bottom: "20px",
-        left: "20px",
+        position: 'fixed',
+        bottom: '20px',
+        left: '20px',
         zIndex: 100003, // Above canvas and other controls
-        display: "flex",
-        alignItems: "flex-end",
-        pointerEvents: "none",
+        display: 'flex',
+        alignItems: 'flex-end',
+        pointerEvents: 'none',
       }}
     >
       {/* Smart Clip Character */}
       <motion.div
         className="doodly-character"
-        style={{ pointerEvents: "auto", cursor: "pointer" }}
+        style={{ pointerEvents: 'auto', cursor: 'pointer' }}
         onClick={handleClick}
         animate={
           isWaving
@@ -273,7 +273,7 @@ export default function DoodlyHelper() {
             : {
                 duration: 3,
                 repeat: Infinity,
-                ease: "easeInOut",
+                ease: 'easeInOut',
               }
         }
         whileHover={{ scale: 1.1 }}
@@ -292,7 +292,7 @@ export default function DoodlyHelper() {
             strokeWidth="3.5"
             strokeLinecap="round"
             strokeLinejoin="round"
-            style={{ filter: "url(#wobblyFilter)" }}
+            style={{ filter: 'url(#wobblyFilter)' }}
           />
 
           {/* Left Lens & Right Lens of Glasses */}
@@ -303,7 +303,7 @@ export default function DoodlyHelper() {
             fill="none"
             stroke="var(--text)"
             strokeWidth="2"
-            style={{ filter: "url(#wobblyFilter)" }}
+            style={{ filter: 'url(#wobblyFilter)' }}
           />
           <circle
             cx="40"
@@ -312,7 +312,7 @@ export default function DoodlyHelper() {
             fill="none"
             stroke="var(--text)"
             strokeWidth="2"
-            style={{ filter: "url(#wobblyFilter)" }}
+            style={{ filter: 'url(#wobblyFilter)' }}
           />
           {/* Glasses Bridge */}
           <path
@@ -392,7 +392,7 @@ export default function DoodlyHelper() {
             stroke="var(--text)"
             strokeWidth="2"
             strokeLinecap="round"
-            style={{ filter: "url(#wobblyFilter)" }}
+            style={{ filter: 'url(#wobblyFilter)' }}
           />
           {/* Pencil (tip at 3, 53) */}
           <path
@@ -412,7 +412,7 @@ export default function DoodlyHelper() {
             stroke="var(--text)"
             strokeWidth="2"
             strokeLinecap="round"
-            style={{ filter: "url(#wobblyFilter)" }}
+            style={{ filter: 'url(#wobblyFilter)' }}
           />
           {/* Paper Sheet */}
           <path
@@ -421,7 +421,7 @@ export default function DoodlyHelper() {
             stroke="var(--text)"
             strokeWidth="1.5"
             strokeLinejoin="round"
-            style={{ filter: "url(#wobblyFilter)" }}
+            style={{ filter: 'url(#wobblyFilter)' }}
           />
           {/* Paper Lines */}
           <path
@@ -478,58 +478,58 @@ export default function DoodlyHelper() {
             initial={{ scale: 0.6, opacity: 0, x: -20, y: 10 }}
             animate={{ scale: 1, opacity: 1, x: 0, y: 0 }}
             exit={{ scale: 0.6, opacity: 0, x: -20, y: 10 }}
-            transition={{ type: "spring", stiffness: 200, damping: 15 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 15 }}
             style={{
-              pointerEvents: "auto",
-              marginLeft: "12px",
-              marginBottom: "35px",
-              background: "var(--card-bg)",
-              border: "var(--border-style)",
-              borderStyle: "solid",
-              borderRadius: "var(--sketch-radius-2)",
-              padding: "12px 14px 10px 14px",
-              boxShadow: "var(--shadow)",
-              maxWidth: "220px",
+              pointerEvents: 'auto',
+              marginLeft: '12px',
+              marginBottom: '35px',
+              background: 'var(--card-bg)',
+              border: 'var(--border-style)',
+              borderStyle: 'solid',
+              borderRadius: 'var(--sketch-radius-2)',
+              padding: '12px 14px 10px 14px',
+              boxShadow: 'var(--shadow)',
+              maxWidth: '220px',
               fontFamily: "'Architects Daughter', cursive",
-              fontSize: "12px",
-              lineHeight: "1.4",
-              color: "var(--text)",
-              position: "relative",
-              display: "flex",
-              flexDirection: "column",
-              gap: "4px",
+              fontSize: '12px',
+              lineHeight: '1.4',
+              color: 'var(--text)',
+              position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px',
             }}
           >
             <div
               style={{
-                wordBreak: "break-word",
-                paddingRight: "10px",
-                minHeight: "30px",
+                wordBreak: 'break-word',
+                paddingRight: '10px',
+                minHeight: '30px',
               }}
             >
               {isLoading ? (
                 <div
-                  style={{ display: "flex", gap: "3px", alignItems: "center" }}
+                  style={{ display: 'flex', gap: '3px', alignItems: 'center' }}
                 >
                   <span>Размышляю</span>
                   <motion.span
                     animate={{ opacity: [0, 1, 0] }}
                     transition={{ repeat: Infinity, duration: 1 }}
-                    style={{ fontWeight: "bold" }}
+                    style={{ fontWeight: 'bold' }}
                   >
                     •
                   </motion.span>
                   <motion.span
                     animate={{ opacity: [0, 1, 0] }}
                     transition={{ repeat: Infinity, duration: 1, delay: 0.2 }}
-                    style={{ fontWeight: "bold" }}
+                    style={{ fontWeight: 'bold' }}
                   >
                     •
                   </motion.span>
                   <motion.span
                     animate={{ opacity: [0, 1, 0] }}
                     transition={{ repeat: Infinity, duration: 1, delay: 0.4 }}
-                    style={{ fontWeight: "bold" }}
+                    style={{ fontWeight: 'bold' }}
                   >
                     •
                   </motion.span>
@@ -543,13 +543,13 @@ export default function DoodlyHelper() {
             <form
               onSubmit={handleChatSubmit}
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
-                marginTop: "6px",
-                borderTop: "1px dashed var(--text)",
-                paddingTop: "6px",
-                width: "100%",
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                marginTop: '6px',
+                borderTop: '1px dashed var(--text)',
+                paddingTop: '6px',
+                width: '100%',
               }}
             >
               <input
@@ -560,28 +560,28 @@ export default function DoodlyHelper() {
                 placeholder="Спроси меня..."
                 style={{
                   flex: 1,
-                  background: "none",
-                  border: "none",
-                  outline: "none",
+                  background: 'none',
+                  border: 'none',
+                  outline: 'none',
                   fontFamily: "'Architects Daughter', cursive",
-                  fontSize: "11px",
-                  color: "var(--text)",
-                  padding: "2px 0",
+                  fontSize: '11px',
+                  color: 'var(--text)',
+                  padding: '2px 0',
                 }}
               />
               <button
                 type="submit"
                 disabled={isLoading || !inputValue.trim()}
                 style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: "12px",
-                  color: "var(--text)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: "0 2px",
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  color: 'var(--text)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0 2px',
                   opacity: isLoading || !inputValue.trim() ? 0.3 : 0.8,
                 }}
               >
@@ -595,14 +595,14 @@ export default function DoodlyHelper() {
                 setActiveSpeech(false);
               }}
               style={{
-                position: "absolute",
-                top: "2px",
-                right: "4px",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                fontSize: "10px",
-                color: "var(--text)",
+                position: 'absolute',
+                top: '2px',
+                right: '4px',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '10px',
+                color: 'var(--text)',
                 opacity: 0.5,
               }}
             >
@@ -611,26 +611,26 @@ export default function DoodlyHelper() {
             {/* Wobbly Speech Bubble Tail */}
             <div
               style={{
-                position: "absolute",
-                bottom: "10px",
-                left: "-10px",
-                width: "0",
-                height: "0",
-                borderTop: "6px solid transparent",
-                borderRight: "10px solid var(--text)",
-                borderBottom: "6px solid transparent",
+                position: 'absolute',
+                bottom: '10px',
+                left: '-10px',
+                width: '0',
+                height: '0',
+                borderTop: '6px solid transparent',
+                borderRight: '10px solid var(--text)',
+                borderBottom: '6px solid transparent',
               }}
             />
             <div
               style={{
-                position: "absolute",
-                bottom: "11px",
-                left: "-8px",
-                width: "0",
-                height: "0",
-                borderTop: "5px solid transparent",
-                borderRight: "8px solid var(--card-bg)",
-                borderBottom: "5px solid transparent",
+                position: 'absolute',
+                bottom: '11px',
+                left: '-8px',
+                width: '0',
+                height: '0',
+                borderTop: '5px solid transparent',
+                borderRight: '8px solid var(--card-bg)',
+                borderBottom: '5px solid transparent',
               }}
             />
           </motion.div>

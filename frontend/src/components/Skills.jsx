@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { CodeIcon } from "./SvgIllustrations";
-import { usePortfolioSettings } from "../contexts/SettingsContext";
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { CodeIcon } from './SvgIllustrations';
+import { usePortfolioSettings } from '../contexts/SettingsContext';
 
 function SkillIcon({ iconKey, name, size = 48 }) {
   const { settings } = usePortfolioSettings();
@@ -16,16 +16,16 @@ function SkillIcon({ iconKey, name, size = 48 }) {
     let key = iconKey
       .trim()
       .toLowerCase()
-      .replace(/[^a-z0-9]/g, "");
-    if (key === "sql") key = "postgresql";
-    if (key === "js") key = "javascript";
-    if (key === "node") key = "nodejs";
+      .replace(/[^a-z0-9]/g, '');
+    if (key === 'sql') key = 'postgresql';
+    if (key === 'js') key = 'javascript';
+    if (key === 'node') key = 'nodejs';
 
     const url = `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${key}/${key}-original.svg`;
 
     fetch(url)
       .then((res) => {
-        if (!res.ok) throw new Error("Not found");
+        if (!res.ok) throw new Error('Not found');
         return res.text();
       })
       .then((text) => {
@@ -36,7 +36,7 @@ function SkillIcon({ iconKey, name, size = 48 }) {
         const plainUrl = `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${key}/${key}-plain.svg`;
         fetch(plainUrl)
           .then((res) => {
-            if (!res.ok) throw new Error("Not found");
+            if (!res.ok) throw new Error('Not found');
             return res.text();
           })
           .then((text) => {
@@ -55,7 +55,7 @@ function SkillIcon({ iconKey, name, size = 48 }) {
     const cleanSvg = svgContent
       .replace(
         /<svg/,
-        `<svg width="${size}" height="${size}" class="draw-svg-icon"`,
+        `<svg width="${size}" height="${size}" class="draw-svg-icon"`
       )
       .replace(
         /<\/svg>/,
@@ -75,11 +75,11 @@ function SkillIcon({ iconKey, name, size = 48 }) {
             }
           }
         </style>
-      </svg>`,
+      </svg>`
       );
     return (
       <div
-        style={{ display: "inline-flex" }}
+        style={{ display: 'inline-flex' }}
         dangerouslySetInnerHTML={{ __html: cleanSvg }}
       />
     );
@@ -88,10 +88,10 @@ function SkillIcon({ iconKey, name, size = 48 }) {
   let key = iconKey
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9]/g, "");
-  if (key === "sql") key = "postgresql";
-  if (key === "js") key = "javascript";
-  if (key === "node") key = "nodejs";
+    .replace(/[^a-z0-9]/g, '');
+  if (key === 'sql') key = 'postgresql';
+  if (key === 'js') key = 'javascript';
+  if (key === 'node') key = 'nodejs';
 
   return (
     <img
@@ -99,12 +99,12 @@ function SkillIcon({ iconKey, name, size = 48 }) {
       alt={name}
       width={size}
       height={size}
-      style={{ objectFit: "contain" }}
+      style={{ objectFit: 'contain' }}
       onError={(e) => {
-        if (!e.target.src.includes("-plain")) {
+        if (!e.target.src.includes('-plain')) {
           e.target.src = `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${key}/${key}-plain.svg`;
         } else {
-          e.target.style.display = "none";
+          e.target.style.display = 'none';
           e.target.parentNode.innerHTML = `<svg width="${size}" height="${size}" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="4" width="56" height="56" rx="8" fill="#1a1a2e" stroke="#667eea" stroke-width="2"/><text x="14" y="30" fill="#667eea" font-size="16" font-family="monospace" font-weight="bold">&lt;</text><text x="34" y="30" fill="#f59e0b" font-size="16" font-family="monospace" font-weight="bold">}&gt;</text><rect x="14" y="38" width="36" height="4" rx="2" fill="#6ee7b7" opacity="0.3"/></svg>`;
         }
       }}
@@ -115,35 +115,35 @@ function SkillIcon({ iconKey, name, size = 48 }) {
 export default function Skills({ skills = [] }) {
   const defaultSkills = [
     {
-      name: "JavaScript",
-      icon: "javascript",
+      name: 'JavaScript',
+      icon: 'javascript',
       level: 90,
-      description: "ES6+, TypeScript",
+      description: 'ES6+, TypeScript',
     },
     {
-      name: "React",
-      icon: "react",
+      name: 'React',
+      icon: 'react',
       level: 85,
-      description: "Hooks, Redux, Context API",
+      description: 'Hooks, Redux, Context API',
     },
     {
-      name: "Node.js",
-      icon: "nodejs",
+      name: 'Node.js',
+      icon: 'nodejs',
       level: 80,
-      description: "Express, NestJS",
+      description: 'Express, NestJS',
     },
-    { name: "Python", icon: "python", level: 75, description: "Django, Flask" },
+    { name: 'Python', icon: 'python', level: 75, description: 'Django, Flask' },
     {
-      name: "PostgreSQL",
-      icon: "postgresql",
+      name: 'PostgreSQL',
+      icon: 'postgresql',
       level: 70,
-      description: "SQL, TypeORM",
+      description: 'SQL, TypeORM',
     },
     {
-      name: "Docker",
-      icon: "docker",
+      name: 'Docker',
+      icon: 'docker',
       level: 65,
-      description: "Containerization",
+      description: 'Containerization',
     },
   ];
 
@@ -164,15 +164,15 @@ export default function Skills({ skills = [] }) {
           >
             <div
               style={{
-                display: "flex",
-                justifyContent: "center",
-                marginBottom: "1rem",
+                display: 'flex',
+                justifyContent: 'center',
+                marginBottom: '1rem',
               }}
             >
               <SkillIcon iconKey={skill.icon} name={skill.name} size={48} />
             </div>
             <h3>{skill.name}</h3>
-            <p>{skill.description || "No description"}</p>
+            <p>{skill.description || 'No description'}</p>
             <div className="level-bar">
               <div
                 className="level-fill"

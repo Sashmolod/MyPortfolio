@@ -3,13 +3,13 @@
  */
 
 // Иконка браузера/разработчика
-export function DeveloperIllustration({ className = "" }) {
+export function DeveloperIllustration({ className = '' }) {
   return (
     <svg
       viewBox="0 0 400 400"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
-      style={{ width: "100%", maxWidth: "400px", height: "auto" }}
+      style={{ width: '100%', maxWidth: '400px', height: 'auto' }}
     >
       {/* Фон - круг */}
       <circle cx="200" cy="200" r="180" fill="url(#bgGrad)" opacity="0.1" />
@@ -27,7 +27,7 @@ export function DeveloperIllustration({ className = "" }) {
 
       {/* Код на экране */}
       <text x="125" y="115" fill="#667eea" fontSize="10" fontFamily="monospace">
-        {"<Dev>"}
+        {'<Dev>'}
       </text>
       <text
         x="125"
@@ -141,7 +141,7 @@ export function DeveloperIllustration({ className = "" }) {
 }
 
 // Иконка технологий (шестерёнки/код)
-export function TechIcon({ color = "#667eea", size = 24 }) {
+export function TechIcon({ color = '#667eea', size = 24 }) {
   return (
     <svg
       width={size}
@@ -404,7 +404,7 @@ export function SqlIcon({ size = 24 }) {
 }
 
 // Иконка Rocket (проект/запуск)
-export function RocketIcon({ size = 48, className = "" }) {
+export function RocketIcon({ size = 48, className = '' }) {
   return (
     <svg
       width={size}
@@ -479,7 +479,7 @@ export function RocketIcon({ size = 48, className = "" }) {
 }
 
 // Иконка письма (контакт)
-export function MailIcon({ size = 48, className = "" }) {
+export function MailIcon({ size = 48, className = '' }) {
   return (
     <svg
       width={size}
@@ -524,7 +524,7 @@ export function MailIcon({ size = 48, className = "" }) {
 }
 
 // Иконка проекта (папка/документ)
-export function ProjectIcon({ size = 48, className = "" }) {
+export function ProjectIcon({ size = 48, className = '' }) {
   return (
     <svg
       width={size}
@@ -588,7 +588,7 @@ export function StarIcon({ size = 20, filled = true }) {
       width={size}
       height={size}
       viewBox="0 0 24 24"
-      fill={filled ? "#f59e0b" : "none"}
+      fill={filled ? '#f59e0b' : 'none'}
       stroke="#f59e0b"
       strokeWidth="1.5"
       xmlns="http://www.w3.org/2000/svg"
@@ -599,7 +599,7 @@ export function StarIcon({ size = 20, filled = true }) {
 }
 
 // Иконка кода (</>)
-export function CodeIcon({ size = 48, className = "" }) {
+export function CodeIcon({ size = 48, className = '' }) {
   return (
     <svg
       width={size}
@@ -627,7 +627,7 @@ export function CodeIcon({ size = 48, className = "" }) {
         fontFamily="monospace"
         fontWeight="bold"
       >
-        {"<"}
+        {'<'}
       </text>
       <text
         x="34"
@@ -637,7 +637,7 @@ export function CodeIcon({ size = 48, className = "" }) {
         fontFamily="monospace"
         fontWeight="bold"
       >
-        {"}>"}
+        {'}>'}
       </text>
       <rect
         x="14"
@@ -667,12 +667,12 @@ export function BackgroundParticles({ count = 15 }) {
     <svg
       viewBox="0 0 400 400"
       style={{
-        position: "absolute",
+        position: 'absolute',
         top: 0,
         left: 0,
-        width: "100%",
-        height: "100%",
-        pointerEvents: "none",
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
         zIndex: 0,
       }}
     >
@@ -739,7 +739,7 @@ export function LightningIcon({ size = 20 }) {
 }
 
 // Нарисованный от руки замочек (для кнопки Admin)
-export function SketchLockIcon({ size = 18, className = "" }) {
+export function SketchLockIcon({ size = 18, className = '' }) {
   return (
     <svg
       width={size}
@@ -751,7 +751,7 @@ export function SketchLockIcon({ size = 18, className = "" }) {
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}
-      style={{ display: "inline-block", verticalAlign: "middle" }}
+      style={{ display: 'inline-block', verticalAlign: 'middle' }}
     >
       {/* Корпус замка */}
       <path d="M 5.8 10.5 C 9.5 9.9, 14.5 10.1, 18.2 10.3 C 18.4 13.5, 18.1 16.8, 18.3 19.8 C 14.5 20.2, 9.8 20.0, 5.7 19.6 C 5.5 16.5, 5.9 13.2, 5.8 10.5 Z" />
@@ -765,7 +765,7 @@ export function SketchLockIcon({ size = 18, className = "" }) {
 }
 
 // Нарисованное от руки солнце (переключатель тем)
-export function SketchSunIcon({ size = 20, className = "" }) {
+export function SketchSunIcon({ size = 20, className = '' }) {
   return (
     <svg
       width={size}
@@ -777,7 +777,7 @@ export function SketchSunIcon({ size = 20, className = "" }) {
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}
-      style={{ display: "inline-block", verticalAlign: "middle" }}
+      style={{ display: 'inline-block', verticalAlign: 'middle' }}
     >
       {/* Круг солнца */}
       <path d="M12 7.8 C 14.2 7.9, 16.1 9.8, 16.2 12 C 16.3 14.2, 14.4 16.1, 12.2 16.2 C 10.0 16.3, 8.1 14.4, 8.0 12.2 C 7.9 10.0, 9.8 8.1, 12 7.8" />
@@ -795,7 +795,7 @@ export function SketchSunIcon({ size = 20, className = "" }) {
 }
 
 // Нарисованная от руки луна (переключатель тем)
-export function SketchMoonIcon({ size = 20, className = "" }) {
+export function SketchMoonIcon({ size = 20, className = '' }) {
   return (
     <svg
       width={size}
@@ -807,7 +807,7 @@ export function SketchMoonIcon({ size = 20, className = "" }) {
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}
-      style={{ display: "inline-block", verticalAlign: "middle" }}
+      style={{ display: 'inline-block', verticalAlign: 'middle' }}
     >
       {/* Полумесяц */}
       <path d="M 12.5 3 C 15.5 3, 18.2 5, 18.8 8.2 C 15.0 9.2, 12.8 12.5, 12.2 16.5 C 9.0 15.5, 6.2 12.2, 5.8 8.8 C 5.4 5.0, 9.0 3, 12.5 3 Z" />
@@ -819,7 +819,7 @@ export function SketchMoonIcon({ size = 20, className = "" }) {
 }
 
 // Нарисованный от руки значок звука
-export function SketchSoundIcon({ muted = false, size = 20, className = "" }) {
+export function SketchSoundIcon({ muted = false, size = 20, className = '' }) {
   return (
     <svg
       width={size}
@@ -831,7 +831,7 @@ export function SketchSoundIcon({ muted = false, size = 20, className = "" }) {
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}
-      style={{ display: "inline-block", verticalAlign: "middle" }}
+      style={{ display: 'inline-block', verticalAlign: 'middle' }}
     >
       {/* Рупор динамика */}
       <path d="M 4.2 9.2 L 7.8 9.2 L 11.8 5.5 L 11.8 18.5 L 7.8 14.8 L 4.2 14.8 Z" />
