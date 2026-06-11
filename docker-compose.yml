@@ -106,7 +106,7 @@ services:
       target: production
     container_name: portfolio_frontend
     env_file:
-      - ./frontend/.env.docker
+      - .env.production
     restart: unless-stopped
     # Ждем готовности Backend
     depends_on:
