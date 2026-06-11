@@ -1,90 +1,85 @@
-const CACHE_NAME = 'sketchbook-portfolio-v1';
+// Service Worker — PWA support (only active in production builds)
+// Version: bump this string to force cache invalidation on all clients
+const CACHE_VERSION = 'v2';
+const CACHE_NAME = `sketchbook-portfolio-${CACHE_VERSION}`;
+
+// Only pre-cache truly static assets (no JS chunks — they have content hashes)
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
   '/favicon.svg',
-  '/manifest.json'
+  '/manifest.json',
 ];
 
-// Install Event - Pre-cache minimal critical resources
+// Install — pre-cache minimal assets and activate immediately
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
   );
   self.skipWaiting();
 });
 
-// Activate Event - Clean up old caches
+// Activate — delete ALL caches from previous versions
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
-          }
-        })
-      );
-    })
+    caches.keys().then((cacheNames) =>
+      Promise.all(
+        cacheNames
+          .filter((name) => name !== CACHE_NAME)
+          .map((name) => caches.delete(name))
+      )
+    )
   );
   self.clients.claim();
 });
 
-// Fetch Event - Dynamic cache with network-first or cache-first fallback
+// Fetch — strategy depends on request type
 self.addEventListener('fetch', (event) => {
   const requestUrl = new URL(event.request.url);
 
-  // Skip caching non-GET requests or backend API requests
+  // Skip non-GET and API requests entirely (no caching)
   if (event.request.method !== 'GET' || requestUrl.pathname.startsWith('/api/')) {
     return;
   }
 
-  // Strategy: Cache First, fallback to Network (for static assets / media),
-  // Network First, fallback to Cache (for page navigation to support fresh content).
+  // Skip JS/CSS module chunks — they have content hashes, always fresh from network
+  // Caching these causes stale React instances on hot reload
+  if (
+    requestUrl.pathname.includes('/assets/') ||
+    requestUrl.pathname.includes('/node_modules/') ||
+    requestUrl.pathname.includes('.vite')
+  ) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // HTML navigation — Network First (always try fresh, fall back to cache offline)
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          // Clone and cache the navigated HTML
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
           return response;
         })
-        .catch(() => {
-          // Offline: serve from cache, fallback to '/'
-          return caches.match(event.request).then((cachedResponse) => {
-            return cachedResponse || caches.match('/');
-          });
-        })
+        .catch(() =>
+          caches.match(event.request).then((cached) => cached || caches.match('/'))
+        )
     );
-  } else {
-    // Cache First for other assets (images, fonts, scripts, stylesheets)
-    event.respondWith(
-      caches.match(event.request).then((cachedResponse) => {
-        if (cachedResponse) {
-          return cachedResponse;
-        }
-
-        return fetch(event.request)
-          .then((networkResponse) => {
-            if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-              return networkResponse;
-            }
-
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
-            return networkResponse;
-          })
-          .catch(() => {
-            return null;
-          });
-      })
-    );
+    return;
   }
+
+  // Static assets (images, fonts, manifests) — Cache First
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached;
+
+      return fetch(event.request).then((response) => {
+        if (!response || response.status !== 200 || response.type !== 'basic') {
+          return response;
+        }
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        return response;
+      });
+    })
+  );
 });

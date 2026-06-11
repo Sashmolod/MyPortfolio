@@ -9,8 +9,9 @@ import ErrorBoundary from './components/ErrorBoundary'
 import App from './App'
 import './index.css'
 
-// Register Service Worker for PWA support
-if ('serviceWorker' in navigator) {
+// Register Service Worker for PWA support (ONLY in production)
+// In development, SW caches stale JS chunks causing duplicate React instances
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then((reg) => console.log('Service Worker registered successfully:', reg.scope))

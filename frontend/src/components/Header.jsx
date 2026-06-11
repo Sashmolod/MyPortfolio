@@ -46,7 +46,7 @@ export default function Header() {
 
   return (
     <header onDoubleClick={handleDoubleClick}>
-        <h1>MyPortfolio</h1>
+        <h1>MyPortfolio22</h1>
         <nav style={{ display: 'flex', alignItems: 'center' }} aria-label="Main Navigation">
           {navItems.map((item) => (
             <a 
