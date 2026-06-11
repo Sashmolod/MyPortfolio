@@ -15,7 +15,14 @@
 
 ## 2. Конфигурация окружения
 
-Подготовьте переменные окружения для продакшена. Создайте файл `.env` в корневой директории проекта:
+Подготовьте переменные окружения для продакшена. Создайте файл `.env.production` в корневой директории проекта:
+
+```bash
+# Скопируйте шаблон и отредактируйте значения
+cp .env.example .env.production
+```
+
+Отредактируйте `.env.production`, изменив обязательные для продакшена значения:
 
 ```bash
 # PostgreSQL
@@ -27,20 +34,18 @@ POSTGRES_PORT=5432
 DATABASE_URL=postgresql://your_secure_db_user:your_super_secure_db_password@db:5432/portfolio_db
 
 # Backend & Security
-BACKEND_PORT=3000
+BACKEND_PORT=3001
 NODE_ENV=production
-# Сгенерируйте безопасную случайную строку (64 символа):
-# node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
-JWT_SECRET=your_generated_secure_64_char_jwt_secret
+# Сгенерируйте безопасную случайную строку (минимум 32 символа):
+# node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+JWT_SECRET=your_generated_secure_jwt_secret
+JWT_REFRESH_SECRET=your_generated_secure_refresh_secret
 JWT_EXPIRES_IN=7d
-CORS_ORIGIN=https://yourportfolio.com
+ALLOWED_ORIGINS=https://yourportfolio.com
 
 # Учётные данные первого админа (сидируются при первом запуске)
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=your_highly_secure_admin_password_123!
-
-# AI Ассистент
-GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
 ---
