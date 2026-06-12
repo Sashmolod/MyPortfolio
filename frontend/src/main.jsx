@@ -5,6 +5,8 @@ import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { SettingsProvider } from './contexts/SettingsContext';
+import { LanguageProvider } from './contexts/LanguageContext';
+import { TemplateProvider } from './contexts/TemplateContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import App from './App';
 import './index.css';
@@ -28,15 +30,19 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <HelmetProvider>
-        <ThemeProvider>
-          <SettingsProvider>
-            <AuthProvider>
-              <ErrorBoundary>
-                <App />
-              </ErrorBoundary>
-            </AuthProvider>
-          </SettingsProvider>
-        </ThemeProvider>
+        <TemplateProvider>
+          <LanguageProvider>
+            <ThemeProvider>
+              <SettingsProvider>
+                <AuthProvider>
+                  <ErrorBoundary>
+                    <App />
+                  </ErrorBoundary>
+                </AuthProvider>
+              </SettingsProvider>
+            </ThemeProvider>
+          </LanguageProvider>
+        </TemplateProvider>
       </HelmetProvider>
     </BrowserRouter>
   </StrictMode>

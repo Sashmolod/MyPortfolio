@@ -6,19 +6,29 @@ import { usePortfolioSettings } from '../../contexts/SettingsContext';
 import { SketchLockIcon } from '../../components/SvgIllustrations';
 import { statsApi } from '../../api/statsApi';
 import { Helmet } from 'react-helmet-async';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { soundSynth } from '../../utils/audioSynth';
 
 import ConfirmDialog from '../components/ConfirmDialog';
 import MediaTab from '../components/MediaTab';
-import TrashView from '../components/TrashView';
 import SkillForm from '../components/SkillForm';
 import ProjectForm from '../components/ProjectForm';
 import HeroForm from '../components/HeroForm';
 import SocialLinkForm from '../components/SocialLinkForm';
 import StatsView from '../components/StatsView';
 import SkillCategoryManager from './SkillCategoryManager';
+import TabNavigation from './TabNavigation';
+import SkillsList from './SkillsList';
+import ProjectsList from './ProjectsList';
+import SocialLinksList from './SocialLinksList';
+import MessagesList from './MessagesList';
+import DeletedItemsPanel from './DeletedItemsPanel';
+import SettingsTab from '../components/SettingsTab';
+import SecurityTab from '../components/SecurityTab';
 
 export default function AdminDashboard() {
-  const { logout, changePassword } = useAuth();
+  const { logout } = useAuth();
+  const { t, language, setLanguage } = useLanguage();
   const { settings, updateSettingsLocally, refreshSettings } =
     usePortfolioSettings();
   const [savingSettings, setSavingSettings] = useState(false);
@@ -30,13 +40,30 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [passwordForm, setPasswordForm] = useState({
-    currentPassword: '',
-    newPassword: '',
-  });
-  const [passwordErrors, setPasswordErrors] = useState({});
-  const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState(null);
+  const [statsEnabled, setStatsEnabled] = useState(true);
+
+  // Fetch backend capability configuration on mount
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const res = await api.get('/portfolio/config');
+        if (res.data && typeof res.data.statsEnabled === 'boolean') {
+          setStatsEnabled(res.data.statsEnabled);
+        }
+      } catch (err) {
+        console.error('Error fetching backend capabilities config:', err);
+      }
+    };
+    fetchConfig();
+  }, []);
+
+  // Synchronously update tab state, clear previous list, and display skeleton loader
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setLoading(true);
+    setItems([]);
+  };
 
   // Stats state
   const [statsOverview, setStatsOverview] = useState(null);
@@ -222,35 +249,7 @@ export default function AdminDashboard() {
     });
   };
 
-  const validatePassword = () => {
-    const errors = {};
-    if (!passwordForm.currentPassword)
-      errors.currentPassword = 'Current password is required';
-    if (!passwordForm.newPassword)
-      errors.newPassword = 'New password is required';
-    else if (passwordForm.newPassword.length < 6)
-      errors.newPassword = 'Password must be at least 6 characters';
-    setPasswordErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
 
-  const handlePasswordChange = async () => {
-    if (!validatePassword()) return;
-    try {
-      await changePassword(passwordForm);
-      setPasswordSuccess(true);
-      setPasswordForm({ currentPassword: '', newPassword: '' });
-      setPasswordErrors({});
-      window.toast?.('Password changed successfully', 'success');
-      setTimeout(() => setPasswordSuccess(false), 3000);
-    } catch (err) {
-      window.toast?.(
-        'Password change failed: ' +
-          (err.response?.data?.message || err.message),
-        'error'
-      );
-    }
-  };
 
   const handleSave = async (type, form) => {
     try {
@@ -347,6 +346,15 @@ export default function AdminDashboard() {
         ? 'project'
         : activeTab === 'social-links'
           ? 'social-link'
+          : '';
+
+  const typeLabelMapped =
+    activeTab === 'skills'
+      ? t('Навык / Skill')
+      : activeTab === 'projects'
+        ? t('Проект / Project')
+        : activeTab === 'social-links'
+          ? t('Ссылка / Social Link')
           : '';
 
   // Loading skeleton component
@@ -463,7 +471,7 @@ export default function AdminDashboard() {
   return (
     <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
       <Helmet>
-        <title>Админ-панель | Admin Dashboard</title>
+        <title>{t('Админ-панель / Admin Dashboard')}</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <ConfirmDialog
@@ -473,59 +481,69 @@ export default function AdminDashboard() {
       />
 
       <div
+
         style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          position: 'sticky',
+          top: 0,
+          zIndex: 1000,
+          background: 'var(--bg)',
+          paddingTop: '15px',
+          paddingBottom: '15px',
+          borderBottom: '2px dashed var(--border-color)',
           marginBottom: '30px',
         }}
       >
-        <h1
+        <div
           style={{
-            margin: 0,
-            fontFamily: "'Architects Daughter', cursive",
-            fontWeight: 'bold',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '20px',
           }}
         >
-          Admin Dashboard
-        </h1>
-        <button onClick={handleLogout} className="btn btn-danger">
-          Logout
-        </button>
-      </div>
-
-      <nav
-        style={{
-          display: 'flex',
-          gap: '8px',
-          marginBottom: '30px',
-          flexWrap: 'wrap',
-        }}
-      >
-        {[
-          'skills',
-          'categories',
-          'projects',
-          'social-links',
-          'media',
-          'hero',
-          'messages',
-          'trash',
-          'stats',
-          'settings',
-          'security',
-        ].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`btn-tab ${activeTab === tab ? 'active' : ''}`}
+          <h1
+            style={{
+              margin: 0,
+              fontFamily: "'Architects Daughter', cursive",
+              fontWeight: 'bold',
+            }}
           >
-            {tab === 'social-links'
-              ? 'Social Links'
-              : tab.charAt(0).toUpperCase() + tab.slice(1)}
-          </button>
-        ))}
-      </nav>
+            {t('Панель управления / Admin Dashboard')}
+          </h1>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <button
+              onClick={() => {
+                setLanguage(language === 'ru' ? 'en' : 'ru');
+                soundSynth.playPageFlip();
+              }}
+              style={{
+                background: 'none',
+                border: 'var(--border-style)',
+                borderRadius: 'var(--sketch-radius-3)',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--text)',
+                outline: 'none',
+                padding: '3px 8px',
+                fontSize: '13px',
+                fontWeight: 'bold',
+                fontFamily: "'Architects Daughter', cursive",
+              }}
+              title={language === 'ru' ? 'Switch to English' : 'Переключить на русский'}
+              aria-label="Toggle language"
+            >
+              {language === 'ru' ? 'EN' : 'RU'}
+            </button>
+            <button onClick={handleLogout} className="btn btn-danger" style={{ marginBottom: 0 }}>
+              {t('logout')}
+            </button>
+          </div>
+        </div>
+
+        <TabNavigation activeTab={activeTab} onTabChange={handleTabChange} statsEnabled={statsEnabled} />
+      </div>
 
       {activeTab !== 'messages' &&
         activeTab !== 'hero' &&
@@ -540,7 +558,7 @@ export default function AdminDashboard() {
             onClick={() => setShowForm(true)}
             style={{ marginBottom: '20px' }}
           >
-            + Add {typeLabel.charAt(0).toUpperCase() + typeLabel.slice(1)}
+            {t('+ Добавить / + Add') + ' ' + typeLabelMapped}
           </button>
         )}
 
@@ -552,49 +570,6 @@ export default function AdminDashboard() {
           <SkeletonCard />
           <SkeletonCard />
         </div>
-      ) : activeTab === 'messages' ? (
-        messages.length === 0 ? (
-          <p>No messages yet.</p>
-        ) : (
-          <div className="grid">
-            {messages.map((msg) => (
-              <motion.div
-                key={msg.id}
-                className="card"
-                style={{ position: 'relative' }}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                <h3>{msg.subject || '(no subject)'}</h3>
-                <p>
-                  <strong>From:</strong> {msg.name} ({msg.email})
-                </p>
-                <p style={{ marginTop: '10px' }}>{msg.message}</p>
-                <p
-                  style={{
-                    fontSize: '0.8rem',
-                    opacity: 0.6,
-                    marginTop: '10px',
-                  }}
-                >
-                  {new Date(msg.createdAt).toLocaleString()}
-                </p>
-                <button
-                  className="btn btn-danger"
-                  style={{
-                    position: 'absolute',
-                    top: '16px',
-                    right: '16px',
-                    margin: 0,
-                  }}
-                  onClick={() => handleDelete(msg.id, 'message')}
-                >
-                  Delete
-                </button>
-              </motion.div>
-            ))}
-          </div>
-        )
       ) : activeTab === 'hero' ? (
         !heroData ? (
           <div
@@ -645,12 +620,6 @@ export default function AdminDashboard() {
         )
       ) : activeTab === 'media' ? (
         <MediaTab items={items} refresh={fetchData} />
-      ) : activeTab === 'trash' ? (
-        <TrashView
-          items={items}
-          onRestore={handleRestore}
-          onDeletePermanently={handlePermanentDelete}
-        />
       ) : activeTab === 'stats' ? (
         <StatsView
           statsOverview={statsOverview}
@@ -663,338 +632,53 @@ export default function AdminDashboard() {
           onCleanup={handleCleanupStats}
         />
       ) : activeTab === 'trash' ? (
-        <TrashView
-          items={items}
+        <DeletedItemsPanel
+          deletedItems={(() => {
+            if (!items || typeof items !== 'object' || Array.isArray(items)) return [];
+            return Object.entries(items).flatMap(([type, list]) => {
+              if (!Array.isArray(list)) return [];
+              const singularType = type === 'socialLinks' ? 'social-link' : type.slice(0, -1);
+              return list.map(item => ({ ...item, type: singularType }));
+            });
+          })()}
           onRestore={handleRestore}
-          onDeletePermanently={handlePermanentDelete}
+          onPermanentDelete={handlePermanentDelete}
         />
-       ) : activeTab === 'categories' ? (
-         <SkillCategoryManager />
-       ) : activeTab === 'settings' ? (
-        <div style={{ maxWidth: '520px', margin: '20px auto 0 auto' }}>
-          <div className="card">
-            <h3
-              style={{
-                fontFamily: "'Architects Daughter', cursive",
-                marginBottom: '20px',
-                fontWeight: 'bold',
-                fontSize: '1.4rem',
-              }}
-            >
-              Интерактивные функции и анимации
-            </h3>
-            <div
-              style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
-            >
-              {[
-                {
-                  key: 'enableDoodly',
-                  label: 'Умная Скрепка Дудли (Smart Clip Helper)',
-                },
-                {
-                  key: 'enableSounds',
-                  label: 'Звуковые эффекты (Web Audio API)',
-                },
-                {
-                  key: 'enableBug',
-                  label: 'Пасхалка: Ползающий жучок (Sketchy Bug)',
-                },
-                {
-                  key: 'enablePageTear',
-                  label: 'Пасхалка: Загнутый уголок (Крестики-Нолики)',
-                },
-                {
-                  key: 'enableInkLeak',
-                  label: 'Пасхалка: Протекающие чернила (Header Double Click)',
-                },
-                {
-                  key: 'enableCoffeeSpill',
-                  label: 'Пасхалка: Проливаемая чашка кофе',
-                },
-                {
-                  key: 'enableDrawSkills',
-                  label: 'Анимация: Отрисовка линий навыков при скролле',
-                },
-                {
-                  key: 'enableEraser',
-                  label: 'Инструмент: Интерактивный ластик (Eraser Tool)',
-                },
-                {
-                  key: 'enableCrumpledPageTransition',
-                  label: 'Переходы: Сминание страницы при смене разделов',
-                },
-                {
-                  key: 'showAdminLink',
-                  label: (
-                    <span
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        verticalAlign: 'middle',
-                      }}
-                    >
-                      Отображать ссылку <SketchLockIcon size={16} /> Admin в
-                      шапке сайта
-                    </span>
-                  ),
-                },
-              ].map(({ key, label }) => (
-                <label
-                  key={key}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    cursor: savingSettings ? 'default' : 'pointer',
-                    fontSize: '14px',
-                    fontFamily: "'Architects Daughter', cursive",
-                    color: 'var(--text)',
-                    userSelect: 'none',
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={!!settings[key]}
-                    disabled={savingSettings}
-                    onChange={() => handleToggleSetting(key, settings[key])}
-                    style={{
-                      width: '18px',
-                      height: '18px',
-                      cursor: savingSettings ? 'default' : 'pointer',
-                    }}
-                  />
-                  <span>{label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-        </div>
+      ) : activeTab === 'categories' ? (
+        <SkillCategoryManager />
+      ) : activeTab === 'skills' ? (
+        <SkillsList
+          skills={items}
+          onEdit={(item) => { setEditingItem(item); setShowForm(true); }}
+          onDelete={(id) => handleDelete(id, 'skill')}
+        />
+      ) : activeTab === 'projects' ? (
+        <ProjectsList
+          projects={items}
+          onEdit={(item) => { setEditingItem(item); setShowForm(true); }}
+          onDelete={(id) => handleDelete(id, 'project')}
+        />
+      ) : activeTab === 'social-links' ? (
+        <SocialLinksList
+          links={items}
+          onEdit={(item) => { setEditingItem(item); setShowForm(true); }}
+          onDelete={(id) => handleDelete(id, 'social-link')}
+        />
+      ) : activeTab === 'messages' ? (
+        <MessagesList
+          messages={messages}
+          onDelete={(id) => handleDelete(id, 'message')}
+        />
+      ) : activeTab === 'settings' ? (
+        <SettingsTab
+          settings={settings}
+          savingSettings={savingSettings}
+          onToggleSetting={handleToggleSetting}
+        />
       ) : activeTab === 'security' ? (
-        <div style={{ maxWidth: '420px', margin: '20px auto 0 auto' }}>
-          {passwordSuccess && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="card"
-              style={{
-                border: 'var(--border-style)',
-                borderColor: 'var(--accent)',
-                borderRadius: 'var(--sketch-radius-3)',
-                padding: '12px',
-                color: 'var(--text)',
-                background: 'var(--card-bg)',
-                marginBottom: '20px',
-                textAlign: 'center',
-                fontWeight: 'bold',
-                fontFamily: "'Architects Daughter', cursive",
-              }}
-            >
-              Пароль успешно изменён!
-            </motion.div>
-          )}
-          <div className="card">
-            <h3
-              style={{
-                fontFamily: "'Architects Daughter', cursive",
-                marginBottom: '20px',
-                fontWeight: 'bold',
-                fontSize: '1.4rem',
-              }}
-            >
-              Change Password
-            </h3>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handlePasswordChange();
-              }}
-              noValidate
-            >
-              <div
-                style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
-              >
-                <div>
-                  <input
-                    type="password"
-                    placeholder="Current password"
-                    value={passwordForm.currentPassword}
-                    onChange={(e) =>
-                      setPasswordForm({
-                        ...passwordForm,
-                        currentPassword: e.target.value,
-                      })
-                    }
-                    className={
-                      passwordErrors.currentPassword ? 'input-error' : ''
-                    }
-                    required
-                  />
-                  {passwordErrors.currentPassword && (
-                    <span
-                      style={{
-                        color: 'var(--danger)',
-                        fontSize: '12px',
-                        display: 'block',
-                        marginTop: '-8px',
-                        marginBottom: '8px',
-                        fontFamily: "'Architects Daughter', cursive",
-                      }}
-                    >
-                      {passwordErrors.currentPassword}
-                    </span>
-                  )}
-                </div>
-                <div>
-                  <input
-                    type="password"
-                    placeholder="New password (min. 6 characters)"
-                    value={passwordForm.newPassword}
-                    onChange={(e) =>
-                      setPasswordForm({
-                        ...passwordForm,
-                        newPassword: e.target.value,
-                      })
-                    }
-                    className={passwordErrors.newPassword ? 'input-error' : ''}
-                    minLength={6}
-                    required
-                  />
-                  {passwordErrors.newPassword && (
-                    <span
-                      style={{
-                        color: 'var(--danger)',
-                        fontSize: '12px',
-                        display: 'block',
-                        marginTop: '-8px',
-                        marginBottom: '8px',
-                        fontFamily: "'Architects Daughter', cursive",
-                      }}
-                    >
-                      {passwordErrors.newPassword}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <button
-                className="btn"
-                type="submit"
-                style={{ marginTop: '12px', width: '100%' }}
-              >
-                Сменить пароль
-              </button>
-            </form>
-          </div>
-        </div>
-      ) : items.length === 0 ? (
-        <p>No items yet. Click the button above to add one.</p>
-      ) : (
-        <div className="grid">
-          {items.map((item) => (
-            <motion.div
-              key={item.id}
-              className="card"
-              style={{ position: 'relative' }}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <h3>{item.name || item.title || item.platform}</h3>
-              {activeTab === 'skills' && (
-                <>
-                  <p>
-                    <strong>Icon:</strong> {item.icon}
-                  </p>
-                  <p>
-                    <strong>Description:</strong> {item.description}
-                  </p>
-                  <p>
-                    <strong>Level:</strong> {item.level}%
-                  </p>
-                  <p>
-                    <strong>Sort Order:</strong> {item.sortOrder}
-                  </p>
-                </>
-              )}
-              {activeTab === 'projects' && (
-                <>
-                  <p>
-                    <strong>Description:</strong> {item.description}
-                  </p>
-                  {item.image && (
-                    <p>
-                      <strong>Image:</strong> {item.image}
-                    </p>
-                  )}
-                  {item.link && (
-                    <p>
-                      <strong>Link:</strong>{' '}
-                      <a
-                        href={item.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="sketch-link"
-                        style={{
-                          color: 'var(--accent)',
-                          textDecoration: 'underline',
-                          wordBreak: 'break-all',
-                        }}
-                      >
-                        {item.link}
-                      </a>
-                    </p>
-                  )}
-                  <p>
-                    <strong>Technologies:</strong> {item.technologies}
-                  </p>
-                  <p>
-                    <strong>Sort Order:</strong> {item.sortOrder}
-                  </p>
-                </>
-              )}
-              {activeTab === 'social-links' && (
-                <>
-                  <p>
-                    <strong>URL:</strong>{' '}
-                    <a
-                      href={item.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="sketch-link"
-                      style={{
-                        color: 'var(--accent)',
-                        textDecoration: 'underline',
-                        wordBreak: 'break-all',
-                      }}
-                    >
-                      {item.url}
-                    </a>
-                  </p>
-                  <p>
-                    <strong>Sort Order:</strong> {item.sortOrder}
-                  </p>
-                </>
-              )}
-              <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
-                <button
-                  className="btn"
-                  onClick={() => {
-                    setEditingItem(item);
-                    setShowForm(true);
-                  }}
-                >
-                  Edit
-                </button>
-                <button
-                  className="btn btn-danger"
-                  onClick={() => handleDelete(item.id, activeTab.slice(0, -1))}
-                >
-                  Delete
-                </button>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      )}
+        <SecurityTab />
+      ) : null}
     </div>
   );
 }
+

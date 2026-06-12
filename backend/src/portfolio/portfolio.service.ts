@@ -79,7 +79,10 @@ export class PortfolioService {
   }
 
   async getAllProjects() {
-    return this.projectRepo.find({ order: { sortOrder: 'ASC' } });
+    return this.projectRepo.find({ 
+      order: { sortOrder: 'ASC' },
+      relations: { skills: true }
+    });
   }
 
   // ====== HERO CRUD ======

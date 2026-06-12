@@ -296,7 +296,7 @@ export default function HeroForm({ heroData, onSaveData, onCancel }) {
                     height: '14px',
                     position: 'relative',
                     overflow: 'hidden',
-                    background: 'var(--secondary)',
+                    background: 'var(--input-bg)',
                   }}
                 >
                   <div

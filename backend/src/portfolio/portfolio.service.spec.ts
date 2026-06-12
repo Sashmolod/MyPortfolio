@@ -3,7 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
 import { PortfolioService } from './portfolio.service';
-import { Skill, Hero, Project, ContactMessage, SocialLink, Settings } from '../admin/entities';
+import { Skill, Hero, Project, ContactMessage, SocialLink, Settings, SkillCategory } from '../admin/entities';
 import { CreateContactMessageDto } from '../admin/dto/create-contact-message.dto';
 import { BadRequestException } from '@nestjs/common';
 
@@ -71,11 +71,21 @@ describe('PortfolioService', () => {
     save: jest.fn(async (settings) => settings),
   };
 
+  const mockSkillCategories = [
+    { id: 1, name: 'Frontend', parentId: null, subcategories: [{ id: 3, name: 'React', parentId: 1 }] },
+    { id: 2, name: 'Backend', parentId: null, subcategories: [] },
+  ];
+
+  const mockSkillCategoryRepo = {
+    find: jest.fn().mockResolvedValue(mockSkillCategories),
+  };
+
   const mockConfigService = {
     get: jest.fn((key: string) => {
       const config = {
         JWT_SECRET: 'test-secret',
         GEMINI_API_KEY: 'test-gemini-key',
+        CAPTCHA_SECRET: 'captcha-secret',
       };
       return config[key as keyof typeof config];
     }),
@@ -88,6 +98,7 @@ describe('PortfolioService', () => {
       providers: [
         PortfolioService,
         { provide: getRepositoryToken(Skill), useValue: mockSkillRepo },
+        { provide: getRepositoryToken(SkillCategory), useValue: mockSkillCategoryRepo },
         { provide: getRepositoryToken(Hero), useValue: mockHeroRepo },
         { provide: getRepositoryToken(Project), useValue: mockProjectRepo },
         { provide: getRepositoryToken(ContactMessage), useValue: mockMessageRepo },
@@ -119,7 +130,10 @@ describe('PortfolioService', () => {
     it('should return projects sorted by sortOrder', async () => {
       const result = await service.getAllProjects();
       expect(result).toEqual(mockProjects);
-      expect(mockProjectRepo.find).toHaveBeenCalledWith({ order: { sortOrder: 'ASC' } });
+      expect(mockProjectRepo.find).toHaveBeenCalledWith({
+        order: { sortOrder: 'ASC' },
+        relations: { skills: true },
+      });
     });
   });
 
@@ -128,21 +142,26 @@ describe('PortfolioService', () => {
       mockHeroRepo.find.mockResolvedValue([mockHero]);
       const result = await service.getHeroData();
       expect(result).toEqual({
-        id: mockHero.id,
-        name: mockHero.name,
-        title: mockHero.title,
-        bio: mockHero.bio,
-        avatar: mockHero.avatar,
+        hero: {
+          id: mockHero.id,
+          name: mockHero.name,
+          title: mockHero.title,
+          bio: mockHero.bio,
+          avatar: mockHero.avatar,
+        },
         socialLinks: mockSocialLinks,
       });
-      expect(mockHeroRepo.find).toHaveBeenCalledWith({ take: 1 });
+      expect(mockHeroRepo.find).toHaveBeenCalledWith({
+        order: { createdAt: 'DESC' },
+        take: 1,
+      });
       expect(mockSocialLinkRepo.find).toHaveBeenCalledWith({ order: { sortOrder: 'ASC' } });
     });
 
     it('should return default hero data when database is empty', async () => {
       mockHeroRepo.find.mockResolvedValue([]);
       const result = await service.getHeroData();
-      expect(result.name).toBe('John Doe');
+      expect(result.hero.name).toBe('John Doe');
       expect(result.socialLinks).toHaveLength(3);
     });
   });

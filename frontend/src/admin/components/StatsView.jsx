@@ -261,7 +261,7 @@ export default function StatsView({
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr style={{ borderBottom: '2px solid var(--border)' }}>
+                    <tr style={{ borderBottom: '2px dashed var(--border-color)' }}>
                       <th style={{ padding: '8px', textAlign: 'left' }}>
                         Дата
                       </th>
@@ -284,7 +284,7 @@ export default function StatsView({
                     {visitsList.map((v) => (
                       <tr
                         key={v.id}
-                        style={{ borderBottom: '1px solid var(--border)' }}
+                        style={{ borderBottom: '1px dashed var(--border-color)' }}
                       >
                         <td style={{ padding: '8px' }}>
                           {formatDate(v.visitedAt)}

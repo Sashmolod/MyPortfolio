@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsArray } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { CreateProjectDto } from './create-project.dto';
 
@@ -23,10 +23,10 @@ export class UpdateProjectDto implements Partial<CreateProjectDto> {
   @IsOptional()
   link?: string;
 
-  @ApiPropertyOptional({ description: 'Technologies used (comma-separated)', example: 'React, NestJS, SQLite' })
-  @IsString()
+  @ApiPropertyOptional({ description: 'Skill IDs associated with the project', example: [1, 2, 3] })
+  @IsArray()
   @IsOptional()
-  technologies?: string;
+  skillIds?: number[];
 
   @ApiPropertyOptional({ description: 'Display order', example: 1 })
   @IsNumber()

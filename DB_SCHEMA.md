@@ -35,6 +35,16 @@ erDiagram
         timestamptz deleted_at
     }
 
+    skill_category {
+        int id PK
+        varchar name
+        int parent_id FK
+        int sort_order
+        timestamptz created_at
+        timestamptz updated_at
+        timestamptz deleted_at
+    }
+
     skills {
         int id PK
         varchar name
@@ -42,6 +52,8 @@ erDiagram
         text description
         int level
         int sort_order
+        int category_id FK
+        int subcategory_id FK
         timestamptz created_at
         timestamptz updated_at
         timestamptz deleted_at
@@ -53,12 +65,16 @@ erDiagram
         text description
         varchar image
         varchar link
-        text technologies
         int sort_order
         int view_count
         timestamptz created_at
         timestamptz updated_at
         timestamptz deleted_at
+    }
+
+    project_skills_skill {
+        int project_id PK, FK
+        int skill_id PK, FK
     }
 
     social_links {
@@ -129,6 +145,12 @@ erDiagram
         boolean show_admin_link
         timestamptz updated_at
     }
+
+    skill_category ||--o{ skill_category : parent_id
+    skill_category ||--o{ skills : category_id
+    skill_category ||--o{ skills : subcategory_id
+    projects ||--o{ project_skills_skill : project_id
+    skills ||--o{ project_skills_skill : skill_id
 ```
 
 ---
@@ -156,29 +178,43 @@ erDiagram
 - `avatar` (varchar(255)): Ссылка на изображение аватара.
 - `created_at` / `updated_at` / `deleted_at` (timestamptz)
 
-### 3. `skills` — Навыки (Skills)
-Перечень навыков, отображаемых в соответствующем разделе.
+### 3. `skill_category` — Категории навыков (Skill Categories)
+Иерархическая структура категорий и подкатегорий для группировки навыков.
+- `id` (int, PK): Уникальный идентификатор.
+- `name` (varchar(100)): Название категории/подкатегории.
+- `parent_id` (int, FK, nullable): Ссылка на родительскую категорию (для подкатегорий).
+- `sort_order` (int): Порядок сортировки.
+- `created_at` / `updated_at` / `deleted_at` (timestamptz)
+
+### 4. `skills` — Навыки (Skills)
+Перечень навыков, привязанных к категориям.
 - `id` (int, PK)
 - `name` (varchar(100)): Название навыка (например, React, NestJS).
 - `icon` (varchar(255)): Класс иконки или эмодзи.
 - `description` (text): Краткое пояснение.
 - `level` (int): Уровень владения (0-100%).
-- `sort_order` (int): Порядок сортировки на клиенте.
+- `sort_order` (int): Порядок сортировки.
+- `category_id` (int, FK, nullable): Ссылка на корневую категорию навыка.
+- `subcategory_id` (int, FK, nullable): Ссылка на подкатегорию навыка.
 - `created_at` / `updated_at` / `deleted_at` (timestamptz)
 
-### 4. `projects` — Проекты (Portfolio Projects)
+### 5. `projects` — Проекты (Portfolio Projects)
 Список выполненных работ.
 - `id` (int, PK)
 - `title` (varchar(255)): Название проекта.
 - `description` (text): Детальное описание.
 - `image` (varchar(500)): Путь к скриншоту/превью.
 - `link` (varchar(500)): Ссылка на проект/GitHub.
-- `technologies` (text): Технологии, использованные в проекте.
 - `sort_order` (int): Порядок ручной сортировки.
 - `view_count` (int): Счетчик просмотров проекта пользователями.
 - `created_at` / `updated_at` / `deleted_at` (timestamptz)
 
-### 5. `social_links` — Социальные сети (Social Links)
+### 6. `project_skills_skill` — Связь проектов и навыков (Project Skills Link)
+Таблица связи (Many-to-Many) для привязки навыков к конкретным проектам.
+- `project_id` (int, PK, FK): Ссылка на проект (`projects.id`).
+- `skill_id` (int, PK, FK): Ссылка на навык (`skills.id`).
+
+### 7. `social_links` — Социальные сети (Social Links)
 Ссылки на профили в социальных сетях.
 - `id` (int, PK)
 - `platform` (varchar(100)): Название (например, GitHub, LinkedIn).
@@ -186,7 +222,7 @@ erDiagram
 - `sort_order` (int): Порядок сортировки.
 - `created_at` / `updated_at` / `deleted_at` (timestamptz)
 
-### 6. `contact_messages` — Обратная связь (Contact Form Messages)
+### 8. `contact_messages` — Обратная связь (Contact Form Messages)
 Сообщения, отправленные через контактную форму.
 - `id` (int, PK)
 - `name` (varchar(100)): Имя отправителя.
@@ -197,7 +233,7 @@ erDiagram
 - `attachments` (jsonb): Массив путей к загруженным файлам.
 - `created_at` / `deleted_at` (timestamptz)
 
-### 7. `visit_stats` — Статистика посещений (Visit Stats)
+### 9. `visit_stats` — Статистика посещений (Visit Stats)
 Лог посещений сайта реальными пользователями.
 - `id` (int, PK)
 - `ip_address` (varchar(45)): Анонимизированный или полный IP.
@@ -210,7 +246,7 @@ erDiagram
 - `device_type` (varchar(20)): Тип устройства (desktop/mobile/tablet).
 - `visited_at` (timestamptz): Время посещения.
 
-### 8. `audit_log` — Логи действий администратора (Admin Audit Logs)
+### 10. `audit_log` — Логи действий администратора (Admin Audit Logs)
 История изменений, выполненных авторизованными пользователями в админке.
 - `id` (int, PK)
 - `username` (varchar(255)): Логин админа.
@@ -221,14 +257,14 @@ erDiagram
 - `ip` (varchar(50)): IP-адрес админа.
 - `createdAt` (timestamp): Время изменения.
 
-### 9. `jwt_blacklist` — Черный список токенов (JWT Blacklist)
+### 11. `jwt_blacklist` — Черный список токенов (JWT Blacklist)
 Используется для мгновенного разлогина и инвалидации выданных токенов.
 - `id` (uuid, PK)
 - `jti` (varchar(255)): Идентификатор JWT токена.
 - `expires_at` (timestamptz): Время истечения жизни токена.
 - `created_at` / `deleted_at` (timestamptz)
 
-### 10. `settings` — Настройки сайта (Portfolio Settings)
+### 12. `settings` — Настройки сайта (Portfolio Settings)
 Управление интерактивными элементами, пасхалками и звуками.
 - `id` (int, PK, default=1): Всегда одна запись.
 - `enable_doodly` (boolean): Помощник Doodly.

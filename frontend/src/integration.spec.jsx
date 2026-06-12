@@ -18,6 +18,7 @@ import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import { LoginPage } from './pages/LoginPage';
 import AdminDashboard from './admin/pages/AdminDashboard';
 import DoodlyHelper from './components/DoodlyHelper';
@@ -151,11 +152,13 @@ describe('Frontend Login-to-Dashboard Integration Flow', () => {
     });
 
     const { container } = render(
-      <AuthProvider>
-        <SettingsProvider>
-          <AppIntegrationWrapper />
-        </SettingsProvider>
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <SettingsProvider>
+            <AppIntegrationWrapper />
+          </SettingsProvider>
+        </AuthProvider>
+      </LanguageProvider>
     );
 
     // Initial check: LoginPage is rendered
@@ -178,7 +181,7 @@ describe('Frontend Login-to-Dashboard Integration Flow', () => {
         username: 'administrator',
         password: 'correct-pass',
       });
-      expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Admin Dashboard', level: 1 })).toBeInTheDocument();
       expect(screen.queryByText('Войти в систему')).not.toBeInTheDocument();
     });
   });
@@ -190,16 +193,18 @@ describe('Frontend Login-to-Dashboard Integration Flow', () => {
     });
 
     render(
-      <AuthProvider>
-        <SettingsProvider>
-          <AppIntegrationWrapper />
-        </SettingsProvider>
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <SettingsProvider>
+            <AppIntegrationWrapper />
+          </SettingsProvider>
+        </AuthProvider>
+      </LanguageProvider>
     );
 
     // Should load straight to AdminDashboard
     await waitFor(() => {
-      expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Admin Dashboard', level: 1 })).toBeInTheDocument();
     });
 
     // Switch to Settings tab
@@ -208,11 +213,11 @@ describe('Frontend Login-to-Dashboard Integration Flow', () => {
 
     // Settings title should be visible
     expect(
-      screen.getByText('Интерактивные функции и анимации')
+      screen.getByText('Interactive features and animations')
     ).toBeInTheDocument();
 
     // Toggle sounds setting
-    const checkbox = screen.getByLabelText('Звуковые эффекты (Web Audio API)');
+    const checkbox = screen.getByLabelText(/Sound effects/i);
     expect(checkbox).toBeChecked(); // default is true
 
     // Mock API put request

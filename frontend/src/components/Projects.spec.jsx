@@ -11,6 +11,25 @@ vi.mock('../api', () => ({
   },
 }));
 
+// Mock LanguageContext hook
+vi.mock('../contexts/LanguageContext', () => ({
+  useLanguage: () => ({
+    language: 'en',
+    t: (keyOrBilingual) => {
+      if (typeof keyOrBilingual !== 'string') return keyOrBilingual;
+      const dict = {
+        projects: 'Projects',
+        viewProject: 'View Project',
+      };
+      if (dict[keyOrBilingual]) return dict[keyOrBilingual];
+      if (keyOrBilingual.includes(' / ')) {
+        return keyOrBilingual.split(' / ')[1].trim();
+      }
+      return keyOrBilingual;
+    },
+  }),
+}));
+
 // Mock framer-motion
 vi.mock('framer-motion', () => {
   const React = require('react');

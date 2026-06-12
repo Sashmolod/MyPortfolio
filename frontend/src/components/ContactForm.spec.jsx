@@ -27,6 +27,48 @@ vi.mock('../utils/audioSynth', () => {
   };
 });
 
+// Mock LanguageContext
+vi.mock('../contexts/LanguageContext', () => ({
+  useLanguage: () => ({
+    language: 'en',
+    t: (keyOrBilingual) => {
+      if (typeof keyOrBilingual !== 'string') return keyOrBilingual;
+      // Simple mock dictionary
+      const dict = {
+        name: 'Name',
+        email: 'Email',
+        subject: 'Subject',
+        message: 'Message',
+        contact: 'Contact',
+        send: 'Send',
+        sending: 'Sending...',
+        nameRequired: 'Name is required',
+        nameMinChars: 'Name must be at least 2 characters',
+        emailRequired: 'Email is required',
+        emailInvalid: 'Invalid email format',
+        subjectRequired: 'Subject is required',
+        subjectMinChars: 'Subject must be at least 3 characters',
+        messageRequired: 'Message is required',
+        messageMinChars: 'Message must be at least 10 characters',
+        captchaRequired: 'Please solve the math puzzle',
+        captchaPlaceholder: 'Answer',
+        captchaLoading: 'Loading captcha...',
+        captchaError: 'Failed to load captcha.',
+        captchaIncorrect: 'Incorrect captcha answer',
+        captchaSolve: 'Solve the puzzle:',
+        captchaRefresh: 'Refresh',
+        successToast: 'Message sent successfully!',
+        failedToast: 'Failed to send message. Please try again.',
+      };
+      if (dict[keyOrBilingual]) return dict[keyOrBilingual];
+      if (keyOrBilingual.includes(' / ')) {
+        return keyOrBilingual.split(' / ')[1].trim();
+      }
+      return keyOrBilingual;
+    },
+  }),
+}));
+
 // Mock framer-motion to render plain HTML elements in tests
 vi.mock('framer-motion', () => {
   const React = require('react');
@@ -166,7 +208,7 @@ describe('ContactForm Component', () => {
     const emailInput = screen.getByPlaceholderText('Email');
     const subjectInput = screen.getByPlaceholderText('Subject');
     const messageInput = screen.getByPlaceholderText('Message');
-    const captchaInput = screen.getByPlaceholderText('Ответ');
+    const captchaInput = screen.getByPlaceholderText('Answer');
 
     fireEvent.change(nameInput, { target: { value: 'A' } }); // < 2 chars
     fireEvent.change(emailInput, { target: { value: 'invalid-email' } });
@@ -223,7 +265,7 @@ describe('ContactForm Component', () => {
     const emailInput = screen.getByPlaceholderText('Email');
     const subjectInput = screen.getByPlaceholderText('Subject');
     const messageInput = screen.getByPlaceholderText('Message');
-    const captchaInput = screen.getByPlaceholderText('Ответ');
+    const captchaInput = screen.getByPlaceholderText('Answer');
 
     fireEvent.change(nameInput, { target: { value: 'John Doe' } });
     fireEvent.change(emailInput, { target: { value: 'john@example.com' } });
@@ -291,7 +333,7 @@ describe('ContactForm Component', () => {
     fireEvent.change(screen.getByPlaceholderText('Message'), {
       target: { value: 'This is a long message for testing.' },
     });
-    fireEvent.change(screen.getByPlaceholderText('Ответ'), {
+    fireEvent.change(screen.getByPlaceholderText('Answer'), {
       target: { value: '9' },
     });
 
@@ -303,7 +345,7 @@ describe('ContactForm Component', () => {
         'Incorrect captcha answer',
         'error'
       );
-      expect(screen.getByText('Неверный ответ на капчу')).toBeInTheDocument();
+      expect(screen.getByText('Incorrect captcha answer')).toBeInTheDocument();
     });
   });
 });

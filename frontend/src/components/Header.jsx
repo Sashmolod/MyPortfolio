@@ -9,12 +9,14 @@ import {
   SketchSoundIcon,
 } from './SvgIllustrations';
 import { usePortfolioSettings } from '../contexts/SettingsContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const navItems = ['Home', 'Skills', 'Projects', 'Contact'];
 
 export default function Header() {
   const { theme, toggleTheme } = useTheme();
   const { settings } = usePortfolioSettings();
+  const { language, setLanguage, t } = useLanguage();
   const [muted, setMuted] = useState(() => {
     const saved = localStorage.getItem('audio_muted') === 'true';
     soundSynth.setMuted(saved);
@@ -66,7 +68,7 @@ export default function Header() {
             href={`#${item.toLowerCase()}`}
             aria-label={`Go to ${item} section`}
           >
-            {item}
+            {t(item.toLowerCase())}
           </a>
         ))}
         {settings?.showAdminLink !== false && (
@@ -74,7 +76,7 @@ export default function Header() {
             href="/admin"
             onClick={handleAdminClick}
             className="btn"
-            aria-label="Admin Dashboard"
+            aria-label={t('admin')}
             style={{
               marginLeft: '10px',
               textDecoration: 'none',
@@ -83,7 +85,7 @@ export default function Header() {
               gap: '6px',
             }}
           >
-            <SketchLockIcon size={18} /> Admin
+            <SketchLockIcon size={18} /> {t('admin')}
           </a>
         )}
         <button
@@ -131,6 +133,32 @@ export default function Header() {
           aria-pressed={!muted}
         >
           <SketchSoundIcon muted={muted} size={20} />
+        </button>
+        <button
+          onClick={() => {
+            setLanguage(language === 'ru' ? 'en' : 'ru');
+            soundSynth.playPageFlip();
+          }}
+          style={{
+            background: 'none',
+            border: 'var(--border-style)',
+            borderRadius: 'var(--sketch-radius-3)',
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginLeft: '10px',
+            color: 'var(--text)',
+            outline: 'none',
+            padding: '3px 8px',
+            fontSize: '13px',
+            fontWeight: 'bold',
+            fontFamily: "'Architects Daughter', cursive",
+          }}
+          title={language === 'ru' ? 'Switch to English' : 'Переключить на русский'}
+          aria-label="Toggle language"
+        >
+          {language === 'ru' ? 'EN' : 'RU'}
         </button>
       </nav>
     </header>

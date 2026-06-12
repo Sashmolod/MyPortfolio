@@ -1,12 +1,34 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import Skills from './Skills';
+import { statsApi } from '../api/statsApi';
 
 // Mock SettingsContext hook
 vi.mock('../contexts/SettingsContext', () => ({
   usePortfolioSettings: () => ({
     settings: { enableDrawSkills: false },
+  }),
+}));
+
+// Mock LanguageContext hook
+vi.mock('../contexts/LanguageContext', () => ({
+  useLanguage: () => ({
+    language: 'en',
+    t: (keyOrBilingual) => {
+      if (typeof keyOrBilingual !== 'string') return keyOrBilingual;
+      const dict = {
+        skills: 'Skills',
+        loading: 'Loading...',
+        all: '+ All',
+        none: '− None',
+      };
+      if (dict[keyOrBilingual]) return dict[keyOrBilingual];
+      if (keyOrBilingual.includes(' / ')) {
+        return keyOrBilingual.split(' / ')[1].trim();
+      }
+      return keyOrBilingual;
+    },
   }),
 }));
 
@@ -33,14 +55,36 @@ describe('Skills Component', () => {
     vi.clearAllMocks();
   });
 
-  it('renders default skills when none are provided', () => {
-    render(<Skills skills={[]} />);
+  it('renders default skills when none are provided', async () => {
+    const mockCategories = [
+      {
+        id: 1,
+        name: 'Languages',
+        skills: [
+          { id: 1, name: 'JavaScript', level: 90, description: 'ES6+, TypeScript', sortOrder: 1 }
+        ]
+      },
+      {
+        id: 2,
+        name: 'Libraries',
+        skills: [
+          { id: 2, name: 'React', level: 85, description: 'UI library', sortOrder: 1 }
+        ]
+      }
+    ];
+    vi.spyOn(statsApi, 'getSkillCategories').mockResolvedValueOnce(mockCategories);
+
+    render(<Skills />);
+
+    // Wait for categories to load and click "+ All" to expand
+    const expandBtn = await screen.findByText('+ All');
+    fireEvent.click(expandBtn);
+
     expect(screen.getByText('JavaScript')).toBeInTheDocument();
     expect(screen.getByText('React')).toBeInTheDocument();
-    expect(screen.getByText('ES6+, TypeScript')).toBeInTheDocument();
   });
 
-  it('renders custom skills with correct level styling', () => {
+  it('renders custom skills with correct level styling', async () => {
     const customSkills = [
       {
         id: 1,
@@ -57,16 +101,24 @@ describe('Skills Component', () => {
         description: 'Query api',
       },
     ];
+    const mockCategories = [
+      {
+        id: 1,
+        name: 'Technologies',
+        skills: customSkills
+      }
+    ];
+    vi.spyOn(statsApi, 'getSkillCategories').mockResolvedValueOnce(mockCategories);
 
-    const { container } = render(<Skills skills={customSkills} />);
+    render(<Skills />);
+
+    // Wait for categories to load and click "+ All" to expand
+    const expandBtn = await screen.findByText('+ All');
+    fireEvent.click(expandBtn);
+
     expect(screen.getByText('WebAssembly')).toBeInTheDocument();
-    expect(screen.getByText('Super fast execution')).toBeInTheDocument();
     expect(screen.getByText('GraphQL')).toBeInTheDocument();
-
-    // Verify progress bar levels are applied to widths
-    const progressFills = container.querySelectorAll('.level-fill');
-    expect(progressFills).toHaveLength(2);
-    expect(progressFills[0].style.width).toBe('95%');
-    expect(progressFills[1].style.width).toBe('75%');
+    expect(screen.getByText('95%')).toBeInTheDocument();
+    expect(screen.getByText('75%')).toBeInTheDocument();
   });
 });

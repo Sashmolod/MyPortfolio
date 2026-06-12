@@ -6,8 +6,11 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   Index,
+  ManyToMany,
+  JoinTable,
 } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Skill } from './skill.entity';
 
 @Entity('projects')
 export class Project {
@@ -31,9 +34,14 @@ export class Project {
   @Column({ name: 'link', type: 'varchar', length: 500, nullable: true })
   link: string;
 
-  @ApiPropertyOptional({ description: 'Использованные технологии (через запятую)', example: 'React, Redux, Node.js' })
-  @Column({ name: 'technologies', type: 'text', nullable: true })
-  technologies: string;
+  @ApiPropertyOptional({ description: 'Навыки, использованные в проекте', type: [Number] })
+  @ManyToMany(() => Skill, { nullable: true })
+  @JoinTable({
+    name: 'project_skills_skill',
+    joinColumn: { name: 'project_id' },
+    inverseJoinColumn: { name: 'skill_id' },
+  })
+  skills: Skill[];
 
   @ApiPropertyOptional({ description: 'Порядок сортировки', example: 1 })
   @Index()

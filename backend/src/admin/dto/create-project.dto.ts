@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsOptional, IsNotEmpty } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsNotEmpty, IsArray } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 
@@ -23,10 +23,10 @@ export class CreateProjectDto {
   @IsOptional()
   link?: string;
 
-  @ApiPropertyOptional({ description: 'Technologies used (comma-separated)', example: 'React, NestJS, SQLite' })
-  @IsString()
+  @ApiPropertyOptional({ description: 'Skill IDs associated with the project', example: [1, 2, 3] })
+  @IsArray()
   @IsOptional()
-  technologies?: string;
+  skillIds?: number[];
 
   @ApiPropertyOptional({ description: 'Display order', example: 1 })
   @IsNumber()

@@ -30,6 +30,7 @@ describe('AdminService', () => {
     softDelete: jest.fn().mockResolvedValue({ affected: 1 }),
     restore: jest.fn().mockResolvedValue({ affected: 1 }),
     delete: jest.fn().mockResolvedValue({ affected: 1 }),
+    count: jest.fn().mockResolvedValue(2),
   });
 
   beforeEach(async () => {
@@ -60,8 +61,11 @@ describe('AdminService', () => {
     it('should get all skills sorted by sortOrder', async () => {
       jest.spyOn(skillRepo, 'find').mockResolvedValue([mockSkill]);
       const result = await service.getAllSkills();
-      expect(result).toEqual([mockSkill]);
-      expect(skillRepo.find).toHaveBeenCalledWith({ order: { sortOrder: 'ASC' } });
+      expect(result).toEqual([{ ...mockSkill, category: null, subcategory: null }]);
+      expect(skillRepo.find).toHaveBeenCalledWith({
+        order: { sortOrder: 'ASC' },
+        relations: { category: true, subcategory: true },
+      });
     });
 
     it('should get a skill by id', async () => {
@@ -108,10 +112,11 @@ describe('AdminService', () => {
     it('should get deleted skills', async () => {
       jest.spyOn(skillRepo, 'find').mockResolvedValue([mockSkill]);
       const result = await service.getDeletedSkills();
-      expect(result).toEqual([mockSkill]);
+      expect(result).toEqual([{ ...mockSkill, category: null, subcategory: null }]);
       expect(skillRepo.find).toHaveBeenCalledWith(expect.objectContaining({
         where: { deletedAt: expect.any(Object) },
         withDeleted: true,
+        relations: { category: true, subcategory: true },
       }));
     });
 
@@ -127,7 +132,10 @@ describe('AdminService', () => {
       jest.spyOn(projectRepo, 'find').mockResolvedValue([mockProject]);
       const result = await service.getAllProjects();
       expect(result).toEqual([mockProject]);
-      expect(projectRepo.find).toHaveBeenCalledWith({ order: { sortOrder: 'ASC' } });
+      expect(projectRepo.find).toHaveBeenCalledWith({
+        order: { sortOrder: 'ASC' },
+        relations: { skills: true },
+      });
     });
 
     it('should get a project by id', async () => {
@@ -149,9 +157,10 @@ describe('AdminService', () => {
 
     it('should update project', async () => {
       jest.spyOn(projectRepo, 'findOne').mockResolvedValue(mockProject);
+      jest.spyOn(projectRepo, 'save').mockResolvedValue({ ...mockProject, title: 'New Title' });
       const result = await service.updateProject(1, { title: 'New Title' });
-      expect(projectRepo.update).toHaveBeenCalledWith(1, { title: 'New Title' });
-      expect(result).toEqual(mockProject);
+      expect(projectRepo.save).toHaveBeenCalledWith(expect.objectContaining({ title: 'New Title' }));
+      expect(result.title).toEqual('New Title');
     });
 
     it('should soft delete a project', async () => {
@@ -252,9 +261,11 @@ describe('AdminService', () => {
       expect(result).toEqual({ id: 1, ...dto });
     });
 
-    it('should update hero and throw NotFoundException if hero does not exist', async () => {
+    it('should create hero when updating and hero does not exist', async () => {
       jest.spyOn(heroRepo, 'findOne').mockResolvedValue(null);
-      await expect(service.updateHero(99, { name: 'New' })).rejects.toThrow(NotFoundException);
+      const dto = { name: 'New' };
+      const result = await service.updateHero(99, dto);
+      expect(result).toEqual({ id: 1, ...dto });
     });
 
     it('should update hero successfully', async () => {

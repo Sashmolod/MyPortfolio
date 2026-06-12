@@ -25,6 +25,28 @@ vi.mock('../utils/audioSynth', () => ({
   },
 }));
 
+vi.mock('../contexts/LanguageContext', () => ({
+  useLanguage: () => ({
+    language: 'en',
+    setLanguage: vi.fn(),
+    t: (keyOrBilingual) => {
+      if (typeof keyOrBilingual !== 'string') return keyOrBilingual;
+      const dict = {
+        home: 'Home',
+        skills: 'Skills',
+        projects: 'Projects',
+        contact: 'Contact',
+        admin: 'Admin',
+      };
+      if (dict[keyOrBilingual]) return dict[keyOrBilingual];
+      if (keyOrBilingual.includes(' / ')) {
+        return keyOrBilingual.split(' / ')[1].trim();
+      }
+      return keyOrBilingual;
+    },
+  }),
+}));
+
 describe('Header Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();

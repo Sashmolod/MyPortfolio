@@ -43,9 +43,10 @@ export class UpdateSkillDto {
   @IsNumber()
   @IsOptional()
   @Transform(({ value }) => {
-    if (value === undefined || value === '' || value === null) return undefined;
+    if (value === undefined || value === '') return undefined;
+    if (value === null) return null;
     const num = Number(value);
-    return isNaN(num) ? undefined : num;
+    return isNaN(num) ? null : num;
   })
   categoryId?: number | null;
 
@@ -53,9 +54,10 @@ export class UpdateSkillDto {
   @IsNumber()
   @IsOptional()
   @Transform(({ value }) => {
-    if (value === undefined || value === '' || value === null) return undefined;
+    if (value === undefined || value === '') return undefined;
+    if (value === null) return null;
     const num = Number(value);
-    return isNaN(num) ? undefined : num;
+    return isNaN(num) ? null : num;
   })
   subcategoryId?: number | null;
 }

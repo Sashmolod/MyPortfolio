@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Caveat:wght@400;700&family=Comic+Neue:wght@300;400;700&display=swap');
 
 :root {
+  --font-family: 'Comic Neue', 'Architects Daughter', cursive;
   --bg: #fcfbf7; /* Кремовая бумага */
   --bg-grid: linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px);
   --text: #2c2c2c; /* Графитовый карандаш */
@@ -63,7 +64,7 @@ body {
   background-size: 24px 24px;
   background-attachment: fixed;
   color: var(--text);
-  font-family: 'Comic Neue', 'Architects Daughter', cursive;
+  font-family: var(--font-family);
   font-weight: 500;
   transition: background-color 0.3s ease, color 0.3s ease;
   min-height: 100vh;
@@ -81,7 +82,7 @@ section {
 }
 
 section h2 {
-  font-family: 'Architects Daughter', cursive;
+  font-family: var(--font-family);
   font-size: 2.3rem;
   font-weight: bold;
   margin-bottom: 40px;
@@ -125,7 +126,7 @@ section h2 {
   border: var(--border-style);
   border-radius: var(--sketch-radius-3);
   cursor: pointer;
-  font-family: 'Architects Daughter', cursive;
+  font-family: var(--font-family);
   font-weight: bold;
   font-size: 1rem;
   text-decoration: none;
@@ -192,7 +193,7 @@ section h2 {
   border: var(--border-style);
   border-radius: 12px 22px 18px 8px / 8px 18px 22px 12px;
   padding: 10px 22px;
-  font-family: 'Architects Daughter', cursive;
+  font-family: var(--font-family);
   font-weight: bold;
   font-size: 1rem;
   cursor: pointer;
@@ -249,7 +250,7 @@ input, textarea, select {
   border: var(--border-style);
   border-radius: var(--sketch-radius-1);
   color: var(--text);
-  font-family: 'Comic Neue', cursive;
+  font-family: var(--font-family);
   font-size: 1rem;
   margin-bottom: 16px;
   box-shadow: 2px 2px 0px var(--border-color);
@@ -294,7 +295,7 @@ header {
 }
 
 header h1 {
-  font-family: 'Architects Daughter', cursive;
+  font-family: var(--font-family);
   font-weight: bold;
   font-size: 1.6rem;
   color: var(--text);
@@ -311,7 +312,7 @@ header nav a {
   text-decoration: none;
   font-weight: bold;
   font-size: 1rem;
-  font-family: 'Architects Daughter', cursive;
+  font-family: var(--font-family);
   padding: 4px 8px;
   border-radius: 4px;
   transition: all 0.2s ease;
@@ -339,7 +340,7 @@ footer {
   border-style: dashed;
   margin-top: 60px;
   color: var(--text-muted);
-  font-family: 'Architects Daughter', cursive;
+  font-family: var(--font-family);
   font-size: 0.95rem;
 }
 
@@ -358,7 +359,7 @@ footer {
 }
 
 .hero-content h1 {
-  font-family: 'Architects Daughter', cursive;
+  font-family: var(--font-family);
   font-weight: bold;
   font-size: 3.6rem;
   line-height: 1.1;
@@ -367,7 +368,7 @@ footer {
 }
 
 .hero-content .subtitle {
-  font-family: 'Architects Daughter', cursive;
+  font-family: var(--font-family);
   font-size: 1.7rem;
   font-weight: bold;
   color: var(--primary);
@@ -398,7 +399,7 @@ footer {
   border: var(--border-style);
   border-radius: var(--sketch-radius-3);
   cursor: pointer;
-  font-family: 'Architects Daughter', cursive;
+  font-family: var(--font-family);
   font-weight: bold;
   font-size: 1rem;
   text-decoration: none;
@@ -480,7 +481,7 @@ footer {
 }
 
 .skill-card h3 {
-  font-family: 'Architects Daughter', cursive;
+  font-family: var(--font-family);
   font-size: 1.35rem;
   margin: 15px 0 6px;
 }
@@ -516,7 +517,7 @@ footer {
 }
 
 .project-card h3 {
-  font-family: 'Architects Daughter', cursive;
+  font-family: var(--font-family);
   font-size: 1.4rem;
   margin-top: 15px;
 }
@@ -543,7 +544,7 @@ footer {
   padding: 3px 12px;
   font-size: 0.8rem;
   font-weight: bold;
-  font-family: 'Architects Daughter', cursive;
+  font-family: var(--font-family);
   transition: all 0.2s ease;
 }
 

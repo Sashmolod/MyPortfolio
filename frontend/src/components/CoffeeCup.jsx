@@ -2,12 +2,16 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { soundSynth } from '../utils/audioSynth';
 import { usePortfolioSettings } from '../contexts/SettingsContext';
+import { useTemplate } from '../contexts/TemplateContext';
 
 export default function CoffeeCup() {
   const [clicks, setClicks] = useState(0);
   const [isSpilled, setIsSpilled] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
   const { settings } = usePortfolioSettings();
+  const { enableWobbleFilters } = useTemplate();
+
+  const filterStyle = enableWobbleFilters ? { filter: 'url(#wobblyFilter)' } : {};
 
   const handleClick = () => {
     if (!settings?.enableCoffeeSpill) return;
@@ -76,7 +80,7 @@ export default function CoffeeCup() {
               stroke="rgba(139, 92, 26, 0.7)"
               strokeWidth="2"
               strokeDasharray="4 3"
-              style={{ filter: 'url(#wobblyFilter)' }}
+              style={filterStyle}
             />
             {/* Small Splats */}
             <circle cx="120" cy="18" r="2.5" fill="rgba(139, 92, 26, 0.5)" />
@@ -158,7 +162,7 @@ export default function CoffeeCup() {
             stroke="var(--text)"
             strokeWidth="3.5"
             strokeLinejoin="round"
-            style={{ filter: 'url(#wobblyFilter)' }}
+            style={filterStyle}
           />
 
           {/* Coffee liquid inside (rim) */}
@@ -181,7 +185,7 @@ export default function CoffeeCup() {
             stroke="var(--text)"
             strokeWidth="3"
             strokeLinecap="round"
-            style={{ filter: 'url(#wobblyFilter)' }}
+            style={filterStyle}
           />
 
           {/* Plate / Saucer */}
@@ -192,7 +196,7 @@ export default function CoffeeCup() {
               stroke="var(--text)"
               strokeWidth="3"
               strokeLinejoin="round"
-              style={{ filter: 'url(#wobblyFilter)' }}
+              style={filterStyle}
             />
           )}
 

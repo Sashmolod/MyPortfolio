@@ -4,6 +4,7 @@ import React from 'react';
 import AdminDashboard from './AdminDashboard';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePortfolioSettings } from '../../contexts/SettingsContext';
+import { LanguageProvider } from '../../contexts/LanguageContext';
 import api from '../../api';
 
 // Mock contexts
@@ -119,10 +120,14 @@ describe('AdminDashboard Page', () => {
   });
 
   it('renders initial dashboard structure and fetches default tab (skills)', async () => {
-    render(<AdminDashboard />);
+    render(
+      <LanguageProvider>
+        <AdminDashboard />
+      </LanguageProvider>
+    );
 
     // Header dashboard metadata
-    expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Admin Dashboard', level: 1 })).toBeInTheDocument();
 
     // Loading transition state to skills fetch completion
     await waitFor(() => {
@@ -133,7 +138,11 @@ describe('AdminDashboard Page', () => {
   });
 
   it('switches tabs and fetches projects data', async () => {
-    render(<AdminDashboard />);
+    render(
+      <LanguageProvider>
+        <AdminDashboard />
+      </LanguageProvider>
+    );
 
     const projectsTabBtn = screen.getByRole('button', { name: 'Projects' });
     fireEvent.click(projectsTabBtn);
@@ -145,12 +154,16 @@ describe('AdminDashboard Page', () => {
   });
 
   it('toggles settings via PUT request', async () => {
-    render(<AdminDashboard />);
+    render(
+      <LanguageProvider>
+        <AdminDashboard />
+      </LanguageProvider>
+    );
 
     const settingsTabBtn = screen.getByRole('button', { name: 'Settings' });
     fireEvent.click(settingsTabBtn);
 
-    const checkBug = screen.getByLabelText(/Ползающий жучок/i);
+    const checkBug = screen.getByLabelText(/Crawling sketchy bug/i);
     fireEvent.click(checkBug);
 
     await waitFor(() => {
@@ -173,7 +186,11 @@ describe('AdminDashboard Page', () => {
     });
     window.addEventListener('page-crumple-transition', transitionSpy);
 
-    render(<AdminDashboard />);
+    render(
+      <LanguageProvider>
+        <AdminDashboard />
+      </LanguageProvider>
+    );
 
     const logoutBtn = screen.getByRole('button', { name: 'Logout' });
     fireEvent.click(logoutBtn);

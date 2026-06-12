@@ -3,10 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../api';
 import { MailIcon } from './SvgIllustrations';
 import { soundSynth } from '../utils/audioSynth';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useTemplate } from '../contexts/TemplateContext';
 
 const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 export default function ContactForm() {
+  const { t } = useLanguage();
+  const { enableWobbleFilters } = useTemplate();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -44,30 +48,30 @@ export default function ContactForm() {
     switch (field) {
       case 'name':
         return !value.trim()
-          ? 'Name is required'
+          ? t('nameRequired')
           : value.trim().length < 2
-            ? 'Name must be at least 2 characters'
+            ? t('nameMinChars')
             : '';
       case 'email':
         return !value.trim()
-          ? 'Email is required'
+          ? t('emailRequired')
           : !validateEmail(value)
-            ? 'Invalid email format'
+            ? t('emailInvalid')
             : '';
       case 'subject':
         return !value.trim()
-          ? 'Subject is required'
+          ? t('subjectRequired')
           : value.trim().length < 3
-            ? 'Subject must be at least 3 characters'
+            ? t('subjectMinChars')
             : '';
       case 'message':
         return !value.trim()
-          ? 'Message is required'
+          ? t('messageRequired')
           : value.trim().length < 10
-            ? 'Message must be at least 10 characters'
+            ? t('messageMinChars')
             : '';
       case 'captchaAnswer':
-        return !value.trim() ? 'Please solve the math puzzle' : '';
+        return !value.trim() ? t('captchaRequired') : '';
       default:
         return '';
     }
@@ -131,7 +135,7 @@ export default function ContactForm() {
       };
       await api.post('/portfolio/message', payload);
       setTimeout(() => {
-        window.toast?.('Message sent successfully!', 'success');
+        window.toast?.(t('successToast'), 'success');
         setFormData({
           name: '',
           email: '',
@@ -148,15 +152,15 @@ export default function ContactForm() {
     } catch (err) {
       const serverMsg =
         err.response?.data?.message ||
-        'Failed to send message. Please try again.';
-      window.toast?.(serverMsg, 'error');
+        t('failedToast');
+      window.toast?.(t(serverMsg), 'error');
       setIsFlying(false);
       setIsSubmitting(false);
       fetchCaptcha();
       if (serverMsg.toLowerCase().includes('captcha')) {
         setErrors((prev) => ({
           ...prev,
-          captchaAnswer: 'Неверный ответ на капчу',
+          captchaAnswer: t('captchaIncorrect'),
         }));
       }
     }
@@ -191,7 +195,7 @@ export default function ContactForm() {
           <MailIcon size={64} />
         </motion.div>
       </div>
-      <h2>Contact</h2>
+      <h2>{t('contact')}</h2>
       <div
         className="contact-form-container"
         style={{
@@ -242,13 +246,13 @@ export default function ContactForm() {
               </div>
 
               <label htmlFor="contact-name" className="sr-only">
-                Name
+                {t('name')}
               </label>
               <input
                 id="contact-name"
                 type="text"
                 name="name"
-                placeholder="Name"
+                placeholder={t('name')}
                 value={formData.name}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -259,13 +263,13 @@ export default function ContactForm() {
               {errMsg('name')}
 
               <label htmlFor="contact-email" className="sr-only">
-                Email
+                {t('email')}
               </label>
               <input
                 id="contact-email"
                 type="email"
                 name="email"
-                placeholder="Email"
+                placeholder={t('email')}
                 value={formData.email}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -276,13 +280,13 @@ export default function ContactForm() {
               {errMsg('email')}
 
               <label htmlFor="contact-subject" className="sr-only">
-                Subject
+                {t('subject')}
               </label>
               <input
                 id="contact-subject"
                 type="text"
                 name="subject"
-                placeholder="Subject"
+                placeholder={t('subject')}
                 value={formData.subject}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -293,12 +297,12 @@ export default function ContactForm() {
               {errMsg('subject')}
 
               <label htmlFor="contact-message" className="sr-only">
-                Message
+                {t('message')}
               </label>
               <textarea
                 id="contact-message"
                 name="message"
-                placeholder="Message"
+                placeholder={t('message')}
                 value={formData.message}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -319,7 +323,7 @@ export default function ContactForm() {
                     color: 'var(--text)',
                   }}
                 >
-                  Загрузка проверочного кода...
+                  {t('captchaLoading')}
                 </div>
               ) : captchaError ? (
                 <div
@@ -330,7 +334,7 @@ export default function ContactForm() {
                     fontSize: '0.95rem',
                   }}
                 >
-                  Не удалось загрузить проверочный код.{' '}
+                  {t('captchaError')}{' '}
                   <button
                     type="button"
                     onClick={fetchCaptcha}
@@ -345,7 +349,7 @@ export default function ContactForm() {
                       padding: 0,
                     }}
                   >
-                    Обновить пример
+                    {t('captchaRefresh')}
                   </button>
                 </div>
               ) : captcha ? (
@@ -361,7 +365,7 @@ export default function ContactForm() {
                     userSelect: 'none',
                   }}
                 >
-                  <span>Решите пример:</span>
+                  <span>{t('captchaSolve')}</span>
                   <span
                     style={{
                       fontWeight: 'bold',
@@ -372,13 +376,13 @@ export default function ContactForm() {
                     {captcha.question.replace(' = ?', '')} =
                   </span>
                   <label htmlFor="contact-captcha" className="sr-only">
-                    Ответ на проверочный вопрос
+                    {t('captchaPlaceholder')}
                   </label>
                   <input
                     id="contact-captcha"
                     type="text"
                     name="captchaAnswer"
-                    placeholder="Ответ"
+                    placeholder={t('captchaPlaceholder')}
                     value={formData.captchaAnswer || ''}
                     onChange={handleChange}
                     onBlur={handleBlur}
@@ -413,8 +417,8 @@ export default function ContactForm() {
                       transition: 'transform 0.2s ease',
                       outline: 'none',
                     }}
-                    title="Обновить пример"
-                    aria-label="Обновить проверочный код"
+                    title={t('captchaRefresh')}
+                    aria-label={t('captchaRefresh')}
                     onMouseEnter={(e) =>
                       (e.currentTarget.style.transform = 'rotate(45deg)')
                     }
@@ -434,7 +438,7 @@ export default function ContactForm() {
                 disabled={isSubmitting}
                 style={{ opacity: isSubmitting ? 0.7 : 1 }}
               >
-                {isSubmitting ? 'Sending...' : 'Send'}
+                {isSubmitting ? t('sending') : t('send')}
               </button>
             </motion.form>
           ) : (
@@ -473,7 +477,7 @@ export default function ContactForm() {
                   stroke="var(--text)"
                   strokeWidth="2.5"
                   strokeLinejoin="round"
-                  style={{ filter: 'url(#wobblyFilter)' }}
+                  style={{ filter: enableWobbleFilters ? 'url(#wobblyFilter)' : 'none' }}
                 />
                 <path
                   d="M 90 10 L 45 50"

@@ -7,6 +7,19 @@ import { AdminModule } from './admin/admin.module';
 import { PortfolioModule } from './portfolio/portfolio.module';
 import { HealthModule } from './health.module';
 import { StatsModule } from './stats/stats.module';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+
+// Загружаем переменные окружения вручную для этапа инициализации декораторов
+const envFile = !process.env.DOCKER_CONTAINER && process.env.NODE_ENV === 'production'
+  ? '.env.production'
+  : '.env.development';
+dotenv.config({ path: path.resolve(process.cwd(), envFile) });
+
+const dynamicImports = [];
+if (process.env.ENABLE_STATS_MODULE !== 'false') {
+  dynamicImports.push(StatsModule);
+}
 
 @Module({
   imports: [
@@ -54,7 +67,7 @@ import { StatsModule } from './stats/stats.module';
     AdminModule,
     PortfolioModule,
     HealthModule,
-    StatsModule,
+    ...dynamicImports,
   ],
   providers: [
     {

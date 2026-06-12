@@ -55,6 +55,8 @@ describe('Admin Forms components', () => {
           description: '',
           level: 50,
           sortOrder: 0,
+          categoryId: null,
+          subcategoryId: null,
         });
       });
     });
@@ -107,9 +109,8 @@ describe('Admin Forms components', () => {
           description: '',
           image: '',
           link: '',
-          technologies: '',
           sortOrder: 0,
-        });
+        }, []);
       });
     });
 

@@ -1,25 +1,27 @@
 import { motion } from 'framer-motion';
 import { RocketIcon, ProjectIcon } from './SvgIllustrations';
 import api from '../api';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function Projects({ projects = [] }) {
+  const { t } = useLanguage();
   const defaultProjects = [
     {
-      title: 'Portfolio Website',
-      description: 'A personal portfolio website built with React and Vite.',
+      title: 'Сайт-портфолио / Portfolio Website',
+      description: 'Личный сайт-портфолио, созданный на React и Vite. / A personal portfolio website built with React and Vite.',
       technologies: 'React, Vite, CSS',
       link: '#',
     },
     {
-      title: 'E-Commerce App',
+      title: 'E-Commerce приложение / E-Commerce App',
       description:
-        'Full-stack e-commerce application with payment integration.',
+        'Полнофункциональное e-commerce приложение с интеграцией платежей. / Full-stack e-commerce application with payment integration.',
       technologies: 'React, Node.js, MongoDB, Stripe',
       link: '#',
     },
     {
-      title: 'Task Manager API',
-      description: 'RESTful API for task management with authentication.',
+      title: 'API Менеджера задач / Task Manager API',
+      description: 'RESTful API для управления задачами с авторизацией. / RESTful API for task management with authentication.',
       technologies: 'Node.js, Express, PostgreSQL, JWT',
       link: '#',
     },
@@ -29,7 +31,7 @@ export default function Projects({ projects = [] }) {
 
   return (
     <section id="projects">
-      <h2>Projects</h2>
+      <h2>{t('projects')}</h2>
       <div className="grid">
         {displayProjects.map((project, index) => (
           <motion.div
@@ -48,7 +50,7 @@ export default function Projects({ projects = [] }) {
                 window.lastProjectHoverTime = now;
                 window.dispatchEvent(
                   new CustomEvent('project-hover', {
-                    detail: { title: project.title },
+                    detail: { title: t(project.title) },
                   })
                 );
               }
@@ -69,7 +71,7 @@ export default function Projects({ projects = [] }) {
               {project.image ? (
                 <img
                   src={project.image}
-                  alt={project.title}
+                  alt={t(project.title)}
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               ) : (
@@ -86,32 +88,31 @@ export default function Projects({ projects = [] }) {
                 </div>
               )}
             </div>
-            <h3>{project.title}</h3>
+            <h3>{t(project.title)}</h3>
             <p style={{ minHeight: '60px', margin: '0.5rem 0' }}>
-              {project.description}
+              {t(project.description)}
             </p>
             <div className="tags" style={{ marginBottom: 'auto' }}>
-              {(Array.isArray(project.technologies)
-                ? project.technologies
-                : typeof project.technologies === 'string'
-                  ? project.technologies.split(',')
-                  : []
-              ).map((tech) => {
-                const trimmed = tech ? String(tech).trim() : '';
-                if (!trimmed) return null;
-                return (
-                  <span key={trimmed} className="tag sketch-link">
-                    {trimmed}
+              {project.skills && project.skills.length > 0 ? (
+                project.skills.map((skill) => (
+                  <span key={skill.id} className="tag sketch-link">
+                    {t(skill.name)}
                   </span>
-                );
-              })}
+                ))
+              ) : (
+                (project.technologies || '').split(',').map(tech => tech.trim()).filter(Boolean).map((tech, idx) => (
+                  <span key={idx} className="tag sketch-link">
+                    {t(tech)}
+                  </span>
+                ))
+              )}
             </div>
             {project.link && (
               <a
                 href={project.link}
                 className="btn"
                 style={{ marginTop: '12px', display: 'inline-block' }}
-                aria-label={`View Project: ${project.title}`}
+                aria-label={`${t('viewProject')}: ${t(project.title)}`}
                 onClick={async () => {
                   if (project.id) {
                     try {
@@ -122,7 +123,7 @@ export default function Projects({ projects = [] }) {
                   }
                 }}
               >
-                View Project
+                {t('viewProject')}
               </a>
             )}
           </motion.div>

@@ -109,7 +109,7 @@ export default function MediaTab({ items, refresh }) {
                 height: '18px',
                 position: 'relative',
                 overflow: 'hidden',
-                background: 'var(--secondary)',
+                background: 'var(--input-bg)',
               }}
             >
               <div
@@ -159,7 +159,7 @@ export default function MediaTab({ items, refresh }) {
                 style={{
                   position: 'relative',
                   height: '140px',
-                  background: 'var(--secondary)',
+                  background: 'var(--input-bg)',
                   borderBottom: 'var(--border-style)',
                 }}
               >

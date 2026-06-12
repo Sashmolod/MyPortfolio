@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Not, IsNull } from 'typeorm';
+import { Repository, Not, IsNull, In } from 'typeorm';
 
 import { Skill } from './entities/skill.entity';
 import { Project } from './entities/project.entity';
@@ -8,6 +8,7 @@ import { ContactMessage } from './entities/contact-message.entity';
 import { Hero } from './entities/hero.entity';
 import { SocialLink } from './entities/social-link.entity';
 import { Settings } from './entities/settings.entity';
+import { SkillCategory } from './entities/skill-category.entity';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { CreateContactMessageDto } from './dto/create-contact-message.dto';
@@ -36,8 +37,20 @@ export class AdminService {
   ) {}
 
   // Skills CRUD
-  async getAllSkills() {
-    return this.skillRepo.find({ order: { sortOrder: 'ASC' } });
+  async getAllSkills(): Promise<any[]> {
+    const skills = await this.skillRepo.find({ 
+      order: { sortOrder: 'ASC' },
+      relations: { 
+        category: true,
+        subcategory: true 
+      } 
+    });
+    // Map category/subcategory names for frontend display
+    return skills.map(skill => ({
+      ...skill,
+      category: skill.category?.name || null,
+      subcategory: skill.subcategory?.name || null,
+    }));
   }
 
   async getSkill(id: number) {
@@ -66,33 +79,76 @@ export class AdminService {
     return this.getSkill(id);
   }
 
-  async getDeletedSkills() {
-    return this.skillRepo.find({
+  async getDeletedSkills(): Promise<any[]> {
+    const skills = await this.skillRepo.find({
       where: { deletedAt: Not(IsNull()) },
       withDeleted: true,
       order: { sortOrder: 'ASC' },
+      relations: { 
+        category: true,
+        subcategory: true 
+      }
     });
+    return skills.map(skill => ({
+      ...skill,
+      category: skill.category?.name || null,
+      subcategory: skill.subcategory?.name || null,
+    }));
   }
 
   // Projects CRUD
   async getAllProjects() {
-    return this.projectRepo.find({ order: { sortOrder: 'ASC' } });
+    return this.projectRepo.find({ 
+      order: { sortOrder: 'ASC' },
+      relations: { skills: true }
+    });
   }
 
   async getProject(id: number) {
-    const project = await this.projectRepo.findOne({ where: { id } });
+    const project = await this.projectRepo.findOne({ 
+      where: { id },
+      relations: { skills: true }
+    });
     if (!project) throw new NotFoundException('Project not found');
     return project;
   }
 
   async createProject(dto: CreateProjectDto) {
-    const project = this.projectRepo.create(dto);
+    const { skillIds, ...projectData } = dto;
+    const project = this.projectRepo.create(projectData);
+    
+    if (skillIds && skillIds.length > 0) {
+      const skills = await this.skillRepo.findBy({ id: In(skillIds) });
+      project.skills = skills;
+    }
+    
     return this.projectRepo.save(project);
   }
 
   async updateProject(id: number, dto: UpdateProjectDto) {
-    await this.projectRepo.update(id, dto);
-    return this.getProject(id);
+    const { skillIds, ...projectData } = dto;
+    
+    const project = await this.projectRepo.findOne({
+      where: { id },
+      relations: { skills: true },
+    });
+    if (!project) throw new NotFoundException('Project not found');
+    
+    if (projectData.title !== undefined) project.title = projectData.title;
+    if (projectData.description !== undefined) project.description = projectData.description;
+    if (projectData.image !== undefined) project.image = projectData.image;
+    if (projectData.link !== undefined) project.link = projectData.link;
+    if (projectData.sortOrder !== undefined) project.sortOrder = projectData.sortOrder;
+    
+    if (skillIds !== undefined) {
+      if (skillIds.length > 0) {
+        project.skills = await this.skillRepo.findBy({ id: In(skillIds) });
+      } else {
+        project.skills = [];
+      }
+    }
+    
+    return this.projectRepo.save(project);
   }
 
   async deleteProject(id: number) {
@@ -150,8 +206,9 @@ export class AdminService {
   // Hero CRUD — всегда только ОДИН hero в БД
   private async softDeleteAllHeroes(): Promise<void> {
     // Soft-delete все hero, которые не помечены как удалённые
-    await this.heroRepo.query(
-      "UPDATE \"hero\" SET deleted_at = NOW() WHERE deleted_at IS NULL"
+    await this.heroRepo.update(
+      { deletedAt: IsNull() },
+      { deletedAt: new Date() }
     );
   }
 
@@ -191,7 +248,11 @@ export class AdminService {
       return this.heroRepo.save(hero);
     }
 
-    Object.assign(hero, dto);
+    if (dto.name !== undefined) hero.name = dto.name;
+    if (dto.title !== undefined) hero.title = dto.title;
+    if (dto.bio !== undefined) hero.bio = dto.bio;
+    if (dto.avatar !== undefined) hero.avatar = dto.avatar;
+    
     return this.heroRepo.save(hero);
   }
 

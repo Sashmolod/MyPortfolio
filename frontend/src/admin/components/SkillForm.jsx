@@ -137,7 +137,7 @@ export default function SkillForm({ item, onSaveData, onCancel }) {
             {loadingCategories ? (
               <p style={{ fontSize: '12px', opacity: 0.5 }}>Loading...</p>
             ) : (
-              <select value={form.categoryId} onChange={handleCategoryChange} style={{ width: '100%', padding: '8px' }}>
+              <select value={form.categoryId} onChange={handleCategoryChange} style={{ margin: 0 }}>
                 <option value="">No category</option>
                 {categories.filter(c => c.parentId === null || c.parentId === undefined).map(cat => (
                   <option key={cat.id} value={cat.id}>{cat.name}</option>
@@ -148,7 +148,7 @@ export default function SkillForm({ item, onSaveData, onCancel }) {
           {form.categoryId && (
             <div>
               <label style={{ fontSize: '12px', opacity: 0.7, marginBottom: '4px', display: 'block' }}>Subcategory</label>
-              <select value={form.subcategoryId} onChange={(e) => setForm({ ...form, subcategoryId: e.target.value })} style={{ width: '100%', padding: '8px' }}>
+              <select value={form.subcategoryId} onChange={(e) => setForm({ ...form, subcategoryId: e.target.value })} style={{ margin: 0 }}>
                 <option value="">No subcategory</option>
                 {subcategories.map(sub => (
                   <option key={sub.id} value={sub.id}>{sub.name}</option>
