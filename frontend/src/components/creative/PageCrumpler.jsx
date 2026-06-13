@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { soundSynth } from '../utils/audioSynth';
-import { usePortfolioSettings } from '../contexts/SettingsContext';
+import { soundSynth } from '../../utils/audioSynth';
+import { usePortfolioSettings } from '../../contexts/SettingsContext';
 
 export default function PageCrumpler() {
   const [isAnimating, setIsAnimating] = useState(false);

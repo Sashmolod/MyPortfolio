@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { soundSynth } from '../utils/audioSynth';
-import { usePortfolioSettings } from '../contexts/SettingsContext';
-import { useTemplate } from '../contexts/TemplateContext';
+import { soundSynth } from '../../utils/audioSynth';
+import { usePortfolioSettings } from '../../contexts/SettingsContext';
+import { useTemplate } from '../../contexts/TemplateContext';
 
 export default function CoffeeCup() {
   const [clicks, setClicks] = useState(0);

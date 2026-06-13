@@ -223,11 +223,15 @@ export class PortfolioService {
 
   // ====== AI FEATURES ======
 
-  async askDoodlyChat(message: string): Promise<{ response: string }> {
+  async askDoodlyChat(message: string, lang = 'ru'): Promise<{ response: string }> {
     const apiKey = this.configService.get<string>('GEMINI_API_KEY');
 
     if (!apiKey) {
-      const offlineReplies = [
+      const offlineReplies = lang === 'en' ? [
+        "Oops! It seems I don't have access to my AI brain yet (need to set GEMINI_API_KEY in the .env file)! 🔌 But I'm still happy to chat!",
+        "I'd love to chat about anything, but my AI brain is currently disconnected by the developer. Ask me something else! 📎",
+        "My API key got lost among the paperclips in the drawer! 🗄️ Ask the developer to add GEMINI_API_KEY."
+      ] : [
         "Ой! Кажется, у меня еще нет доступа к моему AI-мозгу (нужно задать GEMINI_API_KEY в файле .env)! 🔌 Но я всё равно рад пообщаться!",
         "Я бы с радостью поболтал на любые темы, но пока мой AI-мозг отключен разработчиком. Спросите меня о чём-нибудь ещё! 📎",
         "Мой API-ключ потерялся среди скрепок в ящике! 🗄️ Попросите разработчика добавить GEMINI_API_KEY."
@@ -255,7 +259,7 @@ export class PortfolioService {
 - Навыки: ${skillsList}
 - Проекты: ${projectsList}
 
-Посетитель сайта написал тебе сообщение. Ответь ему на том же языке, на котором написано сообщение (обычно на русском).`;
+Посетитель сайта зашел с интерфейсом на языке: ${lang.toUpperCase()}. Ответь ему на языке: ${lang === 'en' ? 'English (английский)' : 'Russian (русский)'}.`;
 
       const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', {
         method: 'POST',
@@ -282,18 +286,22 @@ export class PortfolioService {
 
       const data = await response.json();
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      return { response: text?.trim() || 'Ой, я задумался и забыл, что хотел сказать... 📎' };
+      return { response: text?.trim() || (lang === 'en' ? 'Oops, I got distracted and forgot what I wanted to say... 📎' : 'Ой, я задумался и забыл, что хотел сказать... 📎') };
     } catch (error) {
       console.error('Gemini API error:', error);
-      return { response: 'Кажется, пропала связь с моим AI-мозгом... Попробуйте чуть позже! 🔌' };
+      return { response: (lang === 'en' ? 'It seems my AI brain lost connection... Try again in a bit! 🔌' : 'Кажется, пропала связь с моим AI-мозгом... Попробуйте чуть позже! 🔌') };
     }
   }
 
-  async guessDoodle(base64Image: string): Promise<{ guess: string }> {
+  async guessDoodle(base64Image: string, lang = 'ru'): Promise<{ guess: string }> {
     const apiKey = this.configService.get<string>('GEMINI_API_KEY');
 
     if (!apiKey) {
-      const offlineGuesses = [
+      const offlineGuesses = lang === 'en' ? [
+        "Hmm! Unfortunately, my AI eye is currently off (no GEMINI_API_KEY set), but this drawing definitely looks like a masterpiece! 🎨",
+        "I can't inspect your sketch without an API key yet, but I'm sure Leonardo da Vinci would envy such shading! ✏️",
+        "Oh, my AI lens is a bit dusty! Without a key in .env I can't guess, but this is definitely something beautiful! 🌟"
+      ] : [
         "Хм-м! К сожалению, мой AI-глаз сейчас отключен (не задан GEMINI_API_KEY), но этот рисунок определенно выглядит как шедевр! 🎨",
         "Я пока не могу рассмотреть ваш рисунок без API-ключа, но уверен, Леонардо да Винчи позавидовал бы такой штриховке! ✏️",
         "Ой, мой AI-объектив запылился! Без ключа в .env я не угадаю, но это точно что-то прекрасное! 🌟"
@@ -310,7 +318,9 @@ export class PortfolioService {
         base64Data = parts[1];
       }
 
-      const prompt = `Ты — умная скрепка Дудли. Посмотри на этот быстрый набросок от руки, нарисованный посетителем на холсте.
+      const prompt = lang === 'en' ? `You are Doodly, the smart paperclip. Look at this quick hand-drawn sketch drawn by the visitor on the canvas.
+Guess what item or creature this is, and describe it in a playful, cute paperclip tone. Give a very short answer (1-2 sentences).
+Your guess should start with guessing words (e.g. "Wow, that is...", "Hmm, looks like...", "I see a..."). Respond in English.` : `Ты — умная скрепка Дудли. Посмотри на этот быстрый набросок от руки, нарисованный посетителем на холсте.
 Угадай, что это за предмет или существо, опиши его в шутливом и милом тоне скрепки. Дай очень короткий ответ (1-2 предложения).
 Ответ должен начинаться со слов угадывания (например: "Ого, это же...", "Хм-м, похоже на...", "Я вижу здесь..."). Ответь на русском языке.`;
 
@@ -345,10 +355,10 @@ export class PortfolioService {
 
       const data = await response.json();
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      return { guess: text?.trim() || 'Хм-м, не могу разобрать ни одной линии... Нарисуйте что-нибудь почетче! 🎨' };
+      return { guess: text?.trim() || (lang === 'en' ? "Hmm, I can't make out any lines... Draw something clearer! 🎨" : 'Хм-м, не могу разобрать ни одной линии... Нарисуйте что-нибудь почетче! 🎨') };
     } catch (error) {
       console.error('Gemini Vision API error:', error);
-      return { guess: 'Ой! У меня зарябило в глазах от этого шедевра. Попробуйте угадать еще раз! 🔌' };
+      return { guess: (lang === 'en' ? 'Oops! My AI vision got blurry. Try again! 🔌' : 'Ой! У меня зарябило в глазах от этого шедевра. Попробуйте угадать еще раз! 🔌') };
     }
   }
 

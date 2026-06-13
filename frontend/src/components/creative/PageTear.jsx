@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { soundSynth } from '../utils/audioSynth';
+import { soundSynth } from '../../utils/audioSynth';
 
 const WIN_PATTERNS = [
   [0, 1, 2],

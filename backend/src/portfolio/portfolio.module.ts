@@ -15,7 +15,7 @@ import { StatsService } from '../stats/stats.service';
 
 const statsEnabled = process.env.ENABLE_STATS_MODULE !== 'false';
 
-const imports = [
+const imports: any[] = [
   TypeOrmModule.forFeature([Skill, SkillCategory, Project, ContactMessage, Hero, SocialLink, Settings]),
 ];
 

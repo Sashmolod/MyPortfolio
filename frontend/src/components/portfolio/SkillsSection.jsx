@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { CodeIcon } from './SvgIllustrations';
-import { usePortfolioSettings } from '../contexts/SettingsContext';
-import { statsApi } from '../api/statsApi';
-import { useLanguage } from '../contexts/LanguageContext';
+import { CodeIcon } from '../SvgIllustrations';
+import { usePortfolioSettings } from '../../contexts/SettingsContext';
+import { statsApi } from '../../api/statsApi';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 function SkillIcon({ iconKey, name, size = 20 }) {
   const { settings } = usePortfolioSettings();
@@ -58,7 +58,7 @@ function SkillBadge({ skill, compact = false }) {
   );
 }
 
-export default function Skills() {
+export default function SkillsSection() {
   const { t } = useLanguage();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);

@@ -3,18 +3,18 @@ import { usePortfolioSettings } from '../contexts/SettingsContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import api from '../api';
 import Header from '../components/Header';
-import Hero from '../components/Hero';
-import Skills from '../components/Skills';
-import Projects from '../components/Projects';
-import ContactForm from '../components/ContactForm';
+import HeroSection from '../components/portfolio/HeroSection';
+import SkillsSection from '../components/portfolio/SkillsSection';
+import ProjectsSection from '../components/portfolio/ProjectsSection';
+import ContactSection from '../components/portfolio/ContactSection';
 import Footer from '../components/Footer';
-import DoodleCanvas from '../components/DoodleCanvas';
-import DoodleControls from '../components/DoodleControls';
-import DoodlyHelper from '../components/DoodlyHelper';
-import CoffeeCup from '../components/CoffeeCup';
-import SketchyBug from '../components/SketchyBug';
-import PageTear from '../components/PageTear';
-import InkLeak from '../components/InkLeak';
+import DoodleCanvas from '../components/creative/DoodleCanvas';
+import DoodleControls from '../components/creative/DoodleControls';
+import DoodlyHelper from '../components/creative/DoodlyHelper';
+import CoffeeCup from '../components/creative/CoffeeCup';
+import SketchyBug from '../components/creative/SketchyBug';
+import PageTear from '../components/creative/PageTear';
+import InkLeak from '../components/creative/InkLeak';
 import { useTemplate } from '../contexts/TemplateContext';
 import { Helmet } from 'react-helmet-async';
 
@@ -28,7 +28,7 @@ import { Helmet } from 'react-helmet-async';
  */
 export default function PublicPage() {
   const { settings } = usePortfolioSettings();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { config } = useTemplate();
   const [skills, setSkills] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -150,7 +150,7 @@ export default function PublicPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ image: base64Image }),
+        body: JSON.stringify({ image: base64Image, lang: language }),
       });
 
       if (!response.ok) throw new Error('Vision guess failed');
@@ -327,13 +327,13 @@ export default function PublicPage() {
           .map((section) => {
             switch (section.id) {
               case 'hero':
-                return <Hero key="hero" data={hero} />;
+                return <HeroSection key="hero" data={hero} />;
               case 'skills':
-                return <Skills key="skills" skills={skills} />;
+                return <SkillsSection key="skills" skills={skills} />;
               case 'projects':
-                return <Projects key="projects" projects={projects} />;
+                return <ProjectsSection key="projects" projects={projects} />;
               case 'contact':
-                return <ContactForm key="contact" />;
+                return <ContactSection key="contact" />;
               default:
                 return null;
             }

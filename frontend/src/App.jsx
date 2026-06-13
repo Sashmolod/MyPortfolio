@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import ToastContainer from './components/Toast';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import PageCrumpler from './components/PageCrumpler';
+import PageCrumpler from './components/creative/PageCrumpler';
 import ErrorBoundary from './components/ErrorBoundary';
 import PublicPage from './pages/PublicPage';
 

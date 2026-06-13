@@ -21,10 +21,10 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { LoginPage } from './pages/LoginPage';
 import AdminDashboard from './admin/pages/AdminDashboard';
-import DoodlyHelper from './components/DoodlyHelper';
-import CoffeeCup from './components/CoffeeCup';
-import SketchyBug from './components/SketchyBug';
-import PageTear from './components/PageTear';
+import DoodlyHelper from './components/creative/DoodlyHelper';
+import CoffeeCup from './components/creative/CoffeeCup';
+import SketchyBug from './components/creative/SketchyBug';
+import PageTear from './components/creative/PageTear';
 import * as authApi from './api/authApi';
 import api from './api';
 

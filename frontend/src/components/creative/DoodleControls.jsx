@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { usePortfolioSettings } from '../contexts/SettingsContext';
+import { usePortfolioSettings } from '../../contexts/SettingsContext';
+import { useLanguage } from '../../contexts/LanguageContext';
+import Button from '../ui/Button';
 
 export default function DoodleControls({
   active,
@@ -16,6 +18,7 @@ export default function DoodleControls({
 }) {
   const [minimized, setMinimized] = useState(false);
   const { settings } = usePortfolioSettings();
+  const { t } = useLanguage();
 
   // Brush presets
   const presets = [
@@ -23,19 +26,19 @@ export default function DoodleControls({
       name: 'Pencil',
       color: 'rgba(74, 85, 104, 0.85)',
       width: 3,
-      label: '✏️ Pencil',
+      label: '✏️ ' + t('Карандаш / Pencil'),
     },
     {
       name: 'Red Pen',
       color: 'rgba(229, 62, 62, 0.9)',
       width: 3,
-      label: '🖊️ Red Pen',
+      label: '🖊️ ' + t('Красная ручка / Red Pen'),
     },
     {
       name: 'Highlighter',
       color: 'rgba(59, 130, 246, 0.45)',
       width: 16,
-      label: '🖍️ Highlight',
+      label: '🖍️ ' + t('Маркер / Highlight'),
     },
   ];
 
@@ -44,7 +47,7 @@ export default function DoodleControls({
       name: 'Eraser',
       color: 'eraser',
       width: 24,
-      label: '🧼 Eraser / Ластик',
+      label: '🧼 ' + t('Ластик / Eraser'),
     });
   }
 
@@ -59,7 +62,7 @@ export default function DoodleControls({
         bottom: '20px',
         right: '20px',
         zIndex: 100002, // Sit above canvas and everything else
-        fontFamily: "'Architects Daughter', cursive",
+        fontFamily: 'var(--font-family)',
       }}
     >
       <AnimatePresence mode="wait">
@@ -81,10 +84,8 @@ export default function DoodleControls({
               alignItems: 'center',
               justifyContent: 'center',
               boxShadow: 'var(--shadow)',
-              background: 'var(--card-bg)',
-              border: 'var(--border-style)',
             }}
-            title="Open drawing panel"
+            title={t('Открыть панель рисования / Open drawing panel')}
           >
             🎨
           </motion.button>
@@ -122,7 +123,7 @@ export default function DoodleControls({
                   userSelect: 'none',
                 }}
               >
-                🎨 Doodles / Рисование
+                🎨 {t('Рисование / Doodles')}
               </span>
               <button
                 onClick={() => setMinimized(true)}
@@ -139,16 +140,16 @@ export default function DoodleControls({
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
-                title="Minimize toolbar"
+                title={t('Свернуть панель / Minimize toolbar')}
               >
                 —
               </button>
             </div>
 
             {/* Toggle Button */}
-            <button
+            <Button
               onClick={toggleMode}
-              className={`btn ${active ? 'btn-danger' : ''}`}
+              variant={active ? 'danger' : 'primary'}
               style={{
                 width: '100%',
                 padding: '8px',
@@ -157,16 +158,12 @@ export default function DoodleControls({
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '6px',
-                backgroundColor: active
-                  ? 'rgba(229, 62, 62, 0.15)'
-                  : 'transparent',
-                borderColor: active ? 'var(--accent)' : 'var(--text)',
               }}
             >
               {active
-                ? '📴 Disable Drawing / Навигация'
-                : '✏️ Enable Drawing / Рисовать'}
-            </button>
+                ? '📴 ' + t('Отключить рисование / Disable Drawing')
+                : '✏️ ' + t('Включить рисование / Enable Drawing')}
+            </Button>
 
             <AnimatePresence>
               {active && (
@@ -196,7 +193,7 @@ export default function DoodleControls({
                         userSelect: 'none',
                       }}
                     >
-                      Select Tool:
+                      {t('Выберите инструмент: / Select Tool:')}
                     </span>
                     <div
                       style={{
@@ -243,10 +240,10 @@ export default function DoodleControls({
                   </div>
 
                   {/* AI Guessing Button */}
-                  <button
+                  <Button
                     onClick={onGuessDrawing}
                     disabled={isGuessing}
-                    className="btn"
+                    variant="accent"
                     style={{
                       width: '100%',
                       padding: '8px',
@@ -255,14 +252,11 @@ export default function DoodleControls({
                       alignItems: 'center',
                       justifyContent: 'center',
                       gap: '6px',
-                      backgroundColor: 'var(--accent)',
-                      borderColor: 'var(--text)',
-                      color: 'var(--text)',
                       marginTop: '4px',
                     }}
                   >
-                    🎓 {isGuessing ? 'Угадываю...' : 'Дудли, угадай!'}
-                  </button>
+                    🎓 {isGuessing ? t('Угадываю... / Guessing...') : t('Дудли, угадай! / Doodly, guess!')}
+                  </Button>
 
                   {/* Actions */}
                   <div
@@ -274,22 +268,21 @@ export default function DoodleControls({
                       paddingTop: '10px',
                     }}
                   >
-                    <button
+                    <Button
                       onClick={onUndo}
-                      className="btn"
                       style={{ flex: 1, padding: '5px', fontSize: '12px' }}
-                      title="Remove last stroke"
+                      title={t('Удалить последний штрих / Remove last stroke')}
                     >
-                      ↩️ Undo
-                    </button>
-                    <button
+                      ↩️ {t('Назад / Undo')}
+                    </Button>
+                    <Button
                       onClick={onClear}
-                      className="btn btn-danger"
+                      variant="danger"
                       style={{ flex: 1, padding: '5px', fontSize: '12px' }}
-                      title="Clear all doodles"
+                      title={t('Очистить весь холст / Clear all doodles')}
                     >
-                      🗑️ Clear
-                    </button>
+                      🗑️ {t('Сброс / Clear')}
+                    </Button>
                   </div>
                 </motion.div>
               )}
@@ -305,8 +298,7 @@ export default function DoodleControls({
                   userSelect: 'none',
                 }}
               >
-                * Link clicks are disabled while drawing. Turn off to click
-                links.
+                {t('* Во время рисования клики по ссылкам отключены. Отключите рисование для перехода по ссылкам. / * Link clicks are disabled while drawing. Turn off to click links.')}
               </p>
             )}
           </motion.div>

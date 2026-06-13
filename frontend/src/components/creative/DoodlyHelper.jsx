@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { soundSynth } from '../utils/audioSynth';
-import { useTheme } from '../contexts/ThemeContext';
-import { useLanguage } from '../contexts/LanguageContext';
+import { soundSynth } from '../../utils/audioSynth';
+import { useTheme } from '../../contexts/ThemeContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const DOODLY_QUOTES = [
   'Привет! Я скрепка-интеллектуал Дудли. 🎓 Помогу настроить работу и поделюсь знаниями! / Hi! I am Doodly, the intellectual paperclip. 🎓 I will help you set up and share some knowledge!',
@@ -19,8 +19,8 @@ const DOODLY_QUOTES = [
 ];
 
 export default function DoodlyHelper() {
-  const { t } = useLanguage();
-  const [bubbleText, setBubbleText] = useState('');
+  const { t, language } = useLanguage();
+  const [currentQuote, setCurrentQuote] = useState('');
   const [isWaving, setIsWaving] = useState(false);
   const [activeSpeech, setActiveSpeech] = useState(false);
   const [inputValue, setInputValue] = useState('');
@@ -57,7 +57,7 @@ export default function DoodlyHelper() {
   // Listen to canvas guess events
   useEffect(() => {
     const handleGuessStart = () => {
-      setBubbleText(t('Так-так-так... Посмотрим на твой шедевр! Угадываю... 🎨 / Well, well, well... Let\'s look at your masterpiece! Guessing... 🎨'));
+      setCurrentQuote('Так-так-так... Посмотрим на твой шедевр! Угадываю... 🎨 / Well, well, well... Let\'s look at your masterpiece! Guessing... 🎨');
       setActiveSpeech(true);
       setIsLoading(true);
       setIsWaving(true);
@@ -65,7 +65,7 @@ export default function DoodlyHelper() {
 
     const handleGuessResult = (e) => {
       setIsLoading(false);
-      setBubbleText(e.detail.guess || t('Хм-м, не могу распознать рисунок... / Hmm, I cannot recognize the drawing...'));
+      setCurrentQuote(e.detail.guess || 'Хм-м, не могу распознать рисунок... / Hmm, I cannot recognize the drawing...');
       setIsWaving(true);
       setTimeout(() => setIsWaving(false), 800);
     };
@@ -194,7 +194,7 @@ export default function DoodlyHelper() {
   const showQuote = (text) => {
     soundSynth.playPop();
     const rawQuote = text || DOODLY_QUOTES[Math.floor(Math.random() * DOODLY_QUOTES.length)];
-    setBubbleText(t(rawQuote));
+    setCurrentQuote(rawQuote);
     setActiveSpeech(true);
     setIsWaving(true);
     setTimeout(() => setIsWaving(false), 800);
@@ -220,17 +220,17 @@ export default function DoodlyHelper() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message: userMsg }),
+        body: JSON.stringify({ message: userMsg, lang: language }),
       });
 
       if (!response.ok) throw new Error('API error');
       const data = await response.json();
-      setBubbleText(data.response);
+      setCurrentQuote(data.response);
       soundSynth.playPop();
     } catch (err) {
       console.error(err);
-      setBubbleText(
-        t('Ой, у меня карандаш сломался во время размышлений... Попробуй еще раз! ✏️ / Oops, my pencil broke while thinking... Try again! ✏️')
+      setCurrentQuote(
+        'Ой, у меня карандаш сломался во время размышлений... Попробуй еще раз! ✏️ / Oops, my pencil broke while thinking... Try again! ✏️'
       );
     } finally {
       setIsLoading(false);
@@ -536,7 +536,7 @@ export default function DoodlyHelper() {
                   </motion.span>
                 </div>
               ) : (
-                bubbleText
+                t(currentQuote)
               )}
             </div>
 

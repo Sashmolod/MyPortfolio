@@ -52,16 +52,25 @@ vi.mock('../components/StatsView', () => ({
   default: () => <div data-testid="mock-stats" />,
 }));
 
-// Mock framer-motion
+// Mock framer-motion to bypass animations while preserving correct tag names and component instances
 vi.mock('framer-motion', () => {
   const React = require('react');
-  const DummyDiv = React.forwardRef(({ children, ...props }, ref) => {
-    return React.createElement('div', { ref, ...props }, children);
-  });
+  const cache = {};
+  const motionProxy = new Proxy(
+    {},
+    {
+      get: (target, key) => {
+        if (!cache[key]) {
+          cache[key] = React.forwardRef(({ children, whileHover, whileTap, ...props }, ref) => {
+            return React.createElement(key, { ref, ...props }, children);
+          });
+        }
+        return cache[key];
+      },
+    }
+  );
   return {
-    motion: {
-      div: DummyDiv,
-    },
+    motion: motionProxy,
     AnimatePresence: ({ children }) => children,
   };
 });

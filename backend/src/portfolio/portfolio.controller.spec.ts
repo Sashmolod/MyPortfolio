@@ -117,7 +117,7 @@ describe('PortfolioController', () => {
 
       const result = await controller.askDoodlyChat({ message: 'Hi' });
       expect(result).toBe(responseMock);
-      expect(mockPortfolioService.askDoodlyChat).toHaveBeenCalledWith('Hi');
+      expect(mockPortfolioService.askDoodlyChat).toHaveBeenCalledWith('Hi', undefined);
     });
   });
 
@@ -128,7 +128,7 @@ describe('PortfolioController', () => {
 
       const result = await controller.guessDoodle({ image: 'base64str' });
       expect(result).toBe(responseMock);
-      expect(mockPortfolioService.guessDoodle).toHaveBeenCalledWith('base64str');
+      expect(mockPortfolioService.guessDoodle).toHaveBeenCalledWith('base64str', undefined);
     });
   });
 

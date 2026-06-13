@@ -1,37 +1,29 @@
 import { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
 import { useLanguage } from '../../contexts/LanguageContext';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
+import Input from '../../components/ui/Input';
+import Select from '../../components/ui/Select';
 
 function SkillRow({ skill, onEdit, onDelete }) {
   const { t } = useLanguage();
   return (
-    <motion.div
+    <Card
       style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '10px 16px',
         marginBottom: '10px',
-        background: 'var(--card-bg)',
-        border: 'var(--border-style)',
-        borderRadius: 'var(--sketch-radius-3)',
-        boxShadow: '3px 3px 0px var(--border-color)',
         gap: '16px',
         flexWrap: 'wrap',
-        transition: 'transform 0.2s ease, box-shadow 0.2s ease, border-radius 0.3s ease',
       }}
-      whileHover={{
-        transform: 'translate(-2px, -2px)',
-        boxShadow: '5px 5px 0px var(--border-color)',
-        borderRadius: 'var(--sketch-radius-1)',
-      }}
-      initial={{ opacity: 0, y: 5 }}
-      animate={{ opacity: 1, y: 0 }}
+      hoverable
     >
       {/* Icon & Name */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: '160px', flex: '1 1 200px' }}>
         {skill.icon && <span style={{ fontSize: '1.2rem' }}>{skill.icon}</span>}
-        <strong style={{ fontSize: '15px' }}>{skill.name}</strong>
+        <strong style={{ fontSize: '15px', fontFamily: 'var(--font-family)' }}>{skill.name}</strong>
         {skill.subcategory && (
           <span style={{
             fontSize: '11px',
@@ -39,7 +31,8 @@ function SkillRow({ skill, onEdit, onDelete }) {
             border: '1px solid var(--border-color)',
             padding: '1px 6px',
             borderRadius: '10px',
-            whiteSpace: 'nowrap'
+            whiteSpace: 'nowrap',
+            fontFamily: 'var(--font-family)'
           }}>
             {skill.subcategory}
           </span>
@@ -55,8 +48,9 @@ function SkillRow({ skill, onEdit, onDelete }) {
         whiteSpace: 'nowrap',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
-      }} title={skill.description}>
-        {skill.description || 'Нет описания / No description'}
+        fontFamily: 'var(--font-family)'
+      }} title={skill.description ? t(skill.description) : t('Нет описания / No description')}>
+        {skill.description ? t(skill.description) : t('Нет описания / No description')}
       </div>
 
       {/* Level bar */}
@@ -70,40 +64,29 @@ function SkillRow({ skill, onEdit, onDelete }) {
       </div>
 
       {/* Sort order */}
-      <div style={{ fontSize: '12px', opacity: 0.7, minWidth: '60px', textAlign: 'center' }}>
+      <div style={{ fontSize: '12px', opacity: 0.7, minWidth: '60px', textAlign: 'center', fontFamily: 'var(--font-family)' }}>
         {t('Сортировка: / Sort:')} <strong>{skill.sortOrder}</strong>
       </div>
 
       {/* Actions */}
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-        <button
-          className="btn"
+        <Button
           onClick={() => onEdit(skill)}
-          style={{
-            padding: '6px 14px',
-            fontSize: '12px',
-            boxShadow: '2px 2px 0px var(--border-color)',
-            width: 'auto',
-            marginBottom: 0
-          }}
+          size="sm"
+          style={{ width: 'auto', margin: 0 }}
         >
           {t('Редактировать / Edit')}
-        </button>
-        <button
-          className="btn btn-danger"
+        </Button>
+        <Button
+          variant="danger"
           onClick={() => onDelete(skill.id, 'skill')}
-          style={{
-            padding: '6px 14px',
-            fontSize: '12px',
-            boxShadow: '2px 2px 0px var(--border-color)',
-            width: 'auto',
-            marginBottom: 0
-          }}
+          size="sm"
+          style={{ width: 'auto', margin: 0 }}
         >
           {t('Удалить / Delete')}
-        </button>
+        </Button>
       </div>
-    </motion.div>
+    </Card>
   );
 }
 
@@ -150,7 +133,7 @@ export default function SkillsList({ skills = [], onEdit, onDelete }) {
   }, [skills, searchQuery, sortBy]);
 
   const grouped = filteredAndSortedSkills.reduce((acc, skill) => {
-    const cat = skill.category || 'Без категории';
+    const cat = skill.category || 'Без категории / No category';
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(skill);
     return acc;
@@ -165,33 +148,22 @@ export default function SkillsList({ skills = [], onEdit, onDelete }) {
         flexWrap: 'wrap',
         alignItems: 'center'
       }}>
-        <input
+        <Input
           type="text"
           placeholder={t('Поиск по названию, подкатегории или описанию... / Search by name, subcategory or description...')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          style={{
-            flex: '1 1 300px',
-            margin: 0,
-            padding: '8px 12px',
-            fontSize: '14px',
-            width: 'auto',
-          }}
+          containerStyle={{ flex: '1 1 300px' }}
+          style={{ margin: 0 }}
         />
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '0 1 auto' }}>
           <span style={{ fontSize: '14px', fontFamily: 'var(--font-family)', whiteSpace: 'nowrap' }}>
             {t('Сортировка: / Sort by:')}
           </span>
-          <select
+          <Select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            style={{
-              margin: 0,
-              padding: '8px 12px',
-              fontSize: '14px',
-              width: '180px',
-              cursor: 'pointer'
-            }}
+            containerStyle={{ margin: 0, width: '180px' }}
           >
             <option value="sortOrder-asc">{t('Порядок (возр.) / Order (asc)')}</option>
             <option value="sortOrder-desc">{t('Порядок (убыв.) / Order (desc)')}</option>
@@ -199,20 +171,18 @@ export default function SkillsList({ skills = [], onEdit, onDelete }) {
             <option value="level-asc">{t('Уровень (возр.) / Level (asc)')}</option>
             <option value="name-asc">{t('Имя (А-Я) / Name (A-Z)')}</option>
             <option value="name-desc">{t('Имя (Я-А) / Name (Z-A)')}</option>
-          </select>
+          </Select>
         </div>
       </div>
 
       {Object.entries(grouped).map(([category, categorySkills]) => (
-        <motion.div
+        <div
           key={category}
           style={{ marginBottom: '30px' }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
         >
           <h2
             style={{
-              fontFamily: "'Architects Daughter', cursive",
+              fontFamily: 'var(--font-family)',
               borderBottom: '2px solid var(--border-color)',
               paddingBottom: '10px',
               marginBottom: '20px',
@@ -220,8 +190,8 @@ export default function SkillsList({ skills = [], onEdit, onDelete }) {
               color: 'var(--accent)',
             }}
           >
-            {category}
-            <span style={{ fontSize: '0.9rem', opacity: 0.6, marginLeft: '10px' }}>
+            {t(category)}
+            <span style={{ fontSize: '0.9rem', opacity: 0.6, marginLeft: '10px', fontFamily: 'var(--font-family)' }}>
               ({categorySkills.length})
             </span>
           </h2>
@@ -235,7 +205,7 @@ export default function SkillsList({ skills = [], onEdit, onDelete }) {
               />
             ))}
           </div>
-        </motion.div>
+        </div>
       ))}
     </div>
   );

@@ -112,7 +112,7 @@ export class PortfolioController {
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('doodly/chat')
   async askDoodlyChat(@Body() body: DoodlyChatRequestDto): Promise<DoodlyChatResponseDto> {
-    return this.portfolioService.askDoodlyChat(body.message);
+    return this.portfolioService.askDoodlyChat(body.message, body.lang);
   }
 
   @ApiTags('doodly')
@@ -122,7 +122,7 @@ export class PortfolioController {
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('doodly/guess')
   async guessDoodle(@Body() body: DoodlyGuessRequestDto): Promise<DoodlyGuessResponseDto> {
-    return this.portfolioService.guessDoodle(body.image);
+    return this.portfolioService.guessDoodle(body.image, body.lang);
   }
 
   @ApiTags('settings')

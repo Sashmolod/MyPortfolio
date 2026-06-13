@@ -1,18 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
-import Projects from './Projects';
-import api from '../api';
+import Projects from './ProjectsSection';
+import api from '../../api';
 
 // Mock API
-vi.mock('../api', () => ({
+vi.mock('../../api', () => ({
   default: {
     post: vi.fn().mockResolvedValue({}),
   },
 }));
 
 // Mock LanguageContext hook
-vi.mock('../contexts/LanguageContext', () => ({
+vi.mock('../../contexts/LanguageContext', () => ({
   useLanguage: () => ({
     language: 'en',
     t: (keyOrBilingual) => {

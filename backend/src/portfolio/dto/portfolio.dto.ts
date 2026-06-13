@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class ContactInfoDto {
   @ApiProperty({ description: 'Контактный email', example: 'john@example.com' })
@@ -17,6 +17,11 @@ export class DoodlyChatRequestDto {
   @IsString()
   @IsNotEmpty()
   message: string;
+
+  @ApiProperty({ description: 'Текущий активный язык интерфейса (ru или en)', example: 'ru', required: false })
+  @IsString()
+  @IsOptional()
+  lang?: string;
 }
 
 export class DoodlyChatResponseDto {
@@ -29,6 +34,11 @@ export class DoodlyGuessRequestDto {
   @IsString()
   @IsNotEmpty()
   image: string;
+
+  @ApiProperty({ description: 'Текущий активный язык интерфейса (ru или en)', example: 'ru', required: false })
+  @IsString()
+  @IsOptional()
+  lang?: string;
 }
 
 export class DoodlyGuessResponseDto {

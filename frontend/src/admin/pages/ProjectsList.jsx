@@ -1,17 +1,18 @@
-import { motion } from 'framer-motion';
 import { useLanguage } from '../../contexts/LanguageContext';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
 
 function ProjectCard({ project, onEdit, onDelete }) {
   const { t } = useLanguage();
   return (
-    <motion.div
-      className="card"
+    <Card
       style={{ position: 'relative' }}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+      hoverable
     >
-      <h3>{project.title}</h3>
-      <p><strong>{t('Описание: / Description:')}</strong> {project.description}</p>
+      <h3 style={{ fontFamily: 'var(--font-family)', fontWeight: 'bold' }}>{project.title}</h3>
+      <p style={{ fontFamily: 'var(--font-family)' }}>
+        <strong>{t('Описание: / Description:')}</strong> {project.description ? t(project.description) : t('Нет описания / No description')}
+      </p>
       {project.image && (
         <div style={{ marginBottom: '10px' }}>
           <img
@@ -29,7 +30,7 @@ function ProjectCard({ project, onEdit, onDelete }) {
         </div>
       )}
       {project.link && (
-        <p>
+        <p style={{ fontFamily: 'var(--font-family)' }}>
           <strong>{t('Ссылка: / Link:')}</strong>{' '}
           <a
             href={project.link}
@@ -43,7 +44,7 @@ function ProjectCard({ project, onEdit, onDelete }) {
         </p>
       )}
       {project.skills && project.skills.length > 0 && (
-        <p>
+        <p style={{ fontFamily: 'var(--font-family)' }}>
           <strong>{t('Навыки: / Skills:')}</strong>{' '}
           {project.skills
             .map((s) => s?.name || s)
@@ -51,19 +52,29 @@ function ProjectCard({ project, onEdit, onDelete }) {
             .join(', ')}
         </p>
       )}
-      <p><strong>{t('Порядок сортировки: / Sort Order:')}</strong> {project.sortOrder}</p>
+      <p style={{ fontFamily: 'var(--font-family)' }}>
+        <strong>{t('Порядок сортировки: / Sort Order:')}</strong> {project.sortOrder}
+      </p>
       <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
-        <button className="btn" onClick={() => onEdit(project)}>{t('Редактировать / Edit')}</button>
-        <button className="btn btn-danger" onClick={() => onDelete(project.id, 'project')}>{t('Удалить / Delete')}</button>
+        <Button size="sm" onClick={() => onEdit(project)} style={{ width: 'auto', margin: 0 }}>
+          {t('Редактировать / Edit')}
+        </Button>
+        <Button variant="danger" size="sm" onClick={() => onDelete(project.id, 'project')} style={{ width: 'auto', margin: 0 }}>
+          {t('Удалить / Delete')}
+        </Button>
       </div>
-    </motion.div>
+    </Card>
   );
 }
 
 export default function ProjectsList({ projects = [], onEdit, onDelete }) {
   const { t } = useLanguage();
   if (!projects || projects.length === 0) {
-    return <p>{t('Проектов пока нет. Нажмите кнопку выше, чтобы добавить. / No projects yet. Click the button above to add one.')}</p>;
+    return (
+      <p style={{ fontFamily: 'var(--font-family)' }}>
+        {t('Проектов пока нет. Нажмите кнопку выше, чтобы добавить. / No projects yet. Click the button above to add one.')}
+      </p>
+    );
   }
 
   return (

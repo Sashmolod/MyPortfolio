@@ -147,6 +147,58 @@ section h2 {
   box-shadow: 0px 0px 0px var(--border-color);
 }
 
+/* Первичная кнопка в стиле Sketch */
+.btn-primary {
+  background: var(--primary) !important;
+  color: var(--bg) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: 3px 3px 0px var(--border-color) !important;
+  border-radius: var(--sketch-radius-3) !important;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background: var(--secondary) !important;
+  color: var(--bg) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: 5px 5px 0px var(--border-color) !important;
+  border-radius: var(--sketch-radius-1) !important;
+  transform: translate(-2px, -2px);
+}
+
+.btn-primary:active {
+  transform: translate(3px, 3px);
+  box-shadow: 0px 0px 0px var(--border-color) !important;
+}
+
+/* Акцентная кнопка в стиле Sketch */
+.btn-accent {
+  background: var(--accent) !important;
+  color: var(--text) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: 3px 3px 0px var(--border-color) !important;
+  border-radius: var(--sketch-radius-3) !important;
+  transition: all 0.2s ease;
+}
+
+.btn-accent:hover {
+  background: var(--secondary) !important;
+  color: var(--bg) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: 5px 5px 0px var(--border-color) !important;
+  border-radius: var(--sketch-radius-1) !important;
+  transform: translate(-2px, -2px);
+}
+
+.btn-accent:active {
+  transform: translate(3px, 3px);
+  box-shadow: 0px 0px 0px var(--border-color) !important;
+}
+
+[data-theme='dark'] .btn-accent {
+  color: var(--bg) !important;
+}
+
 /* Кнопка удаления/выхода в стиле Sketch */
 .btn-danger {
   background: var(--danger) !important;
@@ -218,6 +270,10 @@ section h2 {
   transform: translate(-2px, -4px);
   box-shadow: 5px 5px 0px var(--border-color);
   border-radius: 18px 12px 22px 8px / 22px 8px 12px 18px;
+}
+
+[data-theme='dark'] .btn-tab:hover {
+  color: var(--bg);
 }
 
 /* Подсветка ошибок инпутов */

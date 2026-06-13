@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { DeveloperIllustration, BackgroundParticles } from './SvgIllustrations';
-import heroImg from '../assets/hero.png';
+import { DeveloperIllustration, BackgroundParticles } from '../SvgIllustrations';
+import heroImg from '../../assets/hero.png';
 
 /**
  * Словарь со встроенными путями SVG для социальных сетей (эскизный стиль)
@@ -172,7 +172,7 @@ function SocialIcon({ name, size = 20 }) {
   );
 }
 
-export default function Hero({ data }) {
+export default function HeroSection({ data }) {
   const hero = data || {
     name: 'John Doe',
     title: 'Full Stack Developer',

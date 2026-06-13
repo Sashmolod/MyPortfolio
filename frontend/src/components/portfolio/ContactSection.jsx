@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import api from '../api';
-import { MailIcon } from './SvgIllustrations';
-import { soundSynth } from '../utils/audioSynth';
-import { useLanguage } from '../contexts/LanguageContext';
-import { useTemplate } from '../contexts/TemplateContext';
+import api from '../../api';
+import { MailIcon } from '../SvgIllustrations';
+import { soundSynth } from '../../utils/audioSynth';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { useTemplate } from '../../contexts/TemplateContext';
 
 const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 

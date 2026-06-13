@@ -1,5 +1,6 @@
 import { SketchLockIcon } from '../../components/SvgIllustrations';
 import { useLanguage } from '../../contexts/LanguageContext';
+import Card from '../../components/ui/Card';
 
 /**
  * SettingsTab Component
@@ -82,10 +83,10 @@ export default function SettingsTab({ settings = {}, savingSettings = false, onT
 
   return (
     <div style={{ maxWidth: '520px', margin: '20px auto 0 auto' }}>
-      <div className="card">
+      <Card>
         <h3
           style={{
-            fontFamily: "'Architects Daughter', cursive",
+            fontFamily: 'var(--font-family)',
             marginBottom: '20px',
             fontWeight: 'bold',
             fontSize: '1.4rem',
@@ -104,7 +105,7 @@ export default function SettingsTab({ settings = {}, savingSettings = false, onT
                 gap: '12px',
                 cursor: savingSettings ? 'default' : 'pointer',
                 fontSize: '14px',
-                fontFamily: "'Architects Daughter', cursive",
+                fontFamily: 'var(--font-family)',
                 color: 'var(--text)',
                 userSelect: 'none',
               }}
@@ -126,7 +127,7 @@ export default function SettingsTab({ settings = {}, savingSettings = false, onT
             </label>
           ))}
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

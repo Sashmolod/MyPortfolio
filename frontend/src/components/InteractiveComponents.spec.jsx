@@ -11,11 +11,11 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 
-import CoffeeCup from './CoffeeCup';
-import InkLeak from './InkLeak';
-import PageCrumpler from './PageCrumpler';
-import PageTear from './PageTear';
-import SketchyBug from './SketchyBug';
+import CoffeeCup from './creative/CoffeeCup';
+import InkLeak from './creative/InkLeak';
+import PageCrumpler from './creative/PageCrumpler';
+import PageTear from './creative/PageTear';
+import SketchyBug from './creative/SketchyBug';
 import {
   DeveloperIllustration,
   TechIcon,

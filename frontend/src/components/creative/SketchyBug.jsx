@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { soundSynth } from '../utils/audioSynth';
+import { soundSynth } from '../../utils/audioSynth';
 
 export default function SketchyBug() {
   const [bug, setBug] = useState(null);

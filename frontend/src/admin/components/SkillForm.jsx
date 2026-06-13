@@ -1,8 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
 import api from '../../api';
+import { useLanguage } from '../../contexts/LanguageContext';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
+import Input from '../../components/ui/Input';
+import Select from '../../components/ui/Select';
 
 export default function SkillForm({ item, onSaveData, onCancel }) {
+  const { t } = useLanguage();
   const [form, setForm] = useState(() => {
     if (item)
       return {
@@ -60,8 +65,8 @@ export default function SkillForm({ item, onSaveData, onCancel }) {
 
   const validate = () => {
     const errs = {};
-    if (!form.name.trim()) errs.name = 'Name is required';
-    if (form.level < 0 || form.level > 100) errs.level = 'Level must be 0-100';
+    if (!form.name.trim()) errs.name = 'Название обязательно / Name is required';
+    if (form.level < 0 || form.level > 100) errs.level = 'Уровень должен быть от 0 до 100 / Level must be 0-100';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -104,64 +109,93 @@ export default function SkillForm({ item, onSaveData, onCancel }) {
     );
   };
 
-  const renderError = (field) => {
-    if (!errors[field]) return null;
-    return <span style={{ color: 'var(--danger)', fontSize: '12px', display: 'block', marginTop: '-8px', marginBottom: '8px', fontFamily: "'Architects Daughter', cursive" }}>{errors[field]}</span>;
-  };
-
   return (
-    <motion.div className="card" style={{ marginBottom: '20px' }} initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-      <h3 style={{ fontFamily: "'Architects Daughter', cursive", fontWeight: 'bold', marginBottom: '20px' }}>
-        {item ? 'Edit Skill' : 'Add Skill'}
+    <Card style={{ marginBottom: '20px' }}>
+      <h3 style={{ fontFamily: 'var(--font-family)', fontWeight: 'bold', marginBottom: '20px' }}>
+        {item ? t('Редактировать навык / Edit Skill') : t('Добавить навык / Add Skill')}
       </h3>
       <form onSubmit={handleSubmit} noValidate>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <div>
-            <input placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={errors.name ? 'input-error' : ''} required />
-            {renderError('name')}
-          </div>
+          <Input
+            placeholder={t('Название / Name')}
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            error={errors.name ? t(errors.name) : null}
+            required
+          />
+          
           <div>
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-              <input placeholder="Icon key (e.g., react, typescript, docker)" value={form.icon} onChange={(e) => setForm({ ...form, icon: e.target.value.trim().toLowerCase() })} style={{ flex: 1, margin: 0 }} />
+              <Input
+                placeholder={t('Ключ иконки (например, react, typescript, docker) / Icon key (e.g., react, typescript, docker)')}
+                value={form.icon}
+                onChange={(e) => setForm({ ...form, icon: e.target.value.trim().toLowerCase() })}
+                containerStyle={{ flex: 1 }}
+                style={{ margin: 0 }}
+              />
               {renderIconPreview()}
             </div>
           </div>
-          <input placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-          <div>
-            <input type="number" placeholder="Level (0-100)" value={form.level} onChange={(e) => setForm({ ...form, level: +e.target.value })} min="0" max="100" className={errors.level ? 'input-error' : ''} required />
-            {renderError('level')}
-          </div>
-          <input type="number" placeholder="Sort Order" value={form.sortOrder} onChange={(e) => setForm({ ...form, sortOrder: +e.target.value })} />
-          <div>
-            <label style={{ fontSize: '12px', opacity: 0.7, marginBottom: '4px', display: 'block' }}>Category</label>
-            {loadingCategories ? (
-              <p style={{ fontSize: '12px', opacity: 0.5 }}>Loading...</p>
-            ) : (
-              <select value={form.categoryId} onChange={handleCategoryChange} style={{ margin: 0 }}>
-                <option value="">No category</option>
-                {categories.filter(c => c.parentId === null || c.parentId === undefined).map(cat => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
-                ))}
-              </select>
-            )}
-          </div>
+
+          <Input
+            placeholder={t('Описание / Description')}
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+          />
+
+          <Input
+            type="number"
+            placeholder={t('Уровень (0-100) / Level (0-100)')}
+            value={form.level}
+            onChange={(e) => setForm({ ...form, level: +e.target.value })}
+            min="0"
+            max="100"
+            error={errors.level ? t(errors.level) : null}
+            required
+          />
+
+          <Input
+            type="number"
+            placeholder={t('Порядок сортировки / Sort Order')}
+            value={form.sortOrder}
+            onChange={(e) => setForm({ ...form, sortOrder: +e.target.value })}
+          />
+
+          <Select
+            label={t('Категория / Category')}
+            value={form.categoryId}
+            onChange={handleCategoryChange}
+            loading={loadingCategories}
+          >
+            <option value="">{t('Без категории / No category')}</option>
+            {categories.filter(c => c.parentId === null || c.parentId === undefined).map(cat => (
+              <option key={cat.id} value={cat.id}>{t(cat.name)}</option>
+            ))}
+          </Select>
+
           {form.categoryId && (
-            <div>
-              <label style={{ fontSize: '12px', opacity: 0.7, marginBottom: '4px', display: 'block' }}>Subcategory</label>
-              <select value={form.subcategoryId} onChange={(e) => setForm({ ...form, subcategoryId: e.target.value })} style={{ margin: 0 }}>
-                <option value="">No subcategory</option>
-                {subcategories.map(sub => (
-                  <option key={sub.id} value={sub.id}>{sub.name}</option>
-                ))}
-              </select>
-            </div>
+            <Select
+              label={t('Подкатегория / Subcategory')}
+              value={form.subcategoryId}
+              onChange={(e) => setForm({ ...form, subcategoryId: e.target.value })}
+            >
+              <option value="">{t('Без подкатегории / No subcategory')}</option>
+              {subcategories.map(sub => (
+                <option key={sub.id} value={sub.id}>{t(sub.name)}</option>
+              ))}
+            </Select>
           )}
         </div>
+
         <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
-          <button className="btn" type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
-          <button className="btn" type="button" onClick={onCancel}>Cancel</button>
+          <Button type="submit" variant="primary" loading={saving}>
+            {t('Сохранить / Save')}
+          </Button>
+          <Button onClick={onCancel}>
+            {t('Отмена / Cancel')}
+          </Button>
         </div>
       </form>
-    </motion.div>
+    </Card>
   );
 }

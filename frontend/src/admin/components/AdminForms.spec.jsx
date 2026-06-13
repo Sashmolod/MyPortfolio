@@ -14,12 +14,42 @@ vi.mock('../../api', () => ({
   },
 }));
 
-// Mock framer-motion to bypass animations
-vi.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, ...props }) => <div {...props}>{children}</div>,
-  },
+// Mock LanguageContext to return English in tests
+vi.mock('../../contexts/LanguageContext', () => ({
+  useLanguage: () => ({
+    language: 'en',
+    t: (keyOrBilingual) => {
+      if (typeof keyOrBilingual !== 'string') return keyOrBilingual;
+      if (keyOrBilingual.includes(' / ')) {
+        return keyOrBilingual.split(' / ')[1].trim();
+      }
+      return keyOrBilingual;
+    },
+  }),
 }));
+
+// Mock framer-motion to bypass animations while preserving correct tag names and component instances
+vi.mock('framer-motion', () => {
+  const React = require('react');
+  const cache = {};
+  const motionProxy = new Proxy(
+    {},
+    {
+      get: (target, key) => {
+        if (!cache[key]) {
+          cache[key] = React.forwardRef(({ children, whileHover, whileTap, ...props }, ref) => {
+            return React.createElement(key, { ref, ...props }, children);
+          });
+        }
+        return cache[key];
+      },
+    }
+  );
+  return {
+    motion: motionProxy,
+    AnimatePresence: ({ children }) => children,
+  };
+});
 
 describe('Admin Forms components', () => {
   beforeEach(() => {
@@ -262,7 +292,7 @@ describe('Admin Forms components', () => {
         <HeroForm heroData={heroData} onSaveData={vi.fn()} onCancel={vi.fn()} />
       );
 
-      const sketchBtn = screen.getByText('✨ Эскиз карандашом');
+      const sketchBtn = screen.getByText('✨ Pencil Sketch');
       fireEvent.click(sketchBtn);
 
       await waitFor(() => {

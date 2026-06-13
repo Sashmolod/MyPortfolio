@@ -1,6 +1,9 @@
-import { motion } from 'framer-motion';
+import { useLanguage } from '../../contexts/LanguageContext';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
 
 export default function TrashView({ items, onRestore, onDeletePermanently }) {
+  const { t } = useLanguage();
   const {
     skills = [],
     projects = [],
@@ -15,10 +18,14 @@ export default function TrashView({ items, onRestore, onDeletePermanently }) {
 
   if (isEmpty) {
     return (
-      <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
-        <h3>Trash is empty</h3>
-        <p style={{ opacity: 0.6 }}>No soft-deleted items found.</p>
-      </div>
+      <Card style={{ textAlign: 'center', padding: '40px' }}>
+        <h3 style={{ fontFamily: 'var(--font-family)', fontWeight: 'bold' }}>
+          {t('Корзина пуста / Trash is empty')}
+        </h3>
+        <p style={{ opacity: 0.6, fontFamily: 'var(--font-family)' }}>
+          {t('Удаленных элементов не найдено. / No soft-deleted items found.')}
+        </p>
+      </Card>
     );
   }
 
@@ -29,42 +36,46 @@ export default function TrashView({ items, onRestore, onDeletePermanently }) {
           <h2
             style={{
               marginBottom: '15px',
-              borderBottom: '1px solid var(--border)',
+              borderBottom: '1px solid var(--border-color)',
               paddingBottom: '8px',
+              fontFamily: 'var(--font-family)',
+              fontWeight: 'bold',
             }}
           >
-            Deleted Skills
+            {t('Удаленные навыки / Deleted Skills')}
           </h2>
           <div className="grid">
             {skills.map((skill) => (
-              <motion.div
+              <Card
                 key={skill.id}
-                className="card"
                 style={{ position: 'relative', opacity: 0.8 }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 0.8 }}
+                hoverable
               >
-                <h3>{skill.name}</h3>
-                <p>Level: {skill.level}%</p>
-                <p style={{ fontSize: '12px', opacity: 0.5, marginTop: '8px' }}>
-                  Deleted: {new Date(skill.deletedAt).toLocaleString()}
+                <h3 style={{ fontFamily: 'var(--font-family)', fontWeight: 'bold' }}>{skill.name}</h3>
+                <p style={{ fontFamily: 'var(--font-family)' }}>
+                  {t('Уровень: / Level:')} {skill.level}%
+                </p>
+                <p style={{ fontSize: '12px', opacity: 0.5, marginTop: '8px', fontFamily: 'var(--font-family)' }}>
+                  {t('Удалено: / Deleted:')} {new Date(skill.deletedAt).toLocaleString()}
                 </p>
                 <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                  <button
-                    className="btn"
-                    style={{ background: '#10b981' }}
+                  <Button
+                    size="sm"
+                    style={{ backgroundColor: '#10b981', color: '#fff', border: 'none', width: 'auto', margin: 0 }}
                     onClick={() => onRestore(skill.id, 'skill')}
                   >
-                    Restore
-                  </button>
-                  <button
-                    className="btn btn-danger"
+                    {t('Восстановить / Restore')}
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    style={{ width: 'auto', margin: 0 }}
                     onClick={() => onDeletePermanently(skill.id, 'skill')}
                   >
-                    Delete Permanently
-                  </button>
+                    {t('Удалить навсегда / Delete Permanently')}
+                  </Button>
                 </div>
-              </motion.div>
+              </Card>
             ))}
           </div>
         </div>
@@ -75,42 +86,46 @@ export default function TrashView({ items, onRestore, onDeletePermanently }) {
           <h2
             style={{
               marginBottom: '15px',
-              borderBottom: '1px solid var(--border)',
+              borderBottom: '1px solid var(--border-color)',
               paddingBottom: '8px',
+              fontFamily: 'var(--font-family)',
+              fontWeight: 'bold',
             }}
           >
-            Deleted Projects
+            {t('Удаленные проекты / Deleted Projects')}
           </h2>
           <div className="grid">
             {projects.map((project) => (
-              <motion.div
+              <Card
                 key={project.id}
-                className="card"
                 style={{ position: 'relative', opacity: 0.8 }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 0.8 }}
+                hoverable
               >
-                <h3>{project.title}</h3>
-                <p>{project.description?.slice(0, 100)}...</p>
-                <p style={{ fontSize: '12px', opacity: 0.5, marginTop: '8px' }}>
-                  Deleted: {new Date(project.deletedAt).toLocaleString()}
+                <h3 style={{ fontFamily: 'var(--font-family)', fontWeight: 'bold' }}>{project.title}</h3>
+                <p style={{ fontFamily: 'var(--font-family)' }}>
+                  {project.description ? t(project.description).slice(0, 100) : t('Нет описания / No description')}...
+                </p>
+                <p style={{ fontSize: '12px', opacity: 0.5, marginTop: '8px', fontFamily: 'var(--font-family)' }}>
+                  {t('Удалено: / Deleted:')} {new Date(project.deletedAt).toLocaleString()}
                 </p>
                 <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                  <button
-                    className="btn"
-                    style={{ background: '#10b981' }}
+                  <Button
+                    size="sm"
+                    style={{ backgroundColor: '#10b981', color: '#fff', border: 'none', width: 'auto', margin: 0 }}
                     onClick={() => onRestore(project.id, 'project')}
                   >
-                    Restore
-                  </button>
-                  <button
-                    className="btn btn-danger"
+                    {t('Восстановить / Restore')}
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    style={{ width: 'auto', margin: 0 }}
                     onClick={() => onDeletePermanently(project.id, 'project')}
                   >
-                    Delete Permanently
-                  </button>
+                    {t('Удалить навсегда / Delete Permanently')}
+                  </Button>
                 </div>
-              </motion.div>
+              </Card>
             ))}
           </div>
         </div>
@@ -121,23 +136,23 @@ export default function TrashView({ items, onRestore, onDeletePermanently }) {
           <h2
             style={{
               marginBottom: '15px',
-              borderBottom: '1px solid var(--border)',
+              borderBottom: '1px solid var(--border-color)',
               paddingBottom: '8px',
+              fontFamily: 'var(--font-family)',
+              fontWeight: 'bold',
             }}
           >
-            Deleted Social Links
+            {t('Удаленные социальные ссылки / Deleted Social Links')}
           </h2>
           <div className="grid">
             {socialLinks.map((link) => (
-              <motion.div
+              <Card
                 key={link.id}
-                className="card"
                 style={{ position: 'relative', opacity: 0.8 }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 0.8 }}
+                hoverable
               >
-                <h3>{link.platform}</h3>
-                <p>
+                <h3 style={{ fontFamily: 'var(--font-family)', fontWeight: 'bold' }}>{link.platform}</h3>
+                <p style={{ fontFamily: 'var(--font-family)' }}>
                   URL:{' '}
                   <a
                     href={link.url}
@@ -151,25 +166,27 @@ export default function TrashView({ items, onRestore, onDeletePermanently }) {
                     {link.url}
                   </a>
                 </p>
-                <p style={{ fontSize: '12px', opacity: 0.5, marginTop: '8px' }}>
-                  Deleted: {new Date(link.deletedAt).toLocaleString()}
+                <p style={{ fontSize: '12px', opacity: 0.5, marginTop: '8px', fontFamily: 'var(--font-family)' }}>
+                  {t('Удалено: / Deleted:')} {new Date(link.deletedAt).toLocaleString()}
                 </p>
                 <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                  <button
-                    className="btn"
-                    style={{ background: '#10b981' }}
+                  <Button
+                    size="sm"
+                    style={{ backgroundColor: '#10b981', color: '#fff', border: 'none', width: 'auto', margin: 0 }}
                     onClick={() => onRestore(link.id, 'social-link')}
                   >
-                    Restore
-                  </button>
-                  <button
-                    className="btn btn-danger"
+                    {t('Восстановить / Restore')}
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    style={{ width: 'auto', margin: 0 }}
                     onClick={() => onDeletePermanently(link.id, 'social-link')}
                   >
-                    Delete Permanently
-                  </button>
+                    {t('Удалить навсегда / Delete Permanently')}
+                  </Button>
                 </div>
-              </motion.div>
+              </Card>
             ))}
           </div>
         </div>
@@ -180,47 +197,51 @@ export default function TrashView({ items, onRestore, onDeletePermanently }) {
           <h2
             style={{
               marginBottom: '15px',
-              borderBottom: '1px solid var(--border)',
+              borderBottom: '1px solid var(--border-color)',
               paddingBottom: '8px',
+              fontFamily: 'var(--font-family)',
+              fontWeight: 'bold',
             }}
           >
-            Deleted Messages
+            {t('Удаленные сообщения / Deleted Messages')}
           </h2>
           <div className="grid">
             {messages.map((msg) => (
-              <motion.div
+              <Card
                 key={msg.id}
-                className="card"
                 style={{ position: 'relative', opacity: 0.8 }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 0.8 }}
+                hoverable
               >
-                <h3>{msg.subject || '(no subject)'}</h3>
-                <p>
-                  <strong>From:</strong> {msg.name} ({msg.email})
+                <h3 style={{ fontFamily: 'var(--font-family)', fontWeight: 'bold' }}>
+                  {msg.subject || t('(без темы) / (no subject)')}
+                </h3>
+                <p style={{ fontFamily: 'var(--font-family)' }}>
+                  <strong>{t('От: / From:')}</strong> {msg.name} ({msg.email})
                 </p>
-                <p style={{ marginTop: '8px' }}>
+                <p style={{ marginTop: '8px', fontFamily: 'var(--font-family)' }}>
                   {msg.message?.slice(0, 100)}...
                 </p>
-                <p style={{ fontSize: '12px', opacity: 0.5, marginTop: '8px' }}>
-                  Deleted: {new Date(msg.deletedAt).toLocaleString()}
+                <p style={{ fontSize: '12px', opacity: 0.5, marginTop: '8px', fontFamily: 'var(--font-family)' }}>
+                  {t('Удалено: / Deleted:')} {new Date(msg.deletedAt).toLocaleString()}
                 </p>
                 <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                  <button
-                    className="btn"
-                    style={{ background: '#10b981' }}
+                  <Button
+                    size="sm"
+                    style={{ backgroundColor: '#10b981', color: '#fff', border: 'none', width: 'auto', margin: 0 }}
                     onClick={() => onRestore(msg.id, 'message')}
                   >
-                    Restore
-                  </button>
-                  <button
-                    className="btn btn-danger"
+                    {t('Восстановить / Restore')}
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    style={{ width: 'auto', margin: 0 }}
                     onClick={() => onDeletePermanently(msg.id, 'message')}
                   >
-                    Delete Permanently
-                  </button>
+                    {t('Удалить навсегда / Delete Permanently')}
+                  </Button>
                 </div>
-              </motion.div>
+              </Card>
             ))}
           </div>
         </div>

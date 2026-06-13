@@ -13,7 +13,7 @@ const dictionary = {
     admin: 'Панель',
     logout: 'Выйти',
     loading: 'Загрузка...',
-    noDescription: 'Нет описания / No description',
+    noDescription: 'Нет описания',
     deleteConfirm: 'Удалить все рисунки?',
     all: '+ Все',
     none: '− Ничего',
@@ -206,6 +206,7 @@ export function useLanguage() {
       setLanguage: () => {},
       t: (keyOrBilingual) => {
         if (typeof keyOrBilingual !== 'string') return keyOrBilingual;
+        if (keyOrBilingual === 'noDescription') return 'Нет описания';
         const hasSlashSep = keyOrBilingual.includes(' / ');
         const hasPipeSep = keyOrBilingual.includes(' | ');
         if (hasSlashSep || hasPipeSep) {

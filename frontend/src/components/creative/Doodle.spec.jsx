@@ -4,11 +4,11 @@ import React from 'react';
 import DoodleCanvas from './DoodleCanvas';
 import DoodleControls from './DoodleControls';
 import DoodlyHelper from './DoodlyHelper';
-import { SettingsProvider } from '../contexts/SettingsContext';
-import { ThemeProvider } from '../contexts/ThemeContext';
+import { SettingsProvider } from '../../contexts/SettingsContext';
+import { ThemeProvider } from '../../contexts/ThemeContext';
 
 // Mock audioSynth and api
-vi.mock('../utils/audioSynth', () => ({
+vi.mock('../../utils/audioSynth', () => ({
   soundSynth: {
     startScribble: vi.fn(),
     stopScribble: vi.fn(),
@@ -17,7 +17,21 @@ vi.mock('../utils/audioSynth', () => ({
   },
 }));
 
-vi.mock('../api', () => ({
+// Mock LanguageContext to return English in tests
+vi.mock('../../contexts/LanguageContext', () => ({
+  useLanguage: () => ({
+    language: 'en',
+    t: (keyOrBilingual) => {
+      if (typeof keyOrBilingual !== 'string') return keyOrBilingual;
+      if (keyOrBilingual.includes(' / ')) {
+        return keyOrBilingual.split(' / ')[1].trim();
+      }
+      return keyOrBilingual;
+    },
+  }),
+}));
+
+vi.mock('../../api', () => ({
   default: {
     get: vi.fn().mockResolvedValue({
       data: {
@@ -188,7 +202,7 @@ describe('Doodle Feature Components', () => {
 
       // Click open -> expands again
       fireEvent.click(openBtn);
-      expect(screen.getByText('🎨 Doodles / Рисование')).toBeInTheDocument();
+      expect(screen.getByText('🎨 Doodles')).toBeInTheDocument();
     });
 
     it('triggers color/tool switches and clear/undo clicks', () => {
@@ -217,7 +231,7 @@ describe('Doodle Feature Components', () => {
       );
 
       // Toggle active
-      const toggleBtn = screen.getByText('📴 Disable Drawing / Навигация');
+      const toggleBtn = screen.getByText('📴 Disable Drawing');
       fireEvent.click(toggleBtn);
       expect(setActive).toHaveBeenCalledWith(false);
 
@@ -237,7 +251,7 @@ describe('Doodle Feature Components', () => {
       expect(onClear).toHaveBeenCalled();
 
       // Guess click
-      const guessBtn = screen.getByText(/Дудли, угадай!/);
+      const guessBtn = screen.getByText(/Doodly, guess!/);
       fireEvent.click(guessBtn);
       expect(onGuess).toHaveBeenCalled();
     });
@@ -264,30 +278,29 @@ describe('Doodle Feature Components', () => {
         </ThemeProvider>
       );
 
-      // Greeting message should render immediately
       await waitFor(() => {
         expect(
-          screen.getByText(/Привет! Нажми на меня, чтобы поболтать/)
+          screen.getByText(/Hi! Click on me to chat/)
         ).toBeInTheDocument();
       });
 
       // Trigger copy event
       fireEvent.copy(document);
       await waitFor(() => {
-        expect(screen.getByText(/Опа, копируешь\?/)).toBeInTheDocument();
+        expect(screen.getByText(/Whoa, copying\?/)).toBeInTheDocument();
       });
 
       // Trigger coffee slosh event
       window.dispatchEvent(new CustomEvent('coffee-slosh'));
       await waitFor(() => {
-        expect(screen.getByText(/Осторожнее с кофе!/)).toBeInTheDocument();
+        expect(screen.getByText(/Be careful with that coffee!/)).toBeInTheDocument();
       });
 
       // Trigger tic-tac-toe win event
       window.dispatchEvent(new CustomEvent('ttt-win-doodly'));
       await waitFor(() => {
         expect(
-          screen.getByText(/Умная скрепка побеждает человека!/)
+          screen.getByText(/smart paperclip beats the human/)
         ).toBeInTheDocument();
       });
     });
@@ -310,7 +323,7 @@ describe('Doodle Feature Components', () => {
       fireEvent.click(clipSvg);
 
       // Chat input form
-      const input = screen.getByPlaceholderText('Спроси меня...');
+      const input = screen.getByPlaceholderText('Ask me...');
       const form = input.closest('form');
 
       fireEvent.change(input, { target: { value: 'Как дела?' } });

@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
+import Input from '../../components/ui/Input';
 
 /**
  * SecurityTab Component
@@ -65,31 +67,25 @@ export default function SecurityTab() {
   return (
     <div style={{ maxWidth: '420px', margin: '20px auto 0 auto' }}>
       {success && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="card"
+        <Card
           style={{
-            border: 'var(--border-style)',
             borderColor: 'var(--accent)',
-            borderRadius: 'var(--sketch-radius-3)',
             padding: '12px',
             color: 'var(--text)',
-            background: 'var(--card-bg)',
             marginBottom: '20px',
             textAlign: 'center',
             fontWeight: 'bold',
-            fontFamily: "'Architects Daughter', cursive",
+            fontFamily: 'var(--font-family)',
           }}
         >
           {t('Пароль успешно изменён! / Password changed!')}
-        </motion.div>
+        </Card>
       )}
 
-      <div className="card">
+      <Card>
         <h3
           style={{
-            fontFamily: "'Architects Daughter', cursive",
+            fontFamily: 'var(--font-family)',
             marginBottom: '20px',
             fontWeight: 'bold',
             fontSize: '1.4rem',
@@ -100,72 +96,35 @@ export default function SecurityTab() {
         
         <form onSubmit={handleSubmit} noValidate>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {/* Current Password Field */}
-            <div>
-              <input
-                type="password"
-                placeholder={t('Текущий пароль / Current password')}
-                value={form.currentPassword}
-                onChange={(e) => setForm({ ...form, currentPassword: e.target.value })}
-                className={errors.currentPassword ? 'input-error' : ''}
-                required
-                style={{ marginBottom: errors.currentPassword ? '8px' : '16px' }}
-              />
-              {errors.currentPassword && (
-                <span
-                  style={{
-                    color: 'var(--danger)',
-                    fontSize: '12px',
-                    display: 'block',
-                    marginTop: '-4px',
-                    marginBottom: '8px',
-                    fontFamily: "'Architects Daughter', cursive",
-                  }}
-                >
-                  {errors.currentPassword}
-                </span>
-              )}
-            </div>
+            <Input
+              type="password"
+              placeholder={t('Текущий пароль / Current password')}
+              value={form.currentPassword}
+              onChange={(e) => setForm({ ...form, currentPassword: e.target.value })}
+              error={errors.currentPassword}
+              required
+            />
 
-            {/* New Password Field */}
-            <div>
-              <input
-                type="password"
-                placeholder={t('Новый пароль (минимум 6 символов) / New password (min. 6 characters)')}
-                value={form.newPassword}
-                onChange={(e) => setForm({ ...form, newPassword: e.target.value })}
-                className={errors.newPassword ? 'input-error' : ''}
-                minLength={6}
-                required
-                style={{ marginBottom: errors.newPassword ? '8px' : '16px' }}
-              />
-              {errors.newPassword && (
-                <span
-                  style={{
-                    color: 'var(--danger)',
-                    fontSize: '12px',
-                    display: 'block',
-                    marginTop: '-4px',
-                    marginBottom: '8px',
-                    fontFamily: "'Architects Daughter', cursive",
-                  }}
-                >
-                  {errors.newPassword}
-                </span>
-              )}
-            </div>
+            <Input
+              type="password"
+              placeholder={t('Новый пароль (минимум 6 символов) / New password (min. 6 characters)')}
+              value={form.newPassword}
+              onChange={(e) => setForm({ ...form, newPassword: e.target.value })}
+              error={errors.newPassword}
+              required
+            />
           </div>
 
-          <button
-            className="btn"
+          <Button
             type="submit"
-            disabled={submitting}
+            variant="primary"
+            loading={submitting}
             style={{ marginTop: '12px', width: '100%', marginBottom: 0 }}
           >
-            {submitting ? t('Изменение... / Updating...') : t('Сменить пароль / Change Password')}
-          </button>
+            {t('Сменить пароль / Change Password')}
+          </Button>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }

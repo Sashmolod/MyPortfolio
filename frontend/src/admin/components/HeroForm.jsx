@@ -1,7 +1,11 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import api from '../../api';
 import heroImg from '../../assets/hero.png';
+import { useLanguage } from '../../contexts/LanguageContext';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
+import Input from '../../components/ui/Input';
+import TextArea from '../../components/ui/TextArea';
 
 function pick(obj, keys) {
   const result = {};
@@ -96,6 +100,7 @@ function convertToSketch(imgElement) {
 }
 
 export default function HeroForm({ heroData, onSaveData, onCancel }) {
+  const { t } = useLanguage();
   const [form, setForm] = useState(() => {
     if (heroData) {
       return pick(heroData, ['name', 'title', 'bio', 'avatar']);
@@ -110,11 +115,10 @@ export default function HeroForm({ heroData, onSaveData, onCancel }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name?.trim()) {
-      window.toast?.('Name is required', 'warning');
+      window.toast?.(t('Имя обязательно для заполнения / Name is required'), 'warning');
       return;
     }
     setSaving(true);
-    // Only send non-empty values (avoid sending null/empty strings)
     const payload = {};
     if (form.name?.trim()) payload.name = form.name.trim();
     if (form.title?.trim()) payload.title = form.title.trim();
@@ -195,216 +199,91 @@ export default function HeroForm({ heroData, onSaveData, onCancel }) {
   };
 
   return (
-    <motion.div
-      className="card"
-      style={{ marginBottom: '20px' }}
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-    >
-      <h3
-        style={{
-          fontFamily: "'Architects Daughter', cursive",
-          fontWeight: 'bold',
-          marginBottom: '20px',
-        }}
-      >
-        {heroData?.id ? 'Edit Hero Section' : 'Create Hero Section'}
+    <Card style={{ marginBottom: '20px' }}>
+      <h3 style={{ fontFamily: 'var(--font-family)', fontWeight: 'bold', marginBottom: '20px' }}>
+        {heroData?.id ? t('Редактировать Hero секцию / Edit Hero Section') : t('Создать Hero секцию / Create Hero Section')}
       </h3>
       <form onSubmit={handleSubmit}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <input
-            placeholder="Name (e.g., John Doe)"
+          <Input
+            placeholder={t('Имя (например, Иван Иванов) / Name (e.g., John Doe)')}
             value={form.name || ''}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             required
           />
-          <input
-            placeholder="Title (e.g., Full Stack Developer)"
+          <Input
+            placeholder={t('Профессия (например, Full Stack Разработчик) / Title (e.g., Full Stack Developer)')}
             value={form.title || ''}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
             required
           />
-          <textarea
-            placeholder="Bio"
+          <TextArea
+            placeholder={t('Биография / Bio')}
             value={form.bio || ''}
             onChange={(e) => setForm({ ...form, bio: e.target.value })}
-            rows="3"
+            rows={3}
           />
 
-          <div
-            style={{
-              border: 'var(--border-style)',
-              borderRadius: 'var(--sketch-radius-3)',
-              padding: '12px',
-              background: 'var(--card-bg)',
-            }}
-          >
-            <label
-              style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontWeight: 'bold',
-                fontFamily: "'Architects Daughter', cursive",
-              }}
-            >
-              Avatar Image
+          <Card style={{ padding: '12px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontFamily: 'var(--font-family)' }}>
+              {t('Аватар / Avatar Image')}
             </label>
-            <div
-              style={{
-                display: 'flex',
-                gap: '10px',
-                alignItems: 'center',
-                marginBottom: '8px',
-              }}
-            >
-              <input
-                placeholder="Avatar URL"
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '8px' }}>
+              <Input
+                placeholder={t('URL аватара / Avatar URL')}
                 value={form.avatar || ''}
                 onChange={(e) => setForm({ ...form, avatar: e.target.value })}
-                style={{ flex: 1, margin: 0 }}
+                containerStyle={{ flex: 1 }}
+                style={{ margin: 0 }}
               />
               <div style={{ position: 'relative', flexShrink: 0 }}>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarUpload}
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    opacity: 0,
-                    cursor: 'pointer',
-                    width: '100%',
-                    height: '100%',
-                  }}
-                />
-                <button
-                  type="button"
-                  className="btn"
-                  disabled={uploading}
-                  style={{ whiteSpace: 'nowrap', margin: 0 }}
-                >
-                  {uploading ? 'Uploading...' : 'Upload Avatar'}
-                </button>
+                <input type="file" accept="image/*" onChange={handleAvatarUpload} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }} />
+                <Button type="button" disabled={uploading} style={{ whiteSpace: 'nowrap', margin: 0 }}>
+                  {uploading ? t('Загрузка... / Uploading...') : t('Загрузить аватар / Upload Avatar')}
+                </Button>
               </div>
             </div>
             {uploading && (
               <div style={{ marginBottom: '12px' }}>
-                <div
-                  style={{
-                    border: 'var(--border-style)',
-                    borderRadius: 'var(--sketch-radius-2)',
-                    height: '14px',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    background: 'var(--input-bg)',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: `${uploadProgress}%`,
-                      height: '100%',
-                      backgroundColor: 'var(--text)',
-                      transition: 'width 0.1s ease',
-                      backgroundImage:
-                        'repeating-linear-gradient(45deg, var(--bg) 0px, var(--bg) 2px, transparent 2px, transparent 10px)',
-                    }}
-                  />
+                <div style={{ border: 'var(--border-style)', borderRadius: 'var(--sketch-radius-2)', height: '14px', position: 'relative', overflow: 'hidden', background: 'var(--input-bg)' }}>
+                  <div style={{ width: `${uploadProgress}%`, height: '100%', backgroundColor: 'var(--text)', transition: 'width 0.1s ease', backgroundImage: 'repeating-linear-gradient(45deg, var(--bg) 0px, var(--bg) 2px, transparent 2px, transparent 10px)' }} />
                 </div>
-                <div
-                  style={{
-                    fontFamily: "'Architects Daughter', cursive",
-                    fontSize: '11px',
-                    textAlign: 'center',
-                    marginTop: '2px',
-                    fontWeight: 'bold',
-                  }}
-                >
-                  Uploading: {uploadProgress}%
+                <div style={{ fontFamily: 'var(--font-family)', fontSize: '11px', textAlign: 'center', marginTop: '2px', fontWeight: 'bold' }}>
+                  {t('Загрузка: / Uploading:')} {uploadProgress}%
                 </div>
               </div>
             )}
             {form.avatar && (
-              <div
-                style={{
-                  marginTop: '10px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                }}
-              >
-                <img
-                  src={form.avatar === '/hero.png' ? heroImg : form.avatar}
-                  alt="Preview"
-                  style={{
-                    width: '60px',
-                    height: '60px',
-                    objectFit: 'cover',
-                    borderRadius: 'var(--sketch-radius-3)',
-                    border: 'var(--border-style)',
-                  }}
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                  }}
-                />
-                <button
-                  type="button"
-                  className="btn"
-                  disabled={sketching || uploading}
-                  style={{
-                    padding: '4px 8px',
-                    fontSize: '12px',
-                    margin: 0,
-                    backgroundColor: 'var(--accent)',
-                    color: 'var(--text)',
-                  }}
-                  onClick={handleMakeSketch}
-                >
-                  {sketching ? 'Converting...' : '✨ Эскиз карандашом'}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-danger"
-                  style={{ padding: '4px 8px', fontSize: '12px', margin: 0 }}
-                  onClick={() => setForm({ ...form, avatar: '' })}
-                >
-                  Remove
-                </button>
+              <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <img src={form.avatar === '/hero.png' ? heroImg : form.avatar} alt="Preview" style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: 'var(--sketch-radius-3)', border: 'var(--border-style)' }} onError={(e) => { e.target.style.display = 'none'; }} />
+                <Button disabled={sketching || uploading} style={{ padding: '4px 8px', fontSize: '12px', margin: 0, backgroundColor: 'var(--accent)', color: 'var(--text)' }} onClick={handleMakeSketch}>
+                  {sketching ? t('Конвертация... / Converting...') : t('✨ Эскиз карандашом / ✨ Pencil Sketch')}
+                </Button>
+                <Button variant="danger" style={{ padding: '4px 8px', fontSize: '12px', margin: 0 }} onClick={() => setForm({ ...form, avatar: '' })}>
+                  {t('Удалить / Remove')}
+                </Button>
               </div>
             )}
-          </div>
+          </Card>
 
-          <div
-            style={{
-              marginTop: '10px',
-              paddingTop: '10px',
-              borderTop: 'var(--border-style)',
-              opacity: 0.8,
-            }}
-          >
-            <h4
-              style={{
-                margin: '0 0 8px 0',
-                fontFamily: "'Architects Daughter', cursive",
-                fontWeight: 'bold',
-              }}
-            >
-              Social Links
+          <Card style={{ padding: '12px', borderTop: 'var(--border-style)', opacity: 0.8 }}>
+            <h4 style={{ margin: '0 0 8px 0', fontFamily: 'var(--font-family)', fontWeight: 'bold' }}>
+              {t('Социальные ссылки / Social Links')}
             </h4>
-            <p style={{ fontSize: '14px', margin: 0 }}>
-              Социальные сети теперь управляются динамически в отдельной вкладке
-              <strong> «Social Links»</strong> на панели навигации сверху.
+            <p style={{ fontSize: '14px', margin: 0, fontFamily: 'var(--font-family)' }}>
+              {t('Социальные сети теперь управляются динамически в отдельной вкладке «Social Links» на панели навигации сверху. / Social links are now managed dynamically in a separate "Social Links" tab in the navigation bar above. ')}
             </p>
-          </div>
+          </Card>
         </div>
         <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
-          <button className="btn" type="submit" disabled={saving}>
-            {saving ? 'Saving...' : 'Save'}
-          </button>
-          <button className="btn" type="button" onClick={onCancel}>
-            Cancel
-          </button>
+          <Button type="submit" variant="primary" loading={saving}>
+            {t('Сохранить / Save')}
+          </Button>
+          <Button onClick={onCancel}>
+            {t('Отмена / Cancel')}
+          </Button>
         </div>
       </form>
-    </motion.div>
+    </Card>
   );
 }

@@ -6,10 +6,10 @@ import {
   waitFor,
   act,
 } from '@testing-library/react';
-import ContactForm from './ContactForm';
+import ContactForm from './ContactSection';
 
 // Mock the API client
-vi.mock('../api', () => {
+vi.mock('../../api', () => {
   return {
     default: {
       get: vi.fn(),
@@ -19,7 +19,7 @@ vi.mock('../api', () => {
 });
 
 // Mock soundSynth
-vi.mock('../utils/audioSynth', () => {
+vi.mock('../../utils/audioSynth', () => {
   return {
     soundSynth: {
       playWhoosh: vi.fn(),
@@ -28,7 +28,7 @@ vi.mock('../utils/audioSynth', () => {
 });
 
 // Mock LanguageContext
-vi.mock('../contexts/LanguageContext', () => ({
+vi.mock('../../contexts/LanguageContext', () => ({
   useLanguage: () => ({
     language: 'en',
     t: (keyOrBilingual) => {
@@ -137,7 +137,7 @@ vi.mock('framer-motion', () => {
   };
 });
 
-import api from '../api';
+import api from '../../api';
 
 describe('ContactForm Component', () => {
   const mockCaptcha = {

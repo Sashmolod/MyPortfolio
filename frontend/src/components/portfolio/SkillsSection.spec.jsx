@@ -1,18 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
-import Skills from './Skills';
-import { statsApi } from '../api/statsApi';
+import Skills from './SkillsSection';
+import { statsApi } from '../../api/statsApi';
 
 // Mock SettingsContext hook
-vi.mock('../contexts/SettingsContext', () => ({
+vi.mock('../../contexts/SettingsContext', () => ({
   usePortfolioSettings: () => ({
     settings: { enableDrawSkills: false },
   }),
 }));
 
 // Mock LanguageContext hook
-vi.mock('../contexts/LanguageContext', () => ({
+vi.mock('../../contexts/LanguageContext', () => ({
   useLanguage: () => ({
     language: 'en',
     t: (keyOrBilingual) => {

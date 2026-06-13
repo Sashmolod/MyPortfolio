@@ -9,7 +9,7 @@ import { Helmet } from 'react-helmet-async';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { soundSynth } from '../../utils/audioSynth';
 
-import ConfirmDialog from '../components/ConfirmDialog';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import MediaTab from '../components/MediaTab';
 import SkillForm from '../components/SkillForm';
 import ProjectForm from '../components/ProjectForm';

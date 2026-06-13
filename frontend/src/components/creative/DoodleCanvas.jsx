@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { soundSynth } from '../utils/audioSynth';
+import { soundSynth } from '../../utils/audioSynth';
 
 export default function DoodleCanvas({
   active,

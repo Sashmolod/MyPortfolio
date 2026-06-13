@@ -43,14 +43,11 @@ export default function TabNavigation({ activeTab, onTabChange, statsEnabled = t
         {filteredTabs.map((tab) => (
           <button
             key={tab.key}
-            className={`btn ${activeTab === tab.key ? 'btn-primary' : 'btn'}`}
+            className={`btn-tab ${activeTab === tab.key ? 'active' : ''}`}
             onClick={() => onTabChange(tab.key)}
             style={{
               whiteSpace: 'nowrap',
               margin: 0,
-              background: activeTab === tab.key ? 'var(--primary)' : 'transparent',
-              color: activeTab === tab.key ? 'var(--bg)' : 'var(--text)',
-              border: 'var(--border-style)',
               flexShrink: 0,
             }}
           >
