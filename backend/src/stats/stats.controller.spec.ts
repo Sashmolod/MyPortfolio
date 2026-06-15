@@ -2,7 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { StatsController } from './stats.controller';
 import { StatsService } from './stats.service';
 import { HttpStatus } from '@nestjs/common';
-import { GetStatsDto } from './dto/stats.dto';
+import { GetStatsDto } from '../shared/dto';
+import { ConfigService } from '@nestjs/config';
 
 describe('StatsController', () => {
   let controller: StatsController;
@@ -21,6 +22,12 @@ describe('StatsController', () => {
       controllers: [StatsController],
       providers: [
         { provide: StatsService, useValue: mockStatsService },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn().mockReturnValue('true'),
+          },
+        },
       ],
     }).compile();
 

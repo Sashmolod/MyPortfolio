@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { usePortfolioSettings } from '../contexts/SettingsContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import api from '../api';
+import api from '../api/client';
 import Header from '../components/Header';
 import HeroSection from '../components/portfolio/HeroSection';
 import SkillsSection from '../components/portfolio/SkillsSection';
@@ -61,6 +61,7 @@ export default function PublicPage() {
   };
 
   const [isGuessing, setIsGuessing] = useState(false);
+  const [error, setError] = useState(null);
 
   /**
    * handleGuessDrawing
@@ -98,10 +99,10 @@ export default function PublicPage() {
         
       doodlePaths.forEach((p) => {
         p.points.forEach((pt) => {
-          if (pt.x < minX) minX = pt.x;
-          if (pt.x > maxX) maxX = pt.x;
-          if (pt.y < minY) minY = pt.y;
-          if (pt.y > maxY) maxY = pt.y;
+          if (pt.x < minX) {minX = pt.x;}
+          if (pt.x > maxX) {maxX = pt.x;}
+          if (pt.y < minY) {minY = pt.y;}
+          if (pt.y > maxY) {maxY = pt.y;}
         });
       });
 
@@ -126,7 +127,7 @@ export default function PublicPage() {
 
       // Draw all paths offset by the minX / minY coordinates to align it to the top-left of the cropped canvas
       doodlePaths.forEach((path) => {
-        if (path.points.length < 1) return;
+        if (path.points.length < 1) {return;}
         ctx.beginPath();
         ctx.strokeStyle = path.color;
         ctx.lineWidth = path.width;
@@ -153,7 +154,7 @@ export default function PublicPage() {
         body: JSON.stringify({ image: base64Image, lang: language }),
       });
 
-      if (!response.ok) throw new Error('Vision guess failed');
+      if (!response.ok) {throw new Error('Vision guess failed');}
       const data = await response.json();
 
       // Dispatch event to show the guess result inside Doodly's speech bubble
@@ -176,43 +177,47 @@ export default function PublicPage() {
     }
   };
 
+  // Fetch portfolio contents (skills, projects, hero bio)
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [skillsRes, projectsRes, heroRes] = await Promise.all([
+        api.get('/portfolio/skills'),
+        api.get('/portfolio/projects'),
+        api.get('/portfolio/hero'),
+      ]);
+      setSkills(skillsRes.data);
+      setProjects(projectsRes.data);
+      
+      const heroDataRaw = heroRes.data;
+      let finalHero = heroDataRaw?.hero || heroDataRaw || null;
+      
+      // Attach socialLinks object back to the hero state for compatibility
+      if (heroDataRaw?.socialLinks) {
+        finalHero = {
+          ...finalHero,
+          socialLinks: heroDataRaw.socialLinks
+        };
+      }
+      setHero(finalHero);
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   const handleClear = () => {
     if (window.confirm(t('deleteConfirm'))) {
       setDoodlePaths([]);
     }
   };
-
-  // Fetch portfolio contents (skills, projects, hero bio)
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [skillsRes, projectsRes, heroRes] = await Promise.all([
-          api.get('/portfolio/skills'),
-          api.get('/portfolio/projects'),
-          api.get('/portfolio/hero'),
-        ]);
-        setSkills(skillsRes.data);
-        setProjects(projectsRes.data);
-        
-        const heroDataRaw = heroRes.data;
-        let finalHero = heroDataRaw?.hero || heroDataRaw || null;
-        
-        // Attach socialLinks object back to the hero state for compatibility
-        if (heroDataRaw?.socialLinks) {
-          finalHero = {
-            ...finalHero,
-            socialLinks: heroDataRaw.socialLinks
-          };
-        }
-        setHero(finalHero);
-      } catch (err) {
-        console.error('Error fetching data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
 
   // Track page visit once per browser session
   useEffect(() => {
@@ -245,6 +250,69 @@ export default function PublicPage() {
         }}
       >
         <p>{t('loading')}</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          fontFamily: 'inherit',
+          backgroundColor: '#fbfbfb',
+          backgroundImage: 'radial-gradient(#e1e1e1 1px, transparent 1px)',
+          backgroundSize: '20px 20px',
+          padding: '24px',
+          textAlign: 'center',
+        }}
+      >
+        <div
+          style={{
+            maxWidth: '500px',
+            backgroundColor: '#ffffff',
+            padding: '40px',
+            border: '2px solid #1a202c',
+            boxShadow: '4px 4px 0px #1a202c',
+            borderRadius: '12px',
+          }}
+        >
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 'bold', marginBottom: '16px', color: '#e53e3e' }}>
+            {t('Failed to load sketchbook / Не удалось загрузить блокнот')}
+          </h2>
+          <p style={{ color: '#4a5568', marginBottom: '32px', fontSize: '1rem', lineHeight: '1.6' }}>
+            {t('Please check your network connection or try again later. / Пожалуйста, проверьте интернет-соединение или попробуйте позже.')}
+          </p>
+          <button
+            onClick={() => fetchData()}
+            style={{
+              padding: '12px 28px',
+              backgroundColor: '#1a202c',
+              color: '#ffffff',
+              border: '2px solid #1a202c',
+              borderRadius: '6px',
+              fontSize: '1rem',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease-in-out',
+              outline: 'none',
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = '#ffffff';
+              e.currentTarget.style.color = '#1a202c';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = '#1a202c';
+              e.currentTarget.style.color = '#ffffff';
+            }}
+          >
+            {t('Retry / Повторить попытку')}
+          </button>
+        </div>
       </div>
     );
   }

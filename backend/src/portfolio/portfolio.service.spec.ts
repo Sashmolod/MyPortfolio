@@ -3,9 +3,15 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
 import { PortfolioService } from './portfolio.service';
-import { Skill, Hero, Project, ContactMessage, SocialLink, Settings, SkillCategory } from '../admin/entities';
-import { CreateContactMessageDto } from '../admin/dto/create-contact-message.dto';
+import { Skill, Hero, Project, ContactMessage, SocialLink, Settings, SkillCategory } from '../shared/entities';
+import { CreateContactMessageDto } from '../shared/dto';
 import { BadRequestException } from '@nestjs/common';
+import { CaptchaService } from './services/captcha.service';
+
+const mockCaptchaService = {
+  verifyCaptcha: jest.fn().mockReturnValue(true),
+  generateCaptcha: jest.fn().mockReturnValue({ question: '2 + 2 = ?', token: 'mock-token' }),
+};
 
 describe('PortfolioService', () => {
   let service: PortfolioService;
@@ -105,6 +111,7 @@ describe('PortfolioService', () => {
         { provide: getRepositoryToken(SocialLink), useValue: mockSocialLinkRepo },
         { provide: getRepositoryToken(Settings), useValue: mockSettingsRepo },
         { provide: ConfigService, useValue: mockConfigService },
+        { provide: CaptchaService, useValue: mockCaptchaService },
       ],
     }).compile();
 
@@ -175,39 +182,8 @@ describe('PortfolioService', () => {
   });
 
   describe('Captcha and Messages', () => {
-    it('should generate and verify captcha', () => {
-      const { question, token } = service.generateCaptcha();
-      expect(question).toBeDefined();
-      expect(token).toBeDefined();
-
-      // extract answer from question e.g. "5 + 2 = ?" -> expectedAnswer is 7
-      const equation = question.replace(' = ?', '');
-      const parts = equation.split(' ');
-      const a = parseInt(parts[0], 10);
-      const op = parts[1];
-      const b = parseInt(parts[2], 10);
-      let expectedAnswer = 0;
-      if (op === '+') {
-        expectedAnswer = a + b;
-      } else {
-        expectedAnswer = a - b;
-      }
-
-      const isValid = service.verifyCaptcha(String(expectedAnswer), token);
-      expect(isValid).toBe(true);
-
-      const isInvalid = service.verifyCaptcha('999', token);
-      expect(isInvalid).toBe(false);
-    });
-
-    it('should fail captcha verification with invalid token structure', () => {
-      expect(service.verifyCaptcha('5', 'invalidtoken')).toBe(false);
-      expect(service.verifyCaptcha('5', 'invalid:token:extra')).toBe(false);
-      expect(service.verifyCaptcha('5', 'notanumber:signature')).toBe(false);
-      expect(service.verifyCaptcha('5', '12345:signature')).toBe(false); // expired
-    });
-
     it('should throw BadRequestException if captcha is incorrect', async () => {
+      mockCaptchaService.verifyCaptcha.mockReturnValueOnce(false);
       const dto: CreateContactMessageDto = {
         name: 'Tester',
         email: 'test@example.com',
@@ -221,6 +197,7 @@ describe('PortfolioService', () => {
     });
 
     it('should detect spam via honeypot and skip message creation/saving', async () => {
+      mockCaptchaService.verifyCaptcha.mockReturnValueOnce(true);
       const dto: CreateContactMessageDto = {
         name: 'Bot',
         email: 'bot@spam.com',
@@ -237,106 +214,20 @@ describe('PortfolioService', () => {
     });
 
     it('should create and save message with correct captcha and no honeypot', async () => {
-      const { question, token } = service.generateCaptcha();
-      const equation = question.replace(' = ?', '');
-      const parts = equation.split(' ');
-      const a = parseInt(parts[0], 10);
-      const op = parts[1];
-      const b = parseInt(parts[2], 10);
-      const answer = op === '+' ? a + b : a - b;
-
+      mockCaptchaService.verifyCaptcha.mockReturnValueOnce(true);
       const dto: CreateContactMessageDto = {
         name: 'Tester',
         email: 'test@example.com',
         subject: 'Valid Message',
         message: 'This is a long valid message',
-        captchaAnswer: String(answer),
-        captchaToken: token,
+        captchaAnswer: '7',
+        captchaToken: 'valid-token',
       };
 
       const result = await service.createMessage(dto);
       expect(result.id).toBe(42);
       expect(mockMessageRepo.create).toHaveBeenCalled();
       expect(mockMessageRepo.save).toHaveBeenCalled();
-    });
-  });
-
-  describe('Doodly Chat and Guess Doodle', () => {
-    it('should return offline reply if GEMINI_API_KEY is not defined', async () => {
-      mockConfigService.get.mockReturnValueOnce(undefined); // API key
-      const result = await service.askDoodlyChat('Hello');
-      expect(result.response).toBeDefined();
-      expect(typeof result.response).toBe('string');
-    });
-
-    it('should return offline guess if GEMINI_API_KEY is not defined', async () => {
-      mockConfigService.get.mockReturnValueOnce(undefined); // API key
-      const result = await service.guessDoodle('data:image/png;base64,image');
-      expect(result.guess).toBeDefined();
-      expect(typeof result.guess).toBe('string');
-    });
-
-    it('should fetch and return AI response when GEMINI_API_KEY is present', async () => {
-      mockConfigService.get.mockImplementation((key) => {
-        if (key === 'GEMINI_API_KEY') return 'valid-key';
-        return 'test-secret';
-      });
-      mockHeroRepo.find.mockResolvedValue([mockHero]);
-
-      const mockFetchResponse = {
-        ok: true,
-        json: jest.fn().mockResolvedValue({
-          candidates: [
-            {
-              content: {
-                parts: [{ text: 'Hello, I am Doodly!' }],
-              },
-            },
-          ],
-        }),
-      };
-      global.fetch = jest.fn().mockResolvedValue(mockFetchResponse);
-
-      const result = await service.askDoodlyChat('Hello');
-      expect(result.response).toBe('Hello, I am Doodly!');
-      expect(global.fetch).toHaveBeenCalled();
-    });
-
-    it('should fallback to error response on fetch failure', async () => {
-      mockConfigService.get.mockImplementation((key) => {
-        if (key === 'GEMINI_API_KEY') return 'valid-key';
-        return 'test-secret';
-      });
-      mockHeroRepo.find.mockResolvedValue([mockHero]);
-      global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 500 });
-
-      const result = await service.askDoodlyChat('Hello');
-      expect(result.response).toContain('связь с моим AI-мозгом');
-    });
-
-    it('should guess doodle when GEMINI_API_KEY is present', async () => {
-      mockConfigService.get.mockImplementation((key) => {
-        if (key === 'GEMINI_API_KEY') return 'valid-key';
-        return 'test-secret';
-      });
-
-      const mockFetchResponse = {
-        ok: true,
-        json: jest.fn().mockResolvedValue({
-          candidates: [
-            {
-              content: {
-                parts: [{ text: 'This looks like a cat!' }],
-              },
-            },
-          ],
-        }),
-      };
-      global.fetch = jest.fn().mockResolvedValue(mockFetchResponse);
-
-      const result = await service.guessDoodle('data:image/png;base64,image');
-      expect(result.guess).toBe('This looks like a cat!');
-      expect(global.fetch).toHaveBeenCalled();
     });
   });
 

@@ -1,10 +1,16 @@
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { GetStatsDto } from './stats/dto/stats.dto';
-import { CreateSkillDto } from './admin/dto/create-skill.dto';
-import { CreateContactMessageDto } from './admin/dto/create-contact-message.dto';
-import { ChangePasswordDto } from './admin/dto/change-password.dto';
-import { LoginDto } from './admin/dto/login.dto';
+import {
+  GetStatsDto,
+  CreateSkillDto,
+  CreateContactMessageDto,
+  ChangePasswordDto,
+  LoginDto,
+  CreateProjectDto,
+  UpdateProjectDto,
+  CreateHeroDto,
+  UpdateHeroDto,
+} from './shared/dto';
 
 describe('DTO Validation', () => {
   const validateDto = async (dtoClass: any, payload: any) => {
@@ -81,9 +87,27 @@ describe('DTO Validation', () => {
         email: 'alice@example.com',
         subject: 'Inquiry',
         message: 'Hello, I like your work!',
+        captchaAnswer: '12',
+        captchaToken: '12345:signature',
       };
       const errors = await validateDto(CreateContactMessageDto, payload);
       expect(errors.length).toBe(0);
+    });
+
+    it('should fail if captchaAnswer is not a numeric string', async () => {
+      const payload = {
+        name: 'Alice',
+        email: 'alice@example.com',
+        subject: 'Inquiry',
+        message: 'Hello, I like your work!',
+        captchaAnswer: 'abc',
+        captchaToken: '12345:signature',
+      };
+      const errors = await validateDto(CreateContactMessageDto, payload);
+      expect(errors.length).toBeGreaterThan(0);
+
+      const captchaError = errors.find(e => e.property === 'captchaAnswer');
+      expect(captchaError).toBeDefined();
     });
 
     it('should fail with invalid email', async () => {
@@ -112,6 +136,52 @@ describe('DTO Validation', () => {
       expect(errors.find(e => e.property === 'name')).toBeDefined();
       expect(errors.find(e => e.property === 'email')).toBeDefined();
       expect(errors.find(e => e.property === 'message')).toBeDefined();
+    });
+  });
+
+  describe('CreateProjectDto & UpdateProjectDto skillIds', () => {
+    it('should pass if skillIds is valid numbers', async () => {
+      const payload = {
+        title: 'Project X',
+        skillIds: [1, 2, 3],
+      };
+      const errors = await validateDto(CreateProjectDto, payload);
+      expect(errors.length).toBe(0);
+    });
+
+    it('should fail if skillIds contains non-number elements', async () => {
+      const payload = {
+        title: 'Project X',
+        skillIds: [1, 'two', 3] as any,
+      };
+      const errors = await validateDto(CreateProjectDto, payload);
+      expect(errors.length).toBeGreaterThan(0);
+      const skillIdsError = errors.find(e => e.property === 'skillIds');
+      expect(skillIdsError).toBeDefined();
+    });
+  });
+
+  describe('CreateHeroDto & UpdateHeroDto socialLinks', () => {
+    it('should pass if socialLinks is valid JSON', async () => {
+      const payload = {
+        name: 'John Doe',
+        title: 'Developer',
+        socialLinks: '{"github": "https://github.com"}',
+      };
+      const errors = await validateDto(CreateHeroDto, payload);
+      expect(errors.length).toBe(0);
+    });
+
+    it('should fail if socialLinks is not a valid JSON string', async () => {
+      const payload = {
+        name: 'John Doe',
+        title: 'Developer',
+        socialLinks: '{invalid-json}',
+      };
+      const errors = await validateDto(CreateHeroDto, payload);
+      expect(errors.length).toBeGreaterThan(0);
+      const socialLinksError = errors.find(e => e.property === 'socialLinks');
+      expect(socialLinksError).toBeDefined();
     });
   });
 

@@ -48,7 +48,7 @@ fi
 # Запускаем миграции через ts-node из TypeScript источников
 # Используем ts-node чтобы избежать ESM/CommonJS конфликтов с compiled JS
 echo "📦 Running database migrations..."
-npx ts-node -r tsconfig-paths/register src/migration/run.ts
+npx ts-node -r tsconfig-paths/register src/migrations/run.ts
 
 if [ $? -eq 0 ]; then
   echo "✅ Database migrations completed successfully"

@@ -11,6 +11,11 @@ const proxyTarget = isDockerDev
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    // Приоритет TS > JS при разрешении импортов без расширения.
+    // Важно при постепенной миграции .js/.jsx → .ts/.tsx
+    extensions: ['.mts', '.ts', '.tsx', '.mjs', '.js', '.jsx', '.json'],
+  },
   server: {
     port: 5173,
     host: '0.0.0.0',

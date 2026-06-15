@@ -42,7 +42,7 @@ export default function SecurityTab() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    if (!validateForm()) {return;}
 
     setSubmitting(true);
     try {

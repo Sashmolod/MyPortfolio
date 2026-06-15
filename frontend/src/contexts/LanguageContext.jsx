@@ -1,9 +1,8 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 
-// Create the context
-const LanguageContext = createContext();
-
-// Predefined static translations dictionary
+// ────────────────────────────────────────────────
+//  Dictionary
+// ────────────────────────────────────────────────
 const dictionary = {
   ru: {
     home: 'Главная',
@@ -19,7 +18,7 @@ const dictionary = {
     none: '− Ничего',
     viewProject: 'Смотреть проект',
     allRightsReserved: 'Все права защищены.',
-    
+
     // Canvas Controls
     pencil: 'Карандаш',
     eraser: 'Ластик',
@@ -29,7 +28,7 @@ const dictionary = {
     clear: 'Очистить',
     aiGuess: 'ИИ Угадать',
     guessing: 'Думаю...',
-    
+
     // Contact Form
     name: 'Имя',
     email: 'Эл. почта',
@@ -54,7 +53,7 @@ const dictionary = {
     captchaRefresh: 'Обновить пример',
     successToast: 'Сообщение отправлено!',
     failedToast: 'Не удалось отправить сообщение. Пожалуйста, попробуйте снова.',
-    
+
     // Admin Tabs
     tabSkills: 'Навыки',
     tabProjects: 'Проекты',
@@ -82,7 +81,7 @@ const dictionary = {
     none: '− None',
     viewProject: 'View Project',
     allRightsReserved: 'All rights reserved.',
-    
+
     // Canvas Controls
     pencil: 'Pencil',
     eraser: 'Eraser',
@@ -92,7 +91,7 @@ const dictionary = {
     clear: 'Clear',
     aiGuess: 'AI Guess',
     guessing: 'Guessing...',
-    
+
     // Contact Form
     name: 'Name',
     email: 'Email',
@@ -117,7 +116,7 @@ const dictionary = {
     captchaRefresh: 'Refresh',
     successToast: 'Message sent successfully!',
     failedToast: 'Failed to send message. Please try again.',
-    
+
     // Admin Tabs
     tabSkills: 'Skills',
     tabProjects: 'Projects',
@@ -130,65 +129,62 @@ const dictionary = {
     tabTrash: 'Trash',
     tabSettings: 'Settings',
     tabSecurity: 'Security',
-  }
+  },
 };
 
-export function LanguageProvider({ children }) {
-  const [language, setLanguage] = useState(() => {
-    // 1. Try to read user preferences from localStorage
-    const saved = localStorage.getItem('portfolio_language');
-    if (saved === 'ru' || saved === 'en') return saved;
-    
-    // 2. Otherwise detect from browser locale preferences
-    if (typeof navigator !== 'undefined') {
-      const langs = [
-        ...(navigator.languages || []),
-        navigator.language,
-        navigator.userLanguage,
-        navigator.browserLanguage,
-        navigator.systemLanguage
-      ].filter(Boolean);
+// ────────────────────────────────────────────────
+//  Helpers
+// ────────────────────────────────────────────────
+function detectLanguage() {
+  const saved = localStorage.getItem('portfolio_language');
+  if (saved === 'ru' || saved === 'en') return saved;
 
-      for (const lang of langs) {
-        if (typeof lang === 'string' && lang.toLowerCase().startsWith('ru')) {
-          return 'ru';
-        }
-      }
+  if (typeof navigator !== 'undefined') {
+    const langs = [
+      ...(navigator.languages || []),
+      navigator.language,
+    ].filter(Boolean);
+
+    for (const lang of langs) {
+      if (lang.toLowerCase().startsWith('ru')) return 'ru';
     }
-    return 'en';
-  });
+  }
+  return 'en';
+}
 
-  // Keep localStorage in sync when language changes
+function translate(lang, keyOrBilingual) {
+  if (typeof keyOrBilingual !== 'string') return keyOrBilingual;
+
+  // Check dictionary first
+  const entry = dictionary[lang][keyOrBilingual];
+  if (entry) return entry;
+
+  // Bilingual separator fallback  "RU_TEXT / EN_TEXT"  or  "RU_TEXT | EN_TEXT"
+  const hasSlash = keyOrBilingual.includes(' / ');
+  const hasPipe  = keyOrBilingual.includes(' | ');
+  if (hasSlash || hasPipe) {
+    const sep      = hasSlash ? ' / ' : ' | ';
+    const segments = keyOrBilingual.split(sep);
+    return lang === 'ru' ? segments[0].trim() : segments[1].trim();
+  }
+
+  return keyOrBilingual;
+}
+
+// ────────────────────────────────────────────────
+//  Context
+// ────────────────────────────────────────────────
+const LanguageContext = createContext(undefined);
+
+export function LanguageProvider({ children }) {
+  const [language, setLanguageState] = useState(detectLanguage);
+
   useEffect(() => {
     localStorage.setItem('portfolio_language', language);
   }, [language]);
 
-  /**
-   * t
-   * Translates a string key or splits dynamic bilingual texts like "RU_TEXT / EN_TEXT".
-   * 
-   * @param {string} keyOrBilingual - The dictionary key or bilingual text to parse.
-   * @returns {string} The translated/parsed string.
-   */
-  const t = (keyOrBilingual) => {
-    if (typeof keyOrBilingual !== 'string') return keyOrBilingual;
-    
-    // Check dictionary first
-    if (dictionary[language][keyOrBilingual]) {
-      return dictionary[language][keyOrBilingual];
-    }
-
-    // Check if the string has a bilingual separator
-    const hasSlashSep = keyOrBilingual.includes(' / ');
-    const hasPipeSep = keyOrBilingual.includes(' | ');
-    if (hasSlashSep || hasPipeSep) {
-      const separator = hasSlashSep ? ' / ' : ' | ';
-      const segments = keyOrBilingual.split(separator);
-      return language === 'ru' ? segments[0].trim() : segments[1].trim();
-    }
-
-    return keyOrBilingual;
-  };
+  const setLanguage = (lang) => setLanguageState(lang);
+  const t = (keyOrBilingual) => translate(language, keyOrBilingual);
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t }}>
@@ -199,24 +195,12 @@ export function LanguageProvider({ children }) {
 
 export function useLanguage() {
   const context = useContext(LanguageContext);
-  if (!context) {
-    // Safe default fallback for unit tests and isolated component runs
-    return {
-      language: 'ru',
-      setLanguage: () => {},
-      t: (keyOrBilingual) => {
-        if (typeof keyOrBilingual !== 'string') return keyOrBilingual;
-        if (keyOrBilingual === 'noDescription') return 'Нет описания';
-        const hasSlashSep = keyOrBilingual.includes(' / ');
-        const hasPipeSep = keyOrBilingual.includes(' | ');
-        if (hasSlashSep || hasPipeSep) {
-          const separator = hasSlashSep ? ' / ' : ' | ';
-          const segments = keyOrBilingual.split(separator);
-          return segments[0].trim(); // Default to Russian (first segment)
-        }
-        return keyOrBilingual;
-      }
-    };
-  }
-  return context;
+  if (context) return context;
+
+  // Safe default fallback for unit tests and isolated component runs
+  return {
+    language: 'ru',
+    setLanguage: () => {},
+    t: (keyOrBilingual) => translate('ru', keyOrBilingual),
+  };
 }

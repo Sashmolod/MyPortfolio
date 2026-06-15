@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import api from '../../api';
+import api from '../../api/client';
 import heroImg from '../../assets/hero.png';
 import { useLanguage } from '../../contexts/LanguageContext';
 import Card from '../../components/ui/Card';
@@ -10,7 +10,7 @@ import TextArea from '../../components/ui/TextArea';
 function pick(obj, keys) {
   const result = {};
   for (const k of keys) {
-    if (obj && obj[k] !== undefined) result[k] = obj[k];
+    if (obj && obj[k] !== undefined) {result[k] = obj[k];}
   }
   return result;
 }
@@ -120,17 +120,17 @@ export default function HeroForm({ heroData, onSaveData, onCancel }) {
     }
     setSaving(true);
     const payload = {};
-    if (form.name?.trim()) payload.name = form.name.trim();
-    if (form.title?.trim()) payload.title = form.title.trim();
-    if (form.bio?.trim()) payload.bio = form.bio.trim();
-    if (form.avatar?.trim()) payload.avatar = form.avatar.trim();
+    if (form.name?.trim()) {payload.name = form.name.trim();}
+    if (form.title?.trim()) {payload.title = form.title.trim();}
+    if (form.bio?.trim()) {payload.bio = form.bio.trim();}
+    if (form.avatar?.trim()) {payload.avatar = form.avatar.trim();}
     await onSaveData(payload);
     setSaving(false);
   };
 
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file) {return;}
     const formData = new FormData();
     formData.append('file', file);
     setUploading(true);
@@ -162,7 +162,7 @@ export default function HeroForm({ heroData, onSaveData, onCancel }) {
   };
 
   const handleMakeSketch = async () => {
-    if (!form.avatar) return;
+    if (!form.avatar) {return;}
     setSketching(true);
     try {
       const img = new Image();

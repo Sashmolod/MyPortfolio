@@ -2,14 +2,22 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { StatsService } from './stats.service';
-import { VisitStat } from '../admin/entities/visit-stat.entity';
-import { Project } from '../admin/entities/project.entity';
+import { VisitStat, Project, AuditLog } from '../shared/entities';
 import { Request } from 'express';
+import { ConfigService } from '@nestjs/config';
 
 describe('StatsService', () => {
   let service: StatsService;
   let visitStatRepo: Repository<VisitStat>;
   let projectRepo: Repository<Project>;
+  let auditLogRepo: Repository<AuditLog>;
+
+  const mockConfigService = {
+    get: jest.fn((key: string) => {
+      if (key === 'ENABLE_STATS_MODULE') return 'true';
+      return undefined;
+    }),
+  };
 
   // Mock repositories
   const mockVisitStatRepo = {
@@ -23,6 +31,12 @@ describe('StatsService', () => {
   const mockProjectRepo = {
     increment: jest.fn(),
     find: jest.fn(),
+  };
+
+  const mockAuditLogRepo = {
+    create: jest.fn((dto) => dto),
+    save: jest.fn(),
+    createQueryBuilder: jest.fn(),
   };
 
   // Mock QueryBuilder chain
@@ -39,23 +53,29 @@ describe('StatsService', () => {
     getRawOne: jest.fn(),
     getRawMany: jest.fn(),
     getManyAndCount: jest.fn(),
+    delete: jest.fn().mockReturnThis(),
+    execute: jest.fn().mockResolvedValue({ affected: 10 }),
   };
 
   beforeEach(async () => {
     jest.clearAllMocks();
     mockVisitStatRepo.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+    mockAuditLogRepo.createQueryBuilder.mockReturnValue(mockQueryBuilder);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         StatsService,
         { provide: getRepositoryToken(VisitStat), useValue: mockVisitStatRepo },
         { provide: getRepositoryToken(Project), useValue: mockProjectRepo },
+        { provide: getRepositoryToken(AuditLog), useValue: mockAuditLogRepo },
+        { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile();
 
     service = module.get<StatsService>(StatsService);
     visitStatRepo = module.get<Repository<VisitStat>>(getRepositoryToken(VisitStat));
     projectRepo = module.get<Repository<Project>>(getRepositoryToken(Project));
+    auditLogRepo = module.get<Repository<AuditLog>>(getRepositoryToken(AuditLog));
   });
 
   it('should be defined', () => {
@@ -63,14 +83,64 @@ describe('StatsService', () => {
   });
 
   describe('recordVisit', () => {
-    it('should save a visit record successfully', async () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('should buffer visits and not save to DB immediately', async () => {
       const visitData = { ipAddress: '127.0.0.1', path: '/' };
-      mockVisitStatRepo.save.mockResolvedValue({ id: 1, ...visitData });
+      await service.recordVisit(visitData);
+
+      expect(mockVisitStatRepo.create).not.toHaveBeenCalled();
+      expect(mockVisitStatRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('should flush buffer and save to DB when buffer reaches limit', async () => {
+      const visitData = { ipAddress: '127.0.0.1', path: '/' };
+      mockVisitStatRepo.save.mockResolvedValue([]);
+
+      // Add 20 visits to trigger flush
+      for (let i = 0; i < 20; i++) {
+        await service.recordVisit(visitData);
+      }
+
+      expect(mockVisitStatRepo.create).toHaveBeenCalled();
+      expect(mockVisitStatRepo.save).toHaveBeenCalled();
+    });
+
+    it('should flush buffer and save to DB when timer expires', async () => {
+      const visitData = { ipAddress: '127.0.0.1', path: '/' };
+      mockVisitStatRepo.save.mockResolvedValue([]);
 
       await service.recordVisit(visitData);
 
-      expect(mockVisitStatRepo.create).toHaveBeenCalledWith(visitData);
-      expect(mockVisitStatRepo.save).toHaveBeenCalledWith(visitData);
+      expect(mockVisitStatRepo.save).not.toHaveBeenCalled();
+
+      // Fast-forward 5 seconds
+      jest.advanceTimersByTime(5000);
+
+      // Timeout triggers flushBuffer asynchronously, wait for microtasks
+      await Promise.resolve();
+
+      expect(mockVisitStatRepo.create).toHaveBeenCalled();
+      expect(mockVisitStatRepo.save).toHaveBeenCalled();
+    });
+
+    it('should flush buffer on module destroy', async () => {
+      const visitData = { ipAddress: '127.0.0.1', path: '/' };
+      mockVisitStatRepo.save.mockResolvedValue([]);
+
+      await service.recordVisit(visitData);
+      expect(mockVisitStatRepo.save).not.toHaveBeenCalled();
+
+      await service.onModuleDestroy();
+
+      expect(mockVisitStatRepo.create).toHaveBeenCalled();
+      expect(mockVisitStatRepo.save).toHaveBeenCalled();
     });
 
     it('should catch and log errors during save', async () => {
@@ -78,8 +148,32 @@ describe('StatsService', () => {
       mockVisitStatRepo.save.mockRejectedValue(new Error('DB Error'));
 
       await service.recordVisit({});
+      await service.flushBuffer();
 
       expect(loggerSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('cleanupOldData', () => {
+    it('should run query builder deletes for visit stats and audit logs older than 90 days', async () => {
+      const loggerSpy = jest.spyOn(service['logger'], 'log').mockImplementation();
+      
+      await service.cleanupOldData();
+
+      expect(mockVisitStatRepo.createQueryBuilder).toHaveBeenCalled();
+      expect(mockAuditLogRepo.createQueryBuilder).toHaveBeenCalled();
+      expect(mockQueryBuilder.delete).toHaveBeenCalledTimes(2);
+      expect(mockQueryBuilder.execute).toHaveBeenCalledTimes(2);
+      expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining('Removed 10 visit records and 10 audit logs'));
+    });
+
+    it('should log an error if database query fails', async () => {
+      const loggerSpy = jest.spyOn(service['logger'], 'error').mockImplementation();
+      mockQueryBuilder.execute.mockRejectedValueOnce(new Error('Deletion failed'));
+
+      await service.cleanupOldData();
+
+      expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining('Cleanup task failed'), expect.any(String));
     });
   });
 

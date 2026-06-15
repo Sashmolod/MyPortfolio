@@ -7,8 +7,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UserService } from './user.service';
 import { JwtStrategy } from './jwt.strategy';
-import { User } from './entities/user.entity';
-import { JwtBlacklist } from './entities/jwt-blacklist.entity';
+import { User, JwtBlacklist } from '../shared/entities';
 
 @Module({
   imports: [

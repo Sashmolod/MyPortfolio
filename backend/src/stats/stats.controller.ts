@@ -9,12 +9,13 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { StatsService } from './stats.service';
-import { GetStatsDto } from './dto/stats.dto';
+import { GetStatsDto } from '../shared/dto';
 import { JwtAuthGuard } from '../admin/jwt-auth.guard';
+import { StatsEnabledGuard } from './stats-enabled.guard';
 
 @ApiTags('stats')
 @Controller('stats')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, StatsEnabledGuard)
 @ApiBearerAuth()
 export class StatsController {
   private readonly logger = new Logger(StatsController.name);

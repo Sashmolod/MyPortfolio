@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import Skills from './SkillsSection';
 import { statsApi } from '../../api/statsApi';
@@ -16,14 +16,14 @@ vi.mock('../../contexts/LanguageContext', () => ({
   useLanguage: () => ({
     language: 'en',
     t: (keyOrBilingual) => {
-      if (typeof keyOrBilingual !== 'string') return keyOrBilingual;
+      if (typeof keyOrBilingual !== 'string') {return keyOrBilingual;}
       const dict = {
         skills: 'Skills',
         loading: 'Loading...',
         all: '+ All',
         none: '− None',
       };
-      if (dict[keyOrBilingual]) return dict[keyOrBilingual];
+      if (dict[keyOrBilingual]) {return dict[keyOrBilingual];}
       if (keyOrBilingual.includes(' / ')) {
         return keyOrBilingual.split(' / ')[1].trim();
       }

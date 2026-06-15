@@ -1,10 +1,4 @@
-import { User } from '../src/admin/entities/user.entity';
-import { Skill } from '../src/admin/entities/skill.entity';
-import { Project } from '../src/admin/entities/project.entity';
-import { Hero } from '../src/admin/entities/hero.entity';
-import { ContactMessage } from '../src/admin/entities/contact-message.entity';
-import { SocialLink } from '../src/admin/entities/social-link.entity';
-import { Settings } from '../src/admin/entities/settings.entity';
+import { User, Skill, Project, Hero, ContactMessage, SocialLink, Settings } from '../src/shared/entities';
 
 export function createMockUser(overrides: Partial<User> = {}): User {
   return {
@@ -43,7 +37,7 @@ export function createMockProject(overrides: Partial<Project> = {}): Project {
     description: 'React/Node storefront',
     image: '/uploads/store.png',
     link: 'https://github.com/my-store',
-    technologies: 'React, Redux, Express',
+    skills: [],
     sortOrder: 2,
     viewCount: 15,
     createdAt: new Date('2026-06-09T00:00:00.000Z'),
@@ -138,7 +132,7 @@ export function createMockCreateProjectDto(overrides = {}) {
     description: 'Project details',
     image: '/uploads/img.png',
     link: 'https://project.com',
-    technologies: 'NestJS, TypeORM',
+    skillIds: [],
     sortOrder: 1,
     ...overrides,
   };

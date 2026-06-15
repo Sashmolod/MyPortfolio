@@ -3,8 +3,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { Request, Response } from 'express';
 import { HttpStatus } from '@nestjs/common';
-import { LoginDto } from './dto/login.dto';
-import { ChangePasswordDto } from './dto/change-password.dto';
+import { LoginDto, ChangePasswordDto } from '../shared/dto';
 
 describe('AuthController', () => {
   let controller: AuthController;

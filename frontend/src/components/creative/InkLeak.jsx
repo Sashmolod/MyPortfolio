@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { soundSynth } from '../../utils/audioSynth';
 
 export default function InkLeak() {
@@ -9,7 +9,7 @@ export default function InkLeak() {
 
   useEffect(() => {
     const handleInkLeakTriggered = (e) => {
-      if (stage !== 'idle') return;
+      if (stage !== 'idle') {return;}
 
       const x = e.detail?.x || window.innerWidth / 2;
       const y = e.detail?.y || 50;

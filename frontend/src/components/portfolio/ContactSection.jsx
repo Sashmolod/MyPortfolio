@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import api from '../../api';
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import api from '../../api/client';
 import { MailIcon } from '../SvgIllustrations';
 import { soundSynth } from '../../utils/audioSynth';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -113,10 +113,10 @@ export default function ContactForm() {
     ];
     for (const field of fieldsToValidate) {
       const error = validate(field, formData[field] || '');
-      if (error) newErrors[field] = error;
+      if (error) {newErrors[field] = error;}
     }
     setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return;
+    if (Object.keys(newErrors).length > 0) {return;}
 
     setIsSubmitting(true);
     setIsFlying(true);

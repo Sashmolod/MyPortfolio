@@ -23,14 +23,14 @@ export default function Button({
   };
 
   const getPadding = () => {
-    if (size === 'sm') return '6px 12px';
-    if (size === 'lg') return '12px 24px';
+    if (size === 'sm') {return '6px 12px';}
+    if (size === 'lg') {return '12px 24px';}
     return '8px 16px';
   };
 
   const getFontSize = () => {
-    if (size === 'sm') return '12px';
-    if (size === 'lg') return '16px';
+    if (size === 'sm') {return '12px';}
+    if (size === 'lg') {return '16px';}
     return '14px';
   };
 

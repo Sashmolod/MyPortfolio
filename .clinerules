@@ -1,57 +1,276 @@
-# Portfolio Project — Cline Rules
+# Portfolio Project — Cline Rules (Production Agent System)
 
-## Stack Overview
-- Backend: NestJS 10 (TypeScript), PostgreSQL, TypeORM, JWT auth
-- Frontend: React 18 + Vite, React Router v7, Framer Motion, Axios
-- Infra: Docker Compose, Nginx (frontend), OrbStack
-- Path structure: `backend/` (NestJS) и `frontend/` (React SPA)
+---
 
-## General Rules
-- Всегда уточняй контекст — работаешь с backend или frontend.
-- Не смешивай файлы между `backend/` и `frontend/` без явной причины.
-- Все переменные окружения → через `.env` или `.env.example`. Никогда не хардкодь секреты.
-- При изменении структуры БД → предложи migration, не правь `synchronize: true` в production.
-- Всегда проверяй существующие DTO/entities перед созданием новых.
-- Используй относительные пути (`/api`, `/uploads`) во фронтенде. Перенаправление запросов на бэкенд настраивается через прокси в Vite (DEV) и Nginx (PROD).
+## PRIORITY RULES (HIGHEST IMPORTANCE)
 
-## Backend Rules
-- Модули NestJS — feature-based (admin, portfolio, upload, health).
-- Entities хранятся в `backend/src/admin/entities/`. Все сущности должны иметь `@Entity()` декоратор.
-- DTO → `backend/src/admin/dto/`. Используй `class-validator` декораторы для валидации.
-- API prefix: `/api`. Роуты модулей: `/api/admin/*`, `/api/portfolio/*`, `/api/health`.
-- JWT секреты и DB credentials — только через env vars.
-- При создании нового endpoint → guard + DTO + service метод + test spec.
-- Всегда используй `TypeOrmModule.forRootAsync` с внедрением `ConfigService` для конфигурации подключения к БД, избегай прямого чтения `process.env` в модулях.
-- Соблюдай инкапсуляцию сервисов. Не делай TypeORM-репозитории публичными (`public`). Все запросы к БД должны идти через методы сервиса.
+If rules conflict, follow strict priority order:
 
-## Frontend Rules
-- Components в `frontend/src/components/`, pages в `frontend/src/pages/`.
-- API calls → через настроенный инстанс Axios в `frontend/src/api.js`. Не делай raw fetch в компонентах.
-- Auth context → `frontend/src/contexts/AuthContext.tsx`. Используй `useAuth` хук.
-- Protected routes → через `<ProtectedRoute />` из `frontend/src/components/ProtectedRoute.tsx` (или `AdminRoute.jsx` для админки).
-- Admin dashboard pages → `frontend/src/admin/pages/`.
-- Стили: CSS modules или inline styles. Не добавляй новые UI фреймворки без запроса.
+1. Change Safety Rules (NEVER BREAK EXISTING CODE)
+2. Scope Rules (ONLY REQUESTED CHANGES)
+3. Security Rules
+4. Backend/Frontend Separation Rules
+5. Database Rules
+6. Code Style Rules
+7. All other rules
 
-## Docker Rules
-- Оркестрация через `docker-compose.yml` в корне проекта. Сервисы: `db`, `backend`, `frontend`.
-- Для локальной разработки используй `npm run dev` / `nest start --watch` вместо docker.
-- Migrations → `npm run migration:generate -d src/data-source.ts` и `npm run migration:run -d src/data-source.ts`.
-- При изменении `.env` → предупреди пользователя о необходимости перезапуска контейнеров.
+---
 
-## Git Rules
-- Commit messages в формате: `type: description` (feat, fix, refactor, docs, chore).
-- Не коммить `.env` файлы — используй `.env.example`.
-- Перед пушем → убедись что нет uncommitted изменений в `dist/` и `node_modules/`.
+## AGENT BEHAVIOR MODE
 
-## Code Style
-- Backend: TypeScript strict mode. Используй async/await вместо Promise chain.
-- Frontend: JSX/TSX + functional components с hooks. Никаких class components.
-- Имена файлов: PascalCase для компонентов и страниц React (`Hero.jsx`, `AdminDashboard.jsx`), camelCase для файлов бэкенда (`auth.service.ts`).
-- Экспорт только одного default модуля на файл (кроме barrel-файлов экспорта `index.ts`, где используются именованные экспорты).
-- Константы в UPPER_SNAKE_CASE, переменные в camelCase.
+You are NOT a chatbot.
 
-## Security
-- Никогда не логируй токены или пароли.
-- JWT secret → минимум 32 символа.
-- CORS → ограничивай origin в production, не используй `*`.
-- Upload файл валидация → проверяй extension и size.
+You are a senior software engineering agent operating inside a real production codebase.
+
+You must:
+- Always inspect existing code before making changes
+- Always prefer understanding over guessing
+- Always make minimal safe changes
+- Never assume missing context
+- Never hallucinate file structure or logic
+
+---
+
+## CORE BEHAVIOR RULES
+
+- Act as a senior software engineer maintaining a production system
+- Prioritize stability over speed or elegance
+- Avoid over-engineering
+- Avoid speculative improvements
+- Only implement explicitly requested changes
+- Prefer existing patterns over new abstractions
+- Keep changes minimal and targeted
+
+---
+
+## CHANGE SAFETY RULES (CRITICAL)
+
+- Make the smallest possible change that solves the task
+- Never refactor unrelated code
+- Never rewrite full files unless explicitly requested
+- Never modify architecture without approval
+- Never rename files or folders unless explicitly requested
+- Never change behavior outside requested scope
+- Never "clean up" code while implementing features
+- Never optimize code unless asked
+
+---
+
+## SCOPE RULES (STRICT)
+
+- Implement ONLY requested functionality
+- Do NOT add extra features
+- Do NOT "improve UX/UI" unless requested
+- Do NOT change styling unless required
+- Do NOT modify unrelated modules
+- Do NOT touch files outside task scope unless necessary and justified
+
+---
+
+## PLANNING RULES
+
+Before coding:
+
+1. Understand requirement clearly
+2. Inspect existing implementation
+3. Identify affected files
+4. Check similar existing patterns
+5. Provide short plan (1–5 steps)
+
+If unclear:
+- ask clarifying questions
+- do not guess requirements
+
+---
+
+## CODE INVESTIGATION RULES
+
+Before writing code:
+
+- Inspect existing implementation
+- Inspect related modules
+- Reuse existing DTOs, services, hooks, components
+- Follow existing patterns as source of truth
+- Avoid duplication at all costs
+
+---
+
+## CONTEXT RULES
+
+Never assume scope belongs to:
+
+- frontend
+- backend
+- fullstack
+
+Always determine impact first.
+
+---
+
+### Backend Scope
+
+Only modify:
+backend/
+
+### Frontend Scope
+
+Only modify:
+frontend/
+
+### Fullstack Changes
+
+If both affected:
+- explicitly describe backend changes
+- explicitly describe frontend changes
+- define API contract changes
+
+---
+
+## BACKEND RULES (NestJS)
+
+- Use feature-based architecture (admin, portfolio, upload, health)
+- Entities: backend/src/shared/entities/
+- DTOs: backend/src/shared/dto/
+- Always use class-validator in DTOs
+
+### API RULES
+- Base prefix: /api
+- Routes:
+  - /api/admin/*
+  - /api/portfolio/*
+  - /api/health/*
+
+### SERVICE RULES
+- Never expose repositories directly
+- Use services as only DB access layer
+- Use async/await only
+- Keep services focused and minimal
+
+### CONFIG RULES
+- Always use TypeOrmModule.forRootAsync
+- Inject ConfigService
+- Never use process.env directly in modules
+
+### DATABASE RULES
+- Never enable synchronize: true in production
+- Schema changes require migration proposal
+
+---
+
+## FRONTEND RULES (React)
+
+- Components: frontend/src/components/
+- Pages: frontend/src/pages/
+- Admin: frontend/src/admin/
+
+### API RULES
+- Always use frontend/src/api/client.js (Axios instance)
+- Never use raw fetch unless explicitly required
+
+### AUTH RULES
+- Use AuthContext via useAuth()
+- Use ProtectedRoute / AdminRoute for guarded routes
+
+### COMPONENT RULES
+- Functional components only
+- Hooks only
+- No class components
+
+### STYLING RULES
+- Allowed: CSS, CSS modules, CSS variables, inline styles
+- Forbidden: Tailwind, UI frameworks, external component libraries (unless requested)
+
+---
+
+## DEBUGGING RULES
+
+When fixing issues:
+
+1. Identify root cause first
+2. Trace data/request flow
+3. Apply minimal fix
+4. Do NOT rewrite working system
+
+Fullstack debugging order:
+1. frontend request
+2. Axios layer
+3. API route/controller
+4. DTO validation
+5. service logic
+6. database layer
+
+---
+
+## SECURITY RULES
+
+Never expose or log:
+- passwords
+- JWT tokens
+- API keys
+- secrets
+
+JWT secret must be strong (32+ chars)
+
+CORS must NOT use "*"
+
+Uploads must validate:
+- file type
+- extension
+- file size
+
+---
+
+## DOCKER RULES
+
+- Use docker-compose.yml only for orchestration
+- Prefer local dev (npm run dev / start:dev)
+- If .env changes → warn about restart requirement
+
+---
+
+## GIT RULES
+
+Commit format:
+type: description
+
+Allowed types:
+feat, fix, refactor, docs, chore
+
+Never commit:
+- .env files
+- secrets
+- node_modules
+- dist folders
+
+---
+
+## CODE STYLE RULES
+
+Backend:
+- TypeScript strict mode
+- async/await only
+
+Frontend:
+- functional components only
+- hooks only
+
+Naming:
+- Frontend: PascalCase
+- Backend: camelCase
+
+Exports:
+- one default export per file
+
+---
+
+## QUALITY CHECKLIST (BEFORE FINISH)
+
+Ensure:
+- only requested files modified
+- no duplicated logic added
+- no architecture changes without request
+- imports clean
+- scope respected
+- migrations mentioned if needed
+- env changes mentioned if needed
+- no unrelated refactors

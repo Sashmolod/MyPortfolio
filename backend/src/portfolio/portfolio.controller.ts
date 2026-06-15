@@ -4,13 +4,8 @@ import { Throttle } from '@nestjs/throttler';
 import { PortfolioService } from './portfolio.service';
 import { StatsService } from '../stats/stats.service';
 import { Request } from 'express';
-import { CreateContactMessageDto } from '../admin/dto/create-contact-message.dto';
-import { Hero } from '../admin/entities/hero.entity';
-import { Skill } from '../admin/entities/skill.entity';
-import { SkillCategory } from '../admin/entities/skill-category.entity';
-import { Project } from '../admin/entities/project.entity';
-import { Settings } from '../admin/entities/settings.entity';
 import {
+  CreateContactMessageDto,
   ContactInfoDto,
   DoodlyChatRequestDto,
   DoodlyChatResponseDto,
@@ -18,16 +13,21 @@ import {
   DoodlyGuessResponseDto,
   HeroDataDto,
   CaptchaResponseDto,
-} from './dto/portfolio.dto';
+} from '../shared/dto';
+import { Hero, Skill, SkillCategory, Project, Settings } from '../shared/entities';
+import { CaptchaService } from './services/captcha.service';
+import { GeminiService } from './services/gemini.service';
 
 // Re-export for Swagger schema reference
-export { CreateContactMessageDto } from '../admin/dto/create-contact-message.dto';
+export { CreateContactMessageDto } from '../shared/dto';
 
 @ApiTags('portfolio')
 @Controller('portfolio')
 export class PortfolioController {
   constructor(
     private portfolioService: PortfolioService,
+    private captchaService: CaptchaService,
+    private geminiService: GeminiService,
     private statsService: StatsService,
   ) {}
 
@@ -91,7 +91,7 @@ export class PortfolioController {
   @Throttle({ default: { limit: 15, ttl: 60000 } })
   @Get('captcha')
   getCaptcha(): CaptchaResponseDto {
-    return this.portfolioService.generateCaptcha();
+    return this.captchaService.generateCaptcha();
   }
 
   @ApiTags('message')
@@ -112,7 +112,7 @@ export class PortfolioController {
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('doodly/chat')
   async askDoodlyChat(@Body() body: DoodlyChatRequestDto): Promise<DoodlyChatResponseDto> {
-    return this.portfolioService.askDoodlyChat(body.message, body.lang);
+    return this.geminiService.askDoodlyChat(body.message, body.lang);
   }
 
   @ApiTags('doodly')
@@ -122,7 +122,7 @@ export class PortfolioController {
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('doodly/guess')
   async guessDoodle(@Body() body: DoodlyGuessRequestDto): Promise<DoodlyGuessResponseDto> {
-    return this.portfolioService.guessDoodle(body.image, body.lang);
+    return this.geminiService.guessDoodle(body.image, body.lang);
   }
 
   @ApiTags('settings')

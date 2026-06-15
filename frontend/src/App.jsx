@@ -1,5 +1,5 @@
-import { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { lazy, Suspense, useEffect } from 'react';
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import ToastContainer from './components/Toast';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -47,6 +47,19 @@ function AdminPage() {
  */
 function AppRoutes() {
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleUnauthorized = (e) => {
+      const redirectUrl = e.detail?.redirect || '/';
+      navigate(`/login?redirect=${encodeURIComponent(redirectUrl)}`);
+    };
+
+    window.addEventListener('unauthorized', handleUnauthorized);
+    return () => {
+      window.removeEventListener('unauthorized', handleUnauthorized);
+    };
+  }, [navigate]);
 
   return (
     <Routes>

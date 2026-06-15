@@ -2,33 +2,57 @@ import { createContext, useContext, useEffect } from 'react';
 import { themePresets } from '../config/themes';
 import { templateConfig } from '../config/template.config';
 
-const TemplateContext = createContext();
+// ────────────────────────────────────────────────
+//  Fallback used in tests / isolated renders
+// ────────────────────────────────────────────────
+const DEFAULT_CONTEXT = {
+  preset: 'sketch',
+  config: {
+    theme: { preset: 'sketch' },
+    layout: {
+      sections: [
+        { id: 'hero',     enabled: true },
+        { id: 'skills',   enabled: true },
+        { id: 'projects', enabled: true },
+        { id: 'contact',  enabled: true },
+      ],
+    },
+  },
+  enableWobbleFilters: true,
+  enableHanddrawnIcons: true,
+};
+
+// ────────────────────────────────────────────────
+//  Context
+// ────────────────────────────────────────────────
+const TemplateContext = createContext(undefined);
 
 export function TemplateProvider({ children }) {
-  const presetKey = templateConfig.theme.preset || 'sketch';
-  const activePreset = themePresets[presetKey] || themePresets.sketch;
+  const presetKey     = templateConfig.theme.preset || 'sketch';
+  const activePreset  = themePresets[presetKey] || themePresets['sketch'];
 
   useEffect(() => {
-    // 1. Inject CSS variables into document root
     const root = document.documentElement;
+
+    // 1. Inject CSS variables
     if (activePreset.variables) {
       Object.entries(activePreset.variables).forEach(([key, val]) => {
         root.style.setProperty(key, val);
       });
     }
 
-    // Apply font-family to root variable and document body
+    // 2. Font family
     if (activePreset.fontFamily) {
       root.style.setProperty('--font-family', activePreset.fontFamily);
       document.body.style.fontFamily = activePreset.fontFamily;
     }
 
-    // 2. Load Google Fonts dynamically
+    // 3. Google Fonts
     let fontLink = document.getElementById('template-google-font');
     if (activePreset.googleFontUrl) {
       if (!fontLink) {
         fontLink = document.createElement('link');
-        fontLink.id = 'template-google-font';
+        fontLink.id  = 'template-google-font';
         fontLink.rel = 'stylesheet';
         document.head.appendChild(fontLink);
       }
@@ -37,12 +61,12 @@ export function TemplateProvider({ children }) {
       fontLink.remove();
     }
 
-    // 3. Load Custom CSS dynamically if configured
+    // 4. Custom CSS
     let customCssLink = document.getElementById('template-custom-css');
     if (templateConfig.customCssPath) {
       if (!customCssLink) {
         customCssLink = document.createElement('link');
-        customCssLink.id = 'template-custom-css';
+        customCssLink.id  = 'template-custom-css';
         customCssLink.rel = 'stylesheet';
         document.head.appendChild(customCssLink);
       }
@@ -55,7 +79,7 @@ export function TemplateProvider({ children }) {
   const value = {
     preset: presetKey,
     config: templateConfig,
-    enableWobbleFilters: !!activePreset.enableWobbleFilters,
+    enableWobbleFilters:  !!activePreset.enableWobbleFilters,
     enableHanddrawnIcons: !!activePreset.enableHanddrawnIcons,
   };
 
@@ -67,25 +91,5 @@ export function TemplateProvider({ children }) {
 }
 
 export function useTemplate() {
-  const context = useContext(TemplateContext);
-  if (!context) {
-    // Safe default fallback values for unit tests and isolated component renders
-    return {
-      preset: 'sketch',
-      config: {
-        theme: { preset: 'sketch' },
-        layout: {
-          sections: [
-            { id: 'hero', enabled: true },
-            { id: 'skills', enabled: true },
-            { id: 'projects', enabled: true },
-            { id: 'contact', enabled: true },
-          ]
-        }
-      },
-      enableWobbleFilters: true,
-      enableHanddrawnIcons: true,
-    };
-  }
-  return context;
+  return useContext(TemplateContext) ?? DEFAULT_CONTEXT;
 }

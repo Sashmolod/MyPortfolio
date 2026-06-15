@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { soundSynth } from '../../utils/audioSynth';
 
 export default function SketchyBug() {
@@ -10,7 +10,7 @@ export default function SketchyBug() {
 
   // Spawns a bug from offscreen
   const spawnBug = () => {
-    if (bug) return; // Only one bug at a time
+    if (bug) {return;} // Only one bug at a time
 
     const sides = ['left', 'right', 'top', 'bottom'];
     const startSide = sides[Math.floor(Math.random() * sides.length)];
@@ -74,11 +74,11 @@ export default function SketchyBug() {
 
   // Bug movement loop
   useEffect(() => {
-    if (!bug || bug.squashed) return;
+    if (!bug || bug.squashed) {return;}
 
     const updateBug = () => {
       const current = stateRef.current;
-      if (!current || current.squashed) return;
+      if (!current || current.squashed) {return;}
 
       let {
         x,
@@ -173,7 +173,7 @@ export default function SketchyBug() {
 
   const handleSquash = (e) => {
     e.stopPropagation();
-    if (!bug || bug.squashed) return;
+    if (!bug || bug.squashed) {return;}
 
     soundSynth.playTap();
     window.dispatchEvent(new CustomEvent('bug-squashed'));
@@ -194,7 +194,7 @@ export default function SketchyBug() {
     }, 1500);
   };
 
-  if (!bug) return null;
+  if (!bug) {return null;}
 
   const legPath =
     frame % 6 < 3

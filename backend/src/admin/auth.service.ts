@@ -4,11 +4,10 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 import { UserService } from './user.service';
-import { LoginDto } from './dto/login.dto';
-import { ChangePasswordDto } from './dto/change-password.dto';
+import { LoginDto, ChangePasswordDto } from '../shared/dto';
 import { Repository, LessThan } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { JwtBlacklist } from './entities/jwt-blacklist.entity';
+import { JwtBlacklist } from '../shared/entities';
 
 /**
  * Сериализованные данные пользователя (без пароля)

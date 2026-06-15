@@ -67,7 +67,7 @@ export default function AdminRoute() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') handleLogin();
+                if (e.key === 'Enter') {handleLogin();}
               }}
               style={{
                 width: '100%',

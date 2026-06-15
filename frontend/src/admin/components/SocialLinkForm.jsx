@@ -7,7 +7,7 @@ import Input from '../../components/ui/Input';
 function pick(obj, keys) {
   const result = {};
   for (const k of keys) {
-    if (obj && obj[k] !== undefined) result[k] = obj[k];
+    if (obj && obj[k] !== undefined) {result[k] = obj[k];}
   }
   return result;
 }
@@ -15,7 +15,7 @@ function pick(obj, keys) {
 export default function SocialLinkForm({ item, onSaveData, onCancel }) {
   const { t } = useLanguage();
   const [form, setForm] = useState(() => {
-    if (item) return pick(item, ['platform', 'url', 'sortOrder']);
+    if (item) {return pick(item, ['platform', 'url', 'sortOrder']);}
     return { platform: '', url: '', sortOrder: 0 };
   });
   const [saving, setSaving] = useState(false);
@@ -23,15 +23,15 @@ export default function SocialLinkForm({ item, onSaveData, onCancel }) {
 
   const validate = () => {
     const errs = {};
-    if (!form.platform.trim()) errs.platform = 'Платформа обязательна / Platform is required';
-    if (!form.url.trim()) errs.url = 'URL обязателен / URL is required';
+    if (!form.platform.trim()) {errs.platform = 'Платформа обязательна / Platform is required';}
+    if (!form.url.trim()) {errs.url = 'URL обязателен / URL is required';}
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate()) {return;}
     setSaving(true);
     await onSaveData(pick(form, ['platform', 'url', 'sortOrder']));
     setSaving(false);

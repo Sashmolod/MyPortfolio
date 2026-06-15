@@ -26,7 +26,7 @@ import {
   MeResponseDto,
   CreateAdminResponseDto,
   MessageResponseDto,
-} from './dto';
+} from '../shared/dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 @ApiTags('auth')

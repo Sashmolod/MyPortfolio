@@ -4,9 +4,9 @@ import { Link } from 'react-router-dom';
 import { soundSynth } from '../utils/audioSynth';
 import {
   SketchLockIcon,
-  SketchSunIcon,
   SketchMoonIcon,
   SketchSoundIcon,
+  SketchSunIcon,
 } from './SvgIllustrations';
 import { usePortfolioSettings } from '../contexts/SettingsContext';
 import { useLanguage } from '../contexts/LanguageContext';

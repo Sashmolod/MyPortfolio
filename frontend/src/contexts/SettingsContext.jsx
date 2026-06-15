@@ -1,34 +1,39 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import api from '../api';
+import api from '../api/client';
 import { soundSynth } from '../utils/audioSynth';
 
-const SettingsContext = createContext();
+// ────────────────────────────────────────────────
+//  Defaults
+// ────────────────────────────────────────────────
+const DEFAULT_SETTINGS = {
+  enableDoodly: true,
+  enableSounds: true,
+  enableBug: true,
+  enablePageTear: true,
+  enableInkLeak: true,
+  enableCoffeeSpill: true,
+  enableDrawSkills: true,
+  enableEraser: true,
+  enableCrumpledPageTransition: true,
+  showAdminLink: true,
+};
+
+// ────────────────────────────────────────────────
+//  Context
+// ────────────────────────────────────────────────
+const SettingsContext = createContext(undefined);
 
 export function SettingsProvider({ children }) {
-  const [settings, setSettings] = useState({
-    enableDoodly: true,
-    enableSounds: true,
-    enableBug: true,
-    enablePageTear: true,
-    enableInkLeak: true,
-    enableCoffeeSpill: true,
-    enableDrawSkills: true,
-    enableEraser: true,
-    enableCrumpledPageTransition: true,
-    showAdminLink: true,
-  });
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
 
   // Sync enableSounds with soundSynth
   useEffect(() => {
-    if (settings) {
-      soundSynth.setSettingsMuted(!settings.enableSounds);
-    }
-  }, [settings?.enableSounds]);
+    soundSynth.setSettingsMuted(!settings.enableSounds);
+  }, [settings.enableSounds]);
 
   const fetchSettings = async () => {
     try {
-      // Use portfolio endpoint for public settings fetching
       const res = await api.get('/portfolio/settings');
       setSettings(res.data);
     } catch (err) {
@@ -42,8 +47,8 @@ export function SettingsProvider({ children }) {
     fetchSettings();
   }, []);
 
-  const updateSettingsLocally = (newSettings) => {
-    setSettings((prev) => ({ ...prev, ...newSettings }));
+  const updateSettingsLocally = (partial) => {
+    setSettings((prev) => ({ ...prev, ...partial }));
   };
 
   return (
@@ -64,9 +69,7 @@ export function SettingsProvider({ children }) {
 export function usePortfolioSettings() {
   const context = useContext(SettingsContext);
   if (!context) {
-    throw new Error(
-      'usePortfolioSettings must be used within a SettingsProvider'
-    );
+    throw new Error('usePortfolioSettings must be used within a SettingsProvider');
   }
   return context;
 }

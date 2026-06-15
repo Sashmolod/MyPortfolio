@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import Card from './Card';
 
 export default function Modal({
@@ -9,7 +9,7 @@ export default function Modal({
   style = {},
   ...props
 }) {
-  if (!isOpen) return null;
+  if (!isOpen) {return null;}
 
   return (
     <AnimatePresence>

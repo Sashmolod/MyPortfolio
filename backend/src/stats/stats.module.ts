@@ -2,14 +2,14 @@ import { Module, NestModule, MiddlewareConsumer, RequestMethod } from '@nestjs/c
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { StatsController } from './stats.controller';
 import { StatsService } from './stats.service';
-import { VisitStat } from '../admin/entities/visit-stat.entity';
-import { Project } from '../admin/entities/project.entity';
+import { VisitStat, Project, AuditLog } from '../shared/entities';
 import { StatsMiddleware } from './stats.middleware';
+import { StatsEnabledGuard } from './stats-enabled.guard';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([VisitStat, Project])],
+  imports: [TypeOrmModule.forFeature([VisitStat, Project, AuditLog])],
   controllers: [StatsController],
-  providers: [StatsService],
+  providers: [StatsService, StatsEnabledGuard],
   exports: [StatsService],
 })
 export class StatsModule implements NestModule {

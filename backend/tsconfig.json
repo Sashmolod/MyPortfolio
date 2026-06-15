@@ -23,5 +23,5 @@
     "types": ["jest", "node"]
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "test", "**/*.spec.ts", "src/migration"]
+  "exclude": ["node_modules", "dist", "test", "**/*.spec.ts", "src/migrations/run.ts"]
 }

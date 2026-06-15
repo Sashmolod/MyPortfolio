@@ -9,8 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { SkillCategoryService } from './skill-category.service';
-import { CreateSkillCategoryDto } from './dto/create-skill-category.dto';
-import { UpdateSkillCategoryDto } from './dto/update-skill-category.dto';
+import { CreateSkillCategoryDto, UpdateSkillCategoryDto } from '../shared/dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('admin/skill-categories')

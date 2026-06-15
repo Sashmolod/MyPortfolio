@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
-import { RocketIcon, ProjectIcon } from '../SvgIllustrations';
-import api from '../../api';
+import { ProjectIcon, RocketIcon } from '../SvgIllustrations';
+import api from '../../api/client';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 export default function ProjectsSection({ projects = [] }) {

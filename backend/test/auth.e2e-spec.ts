@@ -6,15 +6,7 @@ import cookieParser from 'cookie-parser';
 import { JwtService } from '@nestjs/jwt';
 import { AppModule } from '../src/app.module';
 import { AuthService } from '../src/admin/auth.service';
-import { User } from '../src/admin/entities/user.entity';
-import { Skill } from '../src/admin/entities/skill.entity';
-import { Project } from '../src/admin/entities/project.entity';
-import { Hero } from '../src/admin/entities/hero.entity';
-import { ContactMessage } from '../src/admin/entities/contact-message.entity';
-import { SocialLink } from '../src/admin/entities/social-link.entity';
-import { Settings } from '../src/admin/entities/settings.entity';
-import { VisitStat } from '../src/admin/entities/visit-stat.entity';
-import { AuditLog } from '../src/admin/entities/audit-log.entity';
+import { User, Skill, Project, Hero, ContactMessage, SocialLink, Settings, VisitStat, AuditLog } from '../src/shared/entities';
 import { createMockUser } from './fixtures';
 
 describe('AuthController (e2e)', () => {

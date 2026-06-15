@@ -70,7 +70,7 @@ self.addEventListener('fetch', (event) => {
   // Static assets (images, fonts, manifests) — Cache First
   event.respondWith(
     caches.match(event.request).then((cached) => {
-      if (cached) return cached;
+      if (cached) {return cached;}
 
       return fetch(event.request).then((response) => {
         if (!response || response.status !== 200 || response.type !== 'basic') {

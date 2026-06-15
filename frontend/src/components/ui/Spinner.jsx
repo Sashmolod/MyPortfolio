@@ -1,7 +1,7 @@
 export default function Spinner({ size = 'md', color = 'currentColor', className = '', style = {} }) {
   const getDimensions = () => {
-    if (size === 'sm') return 16;
-    if (size === 'lg') return 32;
+    if (size === 'sm') {return 16;}
+    if (size === 'lg') {return 32;}
     return 24;
   };
 

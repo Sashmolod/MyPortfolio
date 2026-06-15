@@ -25,16 +25,16 @@ export default function DoodleCanvas({
   // 1. ResizeObserver to keep canvas sized to full scroll height
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {return;}
 
     const handleResize = (entries) => {
-      for (let entry of entries) {
+      for (const entry of entries) {
         const { width, height } = entry.target.getBoundingClientRect();
         // Use scrollHeight for height to cover the whole document height
         const scrollHeight = entry.target.scrollHeight;
 
         setDimensions({
-          width: width,
+          width,
           height: scrollHeight,
         });
       }
@@ -49,7 +49,7 @@ export default function DoodleCanvas({
   // 2. Handle DPI Scaling and Redrawing Paths
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || dimensions.width === 0 || dimensions.height === 0) return;
+    if (!canvas || dimensions.width === 0 || dimensions.height === 0) {return;}
 
     const ctx = canvas.getContext('2d');
     const dpr = window.devicePixelRatio || 1;
@@ -74,7 +74,7 @@ export default function DoodleCanvas({
 
     // Redraw all saved paths
     paths.forEach((path) => {
-      if (path.points.length < 1) return;
+      if (path.points.length < 1) {return;}
       ctx.beginPath();
       ctx.strokeStyle = resolveColor(path.color);
       ctx.lineWidth = path.width;
@@ -92,7 +92,7 @@ export default function DoodleCanvas({
   // 3. Mouse / Touch Helpers
   const getCoordinates = (e) => {
     const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
+    if (!canvas) {return { x: 0, y: 0 };}
 
     const rect = canvas.getBoundingClientRect();
 
@@ -111,7 +111,7 @@ export default function DoodleCanvas({
   };
 
   const startDrawing = (e) => {
-    if (!active) return;
+    if (!active) {return;}
     setIsDrawing(true);
     soundSynth.startScribble();
 
@@ -131,7 +131,7 @@ export default function DoodleCanvas({
   };
 
   const draw = (e) => {
-    if (!active || !isDrawing) return;
+    if (!active || !isDrawing) {return;}
 
     // Prevent scrolling on mobile touch when drawing
     if (e.cancelable) {
@@ -180,14 +180,14 @@ export default function DoodleCanvas({
   };
 
   const stopDrawing = () => {
-    if (!active || !isDrawing) return;
+    if (!active || !isDrawing) {return;}
     setIsDrawing(false);
     soundSynth.stopScribble();
 
     if (currentPathRef.current.length > 0) {
       const newPath = {
         points: currentPathRef.current,
-        color: color,
+        color,
         width: brushWidth,
       };
       setPaths((prev) => [...prev, newPath]);

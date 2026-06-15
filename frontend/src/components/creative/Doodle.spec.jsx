@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import DoodleCanvas from './DoodleCanvas';
 import DoodleControls from './DoodleControls';
@@ -22,7 +22,7 @@ vi.mock('../../contexts/LanguageContext', () => ({
   useLanguage: () => ({
     language: 'en',
     t: (keyOrBilingual) => {
-      if (typeof keyOrBilingual !== 'string') return keyOrBilingual;
+      if (typeof keyOrBilingual !== 'string') {return keyOrBilingual;}
       if (keyOrBilingual.includes(' / ')) {
         return keyOrBilingual.split(' / ')[1].trim();
       }
@@ -31,7 +31,7 @@ vi.mock('../../contexts/LanguageContext', () => ({
   }),
 }));
 
-vi.mock('../../api', () => ({
+vi.mock('../../api/client', () => ({
   default: {
     get: vi.fn().mockResolvedValue({
       data: {

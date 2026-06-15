@@ -1,10 +1,8 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
-import { SkillCategory } from './entities/skill-category.entity';
-import { CreateSkillCategoryDto } from './dto/create-skill-category.dto';
-import { UpdateSkillCategoryDto } from './dto/update-skill-category.dto';
-import { Skill } from './entities/skill.entity';
+import { SkillCategory, Skill } from '../shared/entities';
+import { CreateSkillCategoryDto, UpdateSkillCategoryDto } from '../shared/dto';
 
 @Injectable()
 export class SkillCategoryService {

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { DeveloperIllustration, BackgroundParticles } from '../SvgIllustrations';
+import { BackgroundParticles, DeveloperIllustration } from '../SvgIllustrations';
 import heroImg from '../../assets/hero.png';
 
 /**
@@ -75,7 +75,7 @@ function SocialIcon({ name, size = 20 }) {
 
   useEffect(() => {
     // Если есть локальная скетч-иконка, загрузка не требуется
-    if (icon) return;
+    if (icon) {return;}
 
     let isMounted = true;
 
@@ -84,11 +84,11 @@ function SocialIcon({ name, size = 20 }) {
 
     fetch(`https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/${slug}.svg`)
       .then((res) => {
-        if (!res.ok) throw new Error('Icon not found');
+        if (!res.ok) {throw new Error('Icon not found');}
         return res.text();
       })
       .then((svgText) => {
-        if (!isMounted) return;
+        if (!isMounted) {return;}
 
         // Извлекаем только внутреннее содержимое путей SVG, чтобы обернуть в наш стилизованный тэг
         const match = svgText.match(/<path[^>]*>/i);

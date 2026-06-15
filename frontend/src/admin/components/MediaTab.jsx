@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import api from '../../api';
+import api from '../../api/client';
 
 export default function MediaTab({ items, refresh }) {
   const [uploading, setUploading] = useState(false);
@@ -8,7 +8,7 @@ export default function MediaTab({ items, refresh }) {
 
   const handleUpload = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file) {return;}
 
     const formData = new FormData();
     formData.append('file', file);
@@ -40,7 +40,7 @@ export default function MediaTab({ items, refresh }) {
   };
 
   const handleDelete = async (filename) => {
-    if (!window.confirm(`Are you sure you want to delete ${filename}?`)) return;
+    if (!window.confirm(`Are you sure you want to delete ${filename}?`)) {return;}
 
     try {
       await api.delete(`/upload/${filename}`);
@@ -58,7 +58,7 @@ export default function MediaTab({ items, refresh }) {
   };
 
   const formatSize = (bytes) => {
-    if (bytes === 0) return '0 B';
+    if (bytes === 0) {return '0 B';}
     const k = 1024;
     const sizes = ['B', 'KB', 'MB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));

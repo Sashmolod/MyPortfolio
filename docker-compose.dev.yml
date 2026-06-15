@@ -3,16 +3,14 @@ services:
     image: postgres:16-alpine
     container_name: portfolio_db_dev
     restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: ${POSTGRES_DB:-portfolio_db}
+    env_file:
+      - .env.development
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5433:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hot_pepper}"]
       interval: 10s
       timeout: 5s
       start_period: 30s
@@ -34,25 +32,14 @@ services:
         NODE_ENV: development
     container_name: portfolio_backend_dev
     restart: unless-stopped
-    environment:
-      POSTGRES_HOST: db
-      POSTGRES_PORT: "5432"
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: ${POSTGRES_DB:-portfolio_db}
-      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@db:5432/portfolio_db}
-      PORT: "3000"
-      JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret_change_in_production_min_32_chars}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev_jwt_refresh_secret_change_in_prod_32}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000,http://frontend:80,http://localhost,http://127.0.0.1}
-      CAPTCHA_SECRET: ${CAPTCHA_SECRET:-dev_captcha_secret_change_in_production_min_32_chars}
-      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
-      DOCKER_CONTAINER: "true"
     env_file:
       - path: .env.development
         required: false
+    environment:
+      POSTGRES_HOST: db
+      DATABASE_URL: postgresql://${POSTGRES_USER:-hot_pepper}:${POSTGRES_PASSWORD:-hot_pepper}@db:5432/${POSTGRES_DB:-portfolio_db}
+      PORT: "3000"
+      DOCKER_CONTAINER: "true"
     ports:
       - "3000:3000"
     volumes:
@@ -61,6 +48,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    command: sh -c "npx ts-node -r tsconfig-paths/register src/migrations/run.ts && npx nest start --watch"
     networks:
       - portfolio-network
     healthcheck:

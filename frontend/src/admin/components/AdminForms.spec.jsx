@@ -1,14 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import SkillForm from './SkillForm';
 import ProjectForm from './ProjectForm';
 import HeroForm from './HeroForm';
 import SocialLinkForm from './SocialLinkForm';
-import api from '../../api';
+import api from '../../api/client';
 
 // Mock API calls
-vi.mock('../../api', () => ({
+vi.mock('../../api/client', () => ({
   default: {
     post: vi.fn(),
   },
@@ -19,7 +19,7 @@ vi.mock('../../contexts/LanguageContext', () => ({
   useLanguage: () => ({
     language: 'en',
     t: (keyOrBilingual) => {
-      if (typeof keyOrBilingual !== 'string') return keyOrBilingual;
+      if (typeof keyOrBilingual !== 'string') {return keyOrBilingual;}
       if (keyOrBilingual.includes(' / ')) {
         return keyOrBilingual.split(' / ')[1].trim();
       }
@@ -247,7 +247,7 @@ describe('Admin Forms components', () => {
       global.Image = class {
         constructor() {
           setTimeout(() => {
-            if (this.onload) this.onload();
+            if (this.onload) {this.onload();}
           }, 0);
         }
       };

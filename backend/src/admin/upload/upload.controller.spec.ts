@@ -3,7 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { UploadController } from './upload.controller';
 import { UploadService } from './upload.service';
-import { AuditLog } from '../entities/audit-log.entity';
+import { AuditLog } from '../../shared/entities';
 
 describe('UploadController', () => {
   let controller: UploadController;

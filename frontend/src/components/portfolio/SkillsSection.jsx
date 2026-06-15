@@ -1,22 +1,38 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { CodeIcon } from '../SvgIllustrations';
 import { usePortfolioSettings } from '../../contexts/SettingsContext';
 import { statsApi } from '../../api/statsApi';
 import { useLanguage } from '../../contexts/LanguageContext';
 
+const ICON_MAPPINGS = {
+  sql: 'postgresql',
+  postgres: 'postgresql',
+  js: 'javascript',
+  node: 'nodejs',
+  mongo: 'mongodb',
+  aws: 'amazonwebservices',
+  css: 'css3',
+  html: 'html5',
+  vue: 'vuejs',
+  javaspring: 'spring',
+  rubyonrails: 'rails',
+  aspnet: 'dotnetcore',
+  elk: 'elasticsearch',
+  mssql: 'microsoftsqlserver',
+  kafka: 'apachekafka',
+};
+
 function SkillIcon({ iconKey, name, size = 20 }) {
   const { settings } = usePortfolioSettings();
-  if (!iconKey) return <CodeIcon size={size} />;
-  let key = iconKey.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-  if (key === 'sql') key = 'postgresql';
-  if (key === 'js') key = 'javascript';
-  if (key === 'node') key = 'nodejs';
+  if (!iconKey) {return <CodeIcon size={size} />;}
+  const keyRaw = iconKey.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  const key = ICON_MAPPINGS[keyRaw] || keyRaw;
   const url = `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${key}/${key}-original.svg`;
   if (settings?.enableDrawSkills) {
     return <img src={url} alt={name} width={size} height={size} className="draw-svg-icon" style={{ objectFit: 'contain', opacity: 0.7 }} onError={(e) => { e.target.style.display = 'none'; }} />;
   }
-  return <img src={url} alt={name} width={size} height={size} style={{ objectFit: 'contain' }} onError={(e) => { if (!e.target.src.includes('-plain')) e.target.src = `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${key}/${key}-plain.svg`; else e.target.style.display = 'none'; }} />;
+  return <img src={url} alt={name} width={size} height={size} style={{ objectFit: 'contain' }} onError={(e) => { if (!e.target.src.includes('-plain')) {e.target.src = `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${key}/${key}-plain.svg`;} else {e.target.style.display = 'none';} }} />;
 }
 
 function SkillBadge({ skill, compact = false }) {
@@ -84,7 +100,7 @@ export default function SkillsSection() {
   const expandAll = () => { const all = {}; categories.forEach(c => { all[c.id] = true; }); setExpanded(all); };
   const collapseAll = () => setExpanded({});
 
-  if (loading) return <section id="skills"><h2>{t('skills')}</h2><p>{t('loading')}</p></section>;
+  if (loading) {return <section id="skills"><h2>{t('skills')}</h2><p>{t('loading')}</p></section>;}
 
   return (
     <section id="skills">
@@ -136,7 +152,7 @@ export default function SkillsSection() {
         {categories.map((cat) => {
           const cs = (cat.skills || []).sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
           const subs = (cat.subcategories || []).filter(s => (s.skills || []).length > 0).sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-          if (!cs.length && !subs.length) return null;
+          if (!cs.length && !subs.length) {return null;}
 
           const isExp = expanded[cat.id];
           const total = cs.length + subs.reduce((s, sub) => s + sub.skills.length, 0);

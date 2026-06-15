@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -97,7 +97,7 @@ export default function SkillsList({ skills = [], onEdit, onDelete }) {
 
   const filteredAndSortedSkills = useMemo(() => {
     // 1. Filter
-    let result = (Array.isArray(skills) ? skills : []).filter(skill => {
+    const result = (Array.isArray(skills) ? skills : []).filter(skill => {
       const query = searchQuery.toLowerCase();
       return (
         (skill.name || '').toLowerCase().includes(query) ||
@@ -134,7 +134,7 @@ export default function SkillsList({ skills = [], onEdit, onDelete }) {
 
   const grouped = filteredAndSortedSkills.reduce((acc, skill) => {
     const cat = skill.category || 'Без категории / No category';
-    if (!acc[cat]) acc[cat] = [];
+    if (!acc[cat]) {acc[cat] = [];}
     acc[cat].push(skill);
     return acc;
   }, {});

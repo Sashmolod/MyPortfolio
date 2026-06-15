@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AdminService } from './admin.service';
-import { Skill, Hero, Project, ContactMessage, SocialLink, Settings } from './entities';
+import { Skill, Hero, Project, ContactMessage, SocialLink, Settings } from '../shared/entities';
 import { NotFoundException } from '@nestjs/common';
 
 describe('AdminService', () => {
@@ -208,7 +208,7 @@ describe('AdminService', () => {
     });
 
     it('should create message', async () => {
-      const dto = { name: 'User', email: 'user@example.com', subject: 'Hi', message: 'Hello' };
+      const dto = { name: 'User', email: 'user@example.com', subject: 'Hi', message: 'Hello', captchaAnswer: '12', captchaToken: 'dummy' };
       const result = await service.createMessage(dto);
       expect(result).toEqual({ id: 1, ...dto });
     });

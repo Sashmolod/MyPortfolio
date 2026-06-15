@@ -98,11 +98,11 @@ docker compose -f docker-compose.dev.yml exec backend npm run seed    # DEV
 docker compose exec backend npm run seed                               # PROD
 
 # Подключиться к БД
-docker compose -f docker-compose.dev.yml exec db psql -U postgres -d portfolio_db   # DEV
-docker compose exec db psql -U postgres -d portfolio_db                              # PROD
+docker compose -f docker-compose.dev.yml exec db psql -U hot_pepper -d portfolio_db   # DEV (пользователь из .env.development)
+docker compose exec db psql -U postgres -d portfolio_db                              # PROD (пользователь из .env.production)
 
 # Выполнить запрос напрямую
-docker compose -f docker-compose.dev.yml exec db psql -U postgres -d portfolio_db -c "SELECT * FROM users;"
+docker compose -f docker-compose.dev.yml exec db psql -U hot_pepper -d portfolio_db -c "SELECT * FROM users;"
 ```
 
 ### Миграции
@@ -168,15 +168,57 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ---
 
-## 💾 Бэкап БД
+## 💾 Бэкап и восстановление БД
 
+> **Важно:** В DEV-окружении имя пользователя базы данных — `hot_pepper`, а в PROD-окружении — `postgres` (согласно настройкам в `.env` файлах). Имена контейнеров также различаются.
+
+### DEV-окружение (Разработка)
+
+#### Создать бэкап (DEV)
 ```bash
-# Создать бэкап
-docker exec portfolio_db_dev pg_dump -U postgres -d portfolio_db | gzip > backups/portfolio_db_backup.sql.gz
-
-# Восстановить из бэкапа
-gunzip < backups/portfolio_db_backup.sql.gz | docker exec -i portfolio_db_dev psql -U postgres -d portfolio_db
+docker exec portfolio_db_dev pg_dump -U hot_pepper -d portfolio_db | gzip > backups/portfolio_db_backup.sql.gz
 ```
+
+#### Восстановить из бэкапа (DEV)
+```bash
+# 1. Остановить бэкенд
+docker compose -f docker-compose.dev.yml stop backend
+
+# 2. Пересоздать пустую базу данных
+docker exec -i portfolio_db_dev psql -U hot_pepper -d postgres -c "DROP DATABASE IF EXISTS portfolio_db;"
+docker exec -i portfolio_db_dev psql -U hot_pepper -d postgres -c "CREATE DATABASE portfolio_db;"
+
+# 3. Восстановить данные из бэкапа
+gunzip -c backups/portfolio_db_backup.sql.gz | docker exec -i portfolio_db_dev psql -U hot_pepper -d portfolio_db
+
+# 4. Запустить бэкенд (он сам применит новые миграции)
+docker compose -f docker-compose.dev.yml start backend
+```
+
+### PROD-окружение (Продакшен)
+
+#### Создать бэкап (PROD)
+```bash
+docker exec portfolio_db pg_dump -U postgres -d portfolio_db | gzip > backups/portfolio_db_backup.sql.gz
+```
+
+#### Восстановить из бэкапа (PROD)
+```bash
+# 1. Остановить бэкенд
+docker compose stop backend
+
+# 2. Пересоздать пустую базу данных
+docker exec -i portfolio_db psql -U postgres -d postgres -c "DROP DATABASE IF EXISTS portfolio_db;"
+docker exec -i portfolio_db psql -U postgres -d postgres -c "CREATE DATABASE portfolio_db;"
+
+# 3. Восстановить данные из бэкапа
+gunzip -c backups/portfolio_db_backup.sql.gz | docker exec -i portfolio_db psql -U postgres -d portfolio_db
+
+# 4. Запустить бэкенд (он автоматически применит миграции на старте)
+docker compose start backend
+```
+
+
 
 ---
 

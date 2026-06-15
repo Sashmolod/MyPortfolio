@@ -1,25 +1,37 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PortfolioController } from './portfolio.controller';
 import { PortfolioService } from './portfolio.service';
+import { CaptchaService } from './services/captcha.service';
+import { GeminiService } from './services/gemini.service';
 import { StatsService } from '../stats/stats.service';
-import { CreateContactMessageDto } from '../admin/dto/create-contact-message.dto';
+import { CreateContactMessageDto } from '../shared/dto';
 import { Request } from 'express';
 
 describe('PortfolioController', () => {
   let controller: PortfolioController;
   let portfolioService: PortfolioService;
+  let captchaService: CaptchaService;
+  let geminiService: GeminiService;
   let statsService: StatsService;
 
   const mockPortfolioService = {
     getHeroData: jest.fn(),
     getAllSkills: jest.fn(),
+    getAllSkillCategories: jest.fn(),
     getAllProjects: jest.fn(),
     getContactInfo: jest.fn(),
-    generateCaptcha: jest.fn(),
     createMessage: jest.fn(),
+    getSettings: jest.fn(),
+  };
+
+  const mockCaptchaService = {
+    generateCaptcha: jest.fn(),
+    verifyCaptcha: jest.fn(),
+  };
+
+  const mockGeminiService = {
     askDoodlyChat: jest.fn(),
     guessDoodle: jest.fn(),
-    getSettings: jest.fn(),
   };
 
   const mockStatsService = {
@@ -34,18 +46,24 @@ describe('PortfolioController', () => {
       controllers: [PortfolioController],
       providers: [
         { provide: PortfolioService, useValue: mockPortfolioService },
-        { provide: StatsService, useValue: mockStatsService },
+        { provide: CaptchaService,   useValue: mockCaptchaService   },
+        { provide: GeminiService,    useValue: mockGeminiService    },
+        { provide: StatsService,     useValue: mockStatsService     },
       ],
     }).compile();
 
-    controller = module.get<PortfolioController>(PortfolioController);
+    controller    = module.get<PortfolioController>(PortfolioController);
     portfolioService = module.get<PortfolioService>(PortfolioService);
-    statsService = module.get<StatsService>(StatsService);
+    captchaService   = module.get<CaptchaService>(CaptchaService);
+    geminiService    = module.get<GeminiService>(GeminiService);
+    statsService     = module.get<StatsService>(StatsService);
   });
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
   });
+
+  // ====== HERO ======
 
   describe('getHeroData', () => {
     it('should return hero data from service', async () => {
@@ -58,6 +76,8 @@ describe('PortfolioController', () => {
     });
   });
 
+  // ====== SKILLS ======
+
   describe('getAllSkills', () => {
     it('should return all skills', async () => {
       const skillsMock = [{ name: 'NestJS' }];
@@ -68,6 +88,19 @@ describe('PortfolioController', () => {
     });
   });
 
+  describe('getAllSkillCategories', () => {
+    it('should return skill categories', async () => {
+      const categoriesMock = [{ id: 1, name: 'Backend' }];
+      mockPortfolioService.getAllSkillCategories.mockResolvedValue(categoriesMock);
+
+      const result = await controller.getAllSkillCategories();
+      expect(result).toBe(categoriesMock);
+      expect(mockPortfolioService.getAllSkillCategories).toHaveBeenCalled();
+    });
+  });
+
+  // ====== PROJECTS ======
+
   describe('getAllProjects', () => {
     it('should return all projects', async () => {
       const projectsMock = [{ title: 'Site' }];
@@ -77,6 +110,8 @@ describe('PortfolioController', () => {
       expect(result).toBe(projectsMock);
     });
   });
+
+  // ====== CONTACT ======
 
   describe('getContactInfo', () => {
     it('should return contact info', async () => {
@@ -89,18 +124,26 @@ describe('PortfolioController', () => {
   });
 
   describe('getCaptcha', () => {
-    it('should return generated captcha', () => {
+    it('should return generated captcha from CaptchaService', () => {
       const captchaMock = { question: '2 + 2', token: 'tok' };
-      mockPortfolioService.generateCaptcha.mockReturnValue(captchaMock);
+      mockCaptchaService.generateCaptcha.mockReturnValue(captchaMock);
 
       const result = controller.getCaptcha();
       expect(result).toBe(captchaMock);
+      expect(mockCaptchaService.generateCaptcha).toHaveBeenCalled();
     });
   });
 
   describe('createMessage', () => {
     it('should submit contact message', async () => {
-      const dto: CreateContactMessageDto = { name: 'Bob', email: 'bob@bob.com', subject: 'Test Subject', message: 'Hello, this is a test message' };
+      const dto: CreateContactMessageDto = {
+        name: 'Bob',
+        email: 'bob@bob.com',
+        subject: 'Test Subject',
+        message: 'Hello, this is a test message',
+        captchaAnswer: '12',
+        captchaToken: '12345:signature',
+      };
       const savedMock = { id: 1, ...dto };
       mockPortfolioService.createMessage.mockResolvedValue(savedMock);
 
@@ -110,27 +153,31 @@ describe('PortfolioController', () => {
     });
   });
 
+  // ====== DOODLY (GeminiService) ======
+
   describe('askDoodlyChat', () => {
-    it('should query Doodly chat and get answer', async () => {
+    it('should query Doodly chat via GeminiService and return answer', async () => {
       const responseMock = { response: 'Hello!' };
-      mockPortfolioService.askDoodlyChat.mockResolvedValue(responseMock);
+      mockGeminiService.askDoodlyChat.mockResolvedValue(responseMock);
 
       const result = await controller.askDoodlyChat({ message: 'Hi' });
       expect(result).toBe(responseMock);
-      expect(mockPortfolioService.askDoodlyChat).toHaveBeenCalledWith('Hi', undefined);
+      expect(mockGeminiService.askDoodlyChat).toHaveBeenCalledWith('Hi', undefined);
     });
   });
 
   describe('guessDoodle', () => {
-    it('should guess sketch', async () => {
+    it('should guess sketch via GeminiService', async () => {
       const responseMock = { guess: 'A cat!' };
-      mockPortfolioService.guessDoodle.mockResolvedValue(responseMock);
+      mockGeminiService.guessDoodle.mockResolvedValue(responseMock);
 
       const result = await controller.guessDoodle({ image: 'base64str' });
       expect(result).toBe(responseMock);
-      expect(mockPortfolioService.guessDoodle).toHaveBeenCalledWith('base64str', undefined);
+      expect(mockGeminiService.guessDoodle).toHaveBeenCalledWith('base64str', undefined);
     });
   });
+
+  // ====== SETTINGS ======
 
   describe('getSettings', () => {
     it('should return site settings', async () => {
@@ -141,6 +188,8 @@ describe('PortfolioController', () => {
       expect(result).toBe(settingsMock);
     });
   });
+
+  // ====== STATS ======
 
   describe('trackVisit', () => {
     it('should call statsService to record visit from request', async () => {

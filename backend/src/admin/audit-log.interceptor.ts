@@ -8,7 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { AuditLog } from './entities/audit-log.entity';
+import { AuditLog } from '../shared/entities';
 
 @Injectable()
 export class AuditLogInterceptor implements NestInterceptor {

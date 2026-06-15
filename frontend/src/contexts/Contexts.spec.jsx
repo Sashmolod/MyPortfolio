@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, act, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import { ThemeProvider, useTheme } from './ThemeContext';
 import { SettingsProvider, usePortfolioSettings } from './SettingsContext';
 import { AuthProvider, useAuth } from './AuthContext';
-import api from '../api';
+import api from '../api/client';
 import * as authApi from '../api/authApi';
 
 // Mock audioSynth to avoid actual audio calls
@@ -15,7 +15,7 @@ vi.mock('../utils/audioSynth', () => ({
 }));
 
 // Mock API calls
-vi.mock('../api', () => ({
+vi.mock('../api/client', () => ({
   default: {
     get: vi.fn(),
   },
@@ -68,7 +68,7 @@ describe('Context Providers', () => {
   describe('SettingsContext', () => {
     function SettingsConsumer() {
       const { settings, loading } = usePortfolioSettings();
-      if (loading) return <div>Loading Settings...</div>;
+      if (loading) {return <div>Loading Settings...</div>;}
       return (
         <div data-testid="doodly-val">
           {settings.enableDoodly ? 'enabled' : 'disabled'}
@@ -102,7 +102,7 @@ describe('Context Providers', () => {
   describe('AuthContext', () => {
     function AuthConsumer() {
       const { user, isAuthenticated, isLoading } = useAuth();
-      if (isLoading) return <div>Checking Auth...</div>;
+      if (isLoading) {return <div>Checking Auth...</div>;}
       return (
         <div>
           <span data-testid="auth-state">{isAuthenticated ? 'yes' : 'no'}</span>

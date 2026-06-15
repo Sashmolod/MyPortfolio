@@ -11,11 +11,11 @@ const TYPE_LABELS = {
 export default function DeletedItemsPanel({ deletedItems, onRestore, onPermanentDelete }) {
   const [expandedType, setExpandedType] = useState(null);
 
-  if (deletedItems.length === 0) return null;
+  if (deletedItems.length === 0) {return null;}
 
   const grouped = deletedItems.reduce((acc, item) => {
     const type = item.type;
-    if (!acc[type]) acc[type] = [];
+    if (!acc[type]) {acc[type] = [];}
     acc[type].push(item);
     return acc;
   }, {});

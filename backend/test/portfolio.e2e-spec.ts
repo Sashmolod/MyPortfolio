@@ -3,16 +3,10 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { AppModule } from '../src/app.module';
-import { User } from '../src/admin/entities/user.entity';
-import { Skill } from '../src/admin/entities/skill.entity';
-import { Project } from '../src/admin/entities/project.entity';
-import { Hero } from '../src/admin/entities/hero.entity';
-import { ContactMessage } from '../src/admin/entities/contact-message.entity';
-import { SocialLink } from '../src/admin/entities/social-link.entity';
-import { Settings } from '../src/admin/entities/settings.entity';
-import { VisitStat } from '../src/admin/entities/visit-stat.entity';
-import { AuditLog } from '../src/admin/entities/audit-log.entity';
+import { User, Skill, Project, Hero, ContactMessage, SocialLink, Settings, VisitStat, AuditLog } from '../src/shared/entities';
 import { PortfolioService } from '../src/portfolio/portfolio.service';
+import { GeminiService } from '../src/portfolio/services/gemini.service';
+import { StatsService } from '../src/stats/stats.service';
 import {
   createMockHero,
   createMockSkill,
@@ -24,6 +18,8 @@ import {
 describe('PortfolioController (e2e)', () => {
   let app: INestApplication;
   let portfolioService: PortfolioService;
+  let geminiService: GeminiService;
+  let statsService: StatsService;
 
   const mockUserRepo = { find: jest.fn(), findOne: jest.fn(), count: jest.fn(), save: jest.fn().mockImplementation((u) => Promise.resolve(u)), create: jest.fn().mockImplementation((dto) => dto), update: jest.fn().mockResolvedValue({}) };
   const mockSkillRepo = { find: jest.fn(), findOne: jest.fn(), save: jest.fn() };
@@ -63,6 +59,8 @@ describe('PortfolioController (e2e)', () => {
     await app.init();
 
     portfolioService = moduleFixture.get<PortfolioService>(PortfolioService);
+    geminiService = moduleFixture.get<GeminiService>(GeminiService);
+    statsService = moduleFixture.get<StatsService>(StatsService);
   });
 
   afterAll(async () => {
@@ -85,7 +83,7 @@ describe('PortfolioController (e2e)', () => {
         .get('/api/portfolio/hero')
         .expect(200);
 
-      expect(res.body.name).toBe('Alexander');
+      expect(res.body.hero.name).toBe('Alexander');
       expect(res.body.socialLinks).toHaveLength(1);
       expect(res.body.socialLinks[0].platform).toBe('GitHub');
     });
@@ -167,6 +165,8 @@ describe('PortfolioController (e2e)', () => {
         subject: 'Buy drugs',
         message: 'Cheap meds here',
         nickname: 'botuser', // honeypot filled
+        captchaAnswer: '12',
+        captchaToken: 'dummy-token',
       };
 
       const res = await request(app.getHttpServer())
@@ -246,6 +246,9 @@ describe('PortfolioController (e2e)', () => {
         .send({ path: '/projects', referrer: 'https://google.com' })
         .expect(200);
 
+      // Flush buffered visits in StatsService to trigger DB mock calls
+      await statsService.flushBuffer();
+
       expect(res.body.success).toBe(true);
       expect(mockVisitStatRepo.save).toHaveBeenCalled();
     });
@@ -266,7 +269,7 @@ describe('PortfolioController (e2e)', () => {
 
   describe('POST /api/portfolio/doodly/*', () => {
     it('asks Doodly Chat AI chatbot assistant', async () => {
-      jest.spyOn(portfolioService, 'askDoodlyChat').mockResolvedValue({
+      jest.spyOn(geminiService, 'askDoodlyChat').mockResolvedValue({
         response: 'Hello, I am Doodly!',
       });
 
@@ -279,7 +282,7 @@ describe('PortfolioController (e2e)', () => {
     });
 
     it('submits base64 canvas image for AI doodle guessing', async () => {
-      jest.spyOn(portfolioService, 'guessDoodle').mockResolvedValue({
+      jest.spyOn(geminiService, 'guessDoodle').mockResolvedValue({
         guess: 'A smiling coffee cup',
       });
 

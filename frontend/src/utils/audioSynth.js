@@ -5,7 +5,7 @@ let scribbleNode = null;
 let scribbleGain = null;
 
 function getAudioContext() {
-  if (isMuted || isSettingsMuted) return null;
+  if (isMuted || isSettingsMuted) {return null;}
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   }
@@ -44,7 +44,7 @@ export const soundSynth = {
   // 2. Play page-flip/paper-rustle sound
   playPageFlip() {
     const ctx = getAudioContext();
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     const noise = ctx.createBufferSource();
     noise.buffer = this.createNoiseBuffer(ctx, 0.3);
@@ -73,7 +73,7 @@ export const soundSynth = {
   // 3. Play cute UI popping sound
   playPop() {
     const ctx = getAudioContext();
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -97,7 +97,7 @@ export const soundSynth = {
   // 4. Pencil scratching sound (continuous scribble loop)
   startScribble() {
     const ctx = getAudioContext();
-    if (!ctx || scribbleNode) return;
+    if (!ctx || scribbleNode) {return;}
 
     // Create noise source
     scribbleNode = ctx.createBufferSource();
@@ -161,7 +161,7 @@ export const soundSynth = {
   // 5. Water splash/slosh sound (clicking cup)
   playSlosh() {
     const ctx = getAudioContext();
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -185,7 +185,7 @@ export const soundSynth = {
   // 6. Splat sound (spilling coffee)
   playSplat() {
     const ctx = getAudioContext();
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     // Noise burst
     const noise = ctx.createBufferSource();
@@ -212,7 +212,7 @@ export const soundSynth = {
   // 7. Paper airplane whoosh sound
   playWhoosh() {
     const ctx = getAudioContext();
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     const noise = ctx.createBufferSource();
     noise.buffer = this.createNoiseBuffer(ctx, 0.6);
@@ -240,7 +240,7 @@ export const soundSynth = {
   // 8. Ripping/tearing paper sound
   playTear() {
     const ctx = getAudioContext();
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     for (let i = 0; i < 3; i++) {
       const delay = i * 0.07;
@@ -274,7 +274,7 @@ export const soundSynth = {
   // 9. Pencil tap/squash sound
   playTap() {
     const ctx = getAudioContext();
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -297,7 +297,7 @@ export const soundSynth = {
   // 10. Crumpling paper sound
   playCrumple() {
     const ctx = getAudioContext();
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     for (let i = 0; i < 6; i++) {
       const delay = i * 0.06 + Math.random() * 0.03;

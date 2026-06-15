@@ -1,38 +1,26 @@
-import { Module, Global } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD } from '@nestjs/core';
 import { AdminModule } from './admin/admin.module';
 import { PortfolioModule } from './portfolio/portfolio.module';
 import { HealthModule } from './health.module';
 import { StatsModule } from './stats/stats.module';
-import * as dotenv from 'dotenv';
-import * as path from 'path';
-
-// Загружаем переменные окружения вручную для этапа инициализации декораторов
-const envFile = !process.env.DOCKER_CONTAINER && process.env.NODE_ENV === 'production'
-  ? '.env.production'
-  : '.env.development';
-dotenv.config({ path: path.resolve(process.cwd(), envFile) });
-
-const dynamicImports = [];
-if (process.env.ENABLE_STATS_MODULE !== 'false') {
-  dynamicImports.push(StatsModule);
-}
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     // Глобальная конфигурация из .env файла
     ConfigModule.forRoot({
       isGlobal: true,
       // В Docker-окружении переменные уже доступны через process.env (из docker-compose environment)
-      // envFilePath не нужен, так как volume mount перезаписывает /app
       envFilePath:
         !process.env.DOCKER_CONTAINER && process.env.NODE_ENV === 'production'
-          ? '.env.production'
+          ? '../.env.production'
           : !process.env.DOCKER_CONTAINER
-          ? '.env.development'
+          ? '../.env.development'
           : undefined,
     }),
     // Глобальный rate limiting
@@ -67,7 +55,7 @@ if (process.env.ENABLE_STATS_MODULE !== 'false') {
     AdminModule,
     PortfolioModule,
     HealthModule,
-    ...dynamicImports,
+    StatsModule,
   ],
   providers: [
     {

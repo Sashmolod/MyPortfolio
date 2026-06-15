@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
-import api from '../../api';
+import api from '../../api/client';
 import { usePortfolioSettings } from '../../contexts/SettingsContext';
 import { SketchLockIcon } from '../../components/SvgIllustrations';
 import { statsApi } from '../../api/statsApi';
@@ -226,7 +226,7 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteHero = async () => {
-    if (!heroData?.id) return;
+    if (!heroData?.id) {return;}
     setConfirmDialog({
       message: 'Are you sure you want to delete Hero data?',
       onConfirm: async () => {
@@ -293,7 +293,7 @@ export default function AdminDashboard() {
 
   const renderForm = () => {
     if (activeTab === 'skills')
-      return (
+      {return (
         <SkillForm
           item={editingItem}
           onSaveData={(form) => handleSave('skill', form)}
@@ -302,9 +302,9 @@ export default function AdminDashboard() {
             setEditingItem(null);
           }}
         />
-      );
+      );}
     if (activeTab === 'projects')
-      return (
+      {return (
         <ProjectForm
           item={editingItem}
           onSaveData={(form) => handleSave('project', form)}
@@ -313,9 +313,9 @@ export default function AdminDashboard() {
             setEditingItem(null);
           }}
         />
-      );
+      );}
     if (activeTab === 'social-links')
-      return (
+      {return (
         <SocialLinkForm
           item={editingItem}
           onSaveData={(form) => handleSave('social-link', form)}
@@ -324,9 +324,9 @@ export default function AdminDashboard() {
             setEditingItem(null);
           }}
         />
-      );
+      );}
     if (activeTab === 'hero')
-      return (
+      {return (
         <HeroForm
           heroData={heroData || editingItem}
           onSaveData={handleSaveHero}
@@ -335,7 +335,7 @@ export default function AdminDashboard() {
             setEditingItem(null);
           }}
         />
-      );
+      );}
     return null;
   };
 
@@ -634,9 +634,9 @@ export default function AdminDashboard() {
       ) : activeTab === 'trash' ? (
         <DeletedItemsPanel
           deletedItems={(() => {
-            if (!items || typeof items !== 'object' || Array.isArray(items)) return [];
+            if (!items || typeof items !== 'object' || Array.isArray(items)) {return [];}
             return Object.entries(items).flatMap(([type, list]) => {
-              if (!Array.isArray(list)) return [];
+              if (!Array.isArray(list)) {return [];}
               const singularType = type === 'socialLinks' ? 'social-link' : type.slice(0, -1);
               return list.map(item => ({ ...item, type: singularType }));
             });

@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
-import api from '../../api';
+import { useEffect, useMemo, useState } from 'react';
+import api from '../../api/client';
 import { useLanguage } from '../../contexts/LanguageContext';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -10,7 +10,7 @@ export default function SkillForm({ item, onSaveData, onCancel }) {
   const { t } = useLanguage();
   const [form, setForm] = useState(() => {
     if (item)
-      return {
+      {return {
         name: item.name || '',
         icon: item.icon || '',
         description: item.description || '',
@@ -18,7 +18,7 @@ export default function SkillForm({ item, onSaveData, onCancel }) {
         sortOrder: item.sortOrder ?? 0,
         categoryId: item.categoryId != null ? String(item.categoryId) : '',
         subcategoryId: item.subcategoryId != null ? String(item.subcategoryId) : '',
-      };
+      };}
     return { name: '', icon: '', description: '', level: 50, sortOrder: 0, categoryId: '', subcategoryId: '' };
   });
   const [saving, setSaving] = useState(false);
@@ -44,7 +44,7 @@ export default function SkillForm({ item, onSaveData, onCancel }) {
   const categoryMap = useMemo(() => {
     const map = new Map();
     for (const cat of categories) {
-      if (cat.parentId === null || cat.parentId === undefined) map.set(cat.id, []);
+      if (cat.parentId === null || cat.parentId === undefined) {map.set(cat.id, []);}
     }
     for (const sub of categories) {
       if (sub.parentId !== null && sub.parentId !== undefined) {
@@ -57,7 +57,7 @@ export default function SkillForm({ item, onSaveData, onCancel }) {
   }, [categories]);
 
   const selectedCategory = useMemo(() => {
-    if (!form.categoryId) return null;
+    if (!form.categoryId) {return null;}
     return categories.find((c) => c.id === Number(form.categoryId)) || null;
   }, [categories, form.categoryId]);
 
@@ -65,15 +65,15 @@ export default function SkillForm({ item, onSaveData, onCancel }) {
 
   const validate = () => {
     const errs = {};
-    if (!form.name.trim()) errs.name = 'Название обязательно / Name is required';
-    if (form.level < 0 || form.level > 100) errs.level = 'Уровень должен быть от 0 до 100 / Level must be 0-100';
+    if (!form.name.trim()) {errs.name = 'Название обязательно / Name is required';}
+    if (form.level < 0 || form.level > 100) {errs.level = 'Уровень должен быть от 0 до 100 / Level must be 0-100';}
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate()) {return;}
     setSaving(true);
     await onSaveData({
       name: form.name,
@@ -91,12 +91,28 @@ export default function SkillForm({ item, onSaveData, onCancel }) {
     setForm({ ...form, categoryId: e.target.value, subcategoryId: '' });
   };
 
+const ICON_MAPPINGS = {
+  sql: 'postgresql',
+  postgres: 'postgresql',
+  js: 'javascript',
+  node: 'nodejs',
+  mongo: 'mongodb',
+  aws: 'amazonwebservices',
+  css: 'css3',
+  html: 'html5',
+  vue: 'vuejs',
+  javaspring: 'spring',
+  rubyonrails: 'rails',
+  aspnet: 'dotnetcore',
+  elk: 'elasticsearch',
+  mssql: 'microsoftsqlserver',
+  kafka: 'apachekafka',
+};
+
   const renderIconPreview = () => {
-    if (!form.icon) return null;
-    let previewKey = form.icon.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-    if (previewKey === 'sql') previewKey = 'postgresql';
-    if (previewKey === 'js') previewKey = 'javascript';
-    if (previewKey === 'node') previewKey = 'nodejs';
+    if (!form.icon) {return null;}
+    const keyRaw = form.icon.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+    const previewKey = ICON_MAPPINGS[keyRaw] || keyRaw;
     return (
       <img
         src={`https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${previewKey}/${previewKey}-original.svg`}

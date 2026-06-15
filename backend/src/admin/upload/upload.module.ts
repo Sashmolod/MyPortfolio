@@ -1,14 +1,17 @@
 import { Module } from '@nestjs/common';
 import { MulterModule } from '@nestjs/platform-express';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { UploadService } from './upload.service';
 import { UploadController } from './upload.controller';
+import { AuditLog } from '../../shared/entities';
 import * as multer from 'multer';
 import { extname, join } from 'path';
 import * as fs from 'fs';
 
 @Module({
   imports: [
+    TypeOrmModule.forFeature([AuditLog]),
     MulterModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

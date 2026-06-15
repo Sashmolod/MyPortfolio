@@ -4,15 +4,7 @@ import request from 'supertest';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { AppModule } from '../src/app.module';
-import { User } from '../src/admin/entities/user.entity';
-import { Skill } from '../src/admin/entities/skill.entity';
-import { Project } from '../src/admin/entities/project.entity';
-import { Hero } from '../src/admin/entities/hero.entity';
-import { ContactMessage } from '../src/admin/entities/contact-message.entity';
-import { SocialLink } from '../src/admin/entities/social-link.entity';
-import { Settings } from '../src/admin/entities/settings.entity';
-import { VisitStat } from '../src/admin/entities/visit-stat.entity';
-import { AuditLog } from '../src/admin/entities/audit-log.entity';
+import { User, Skill, Project, Hero, ContactMessage, SocialLink, Settings, VisitStat, AuditLog } from '../src/shared/entities';
 import { createMockUser, createMockSkill, createMockProject, createMockSettings } from './fixtures';
 
 describe('AdminController (e2e)', () => {
@@ -168,7 +160,7 @@ describe('AdminController (e2e)', () => {
 
   describe('Projects CRUD', () => {
     it('POST /api/admin/projects creates project', async () => {
-      const payload = { title: 'Web App', description: 'React App', technologies: 'Vite' };
+      const payload = { title: 'Web App', description: 'React App', skillIds: [] };
       const savedProj = createMockProject({ id: 5, ...payload });
 
       mockProjectRepo.create.mockReturnValue(savedProj);

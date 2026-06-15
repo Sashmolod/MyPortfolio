@@ -1,15 +1,15 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  act,
+  fireEvent,
   render,
   screen,
-  fireEvent,
   waitFor,
-  act,
 } from '@testing-library/react';
 import ContactForm from './ContactSection';
 
 // Mock the API client
-vi.mock('../../api', () => {
+vi.mock('../../api/client', () => {
   return {
     default: {
       get: vi.fn(),
@@ -32,7 +32,7 @@ vi.mock('../../contexts/LanguageContext', () => ({
   useLanguage: () => ({
     language: 'en',
     t: (keyOrBilingual) => {
-      if (typeof keyOrBilingual !== 'string') return keyOrBilingual;
+      if (typeof keyOrBilingual !== 'string') {return keyOrBilingual;}
       // Simple mock dictionary
       const dict = {
         name: 'Name',
@@ -60,7 +60,7 @@ vi.mock('../../contexts/LanguageContext', () => ({
         successToast: 'Message sent successfully!',
         failedToast: 'Failed to send message. Please try again.',
       };
-      if (dict[keyOrBilingual]) return dict[keyOrBilingual];
+      if (dict[keyOrBilingual]) {return dict[keyOrBilingual];}
       if (keyOrBilingual.includes(' / ')) {
         return keyOrBilingual.split(' / ')[1].trim();
       }
@@ -137,7 +137,7 @@ vi.mock('framer-motion', () => {
   };
 });
 
-import api from '../../api';
+import api from '../../api/client';
 
 describe('ContactForm Component', () => {
   const mockCaptcha = {

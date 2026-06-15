@@ -1,50 +1,133 @@
 import { DataSource } from 'typeorm';
-import { User } from './admin/entities/user.entity';
-import { Hero } from './admin/entities/hero.entity';
-import { Skill } from './admin/entities/skill.entity';
-import { SkillCategory } from './admin/entities/skill-category.entity';
-import { Project } from './admin/entities/project.entity';
-import { ContactMessage } from './admin/entities/contact-message.entity';
-import { SocialLink } from './admin/entities/social-link.entity';
+import { User, Hero, Skill, SkillCategory, Project, ContactMessage, SocialLink } from './shared/entities';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 
 const envFile = process.env.NODE_ENV === 'production' ? '../.env.production' : '../.env.development';
 dotenv.config({ path: path.resolve(__dirname, envFile) });
 
-// Default skills data organized by category/subcategory name
-const DEFAULT_SKILLS_BY_NAME: Record<string, Array<{ name: string; icon: string; description: string; level: number; sortOrder: number }>> = {
-  'Backend': [
-    { name: 'Node.js', icon: 'node', description: 'Express, Fastify', level: 85, sortOrder: 1 },
-    { name: 'SQL', icon: 'sql', description: 'PostgreSQL, MySQL', level: 80, sortOrder: 2 },
-  ],
-  'DevOps': [
-    { name: 'Docker', icon: 'docker', description: 'Containerization', level: 70, sortOrder: 1 },
-  ],
-  'Languages': [
-    { name: 'JavaScript', icon: 'js', description: 'ES6+, TypeScript', level: 95, sortOrder: 1 },
-    { name: 'TypeScript', icon: 'ts', description: 'Type-safe JavaScript', level: 90, sortOrder: 2 },
-    { name: 'Python', icon: 'python', description: 'Django, Flask', level: 75, sortOrder: 3 },
-    { name: 'Java', icon: 'java', description: 'Spring Boot', level: 60, sortOrder: 4 },
-    { name: 'PHP', icon: 'php', description: 'Laravel, Symfony', level: 50, sortOrder: 5 },
-    { name: 'C++', icon: 'cpp', description: 'Systems programming', level: 45, sortOrder: 6 },
-  ],
-  'React': [
-    { name: 'React', icon: 'react', description: 'Hooks, Redux, Context API', level: 90, sortOrder: 1 },
-  ],
-  'Vue': [
-    { name: 'Vue.js', icon: 'vue', description: 'Vue 3, Composition API', level: 70, sortOrder: 1 },
-  ],
-  'Angular': [
-    { name: 'Angular', icon: 'angular', description: 'Angular 16+, RxJS', level: 60, sortOrder: 1 },
-  ],
-  'NestJS': [
-    { name: 'NestJS', icon: 'nestjs', description: 'Enterprise-grade backend', level: 75, sortOrder: 1 },
-  ],
-  'Kubernetes': [
-    { name: 'Kubernetes', icon: 'k8s', description: 'Container orchestration', level: 55, sortOrder: 1 },
-  ],
-};
+interface CategorySeed {
+  name: string;
+  sortOrder: number;
+  subcategories: Array<{ name: string; sortOrder: number }>;
+}
+
+const CATEGORY_TREE: CategorySeed[] = [
+  {
+    name: 'Frontend',
+    sortOrder: 1,
+    subcategories: [
+      { name: 'Basics', sortOrder: 0 },
+      { name: 'Styles', sortOrder: 0 },
+      { name: 'Frameworks', sortOrder: 0 },
+    ],
+  },
+  {
+    name: 'Backend',
+    sortOrder: 2,
+    subcategories: [
+      { name: 'Technology', sortOrder: 0 },
+    ],
+  },
+  {
+    name: 'DevOps',
+    sortOrder: 3,
+    subcategories: [
+      { name: 'Infrastructure', sortOrder: 0 },
+      { name: 'Automation', sortOrder: 0 },
+      { name: 'Virtualization', sortOrder: 0 },
+    ],
+  },
+  {
+    name: 'Languages',
+    sortOrder: 4,
+    subcategories: [],
+  },
+  {
+    name: 'Mobile App',
+    sortOrder: 0,
+    subcategories: [
+      { name: 'Android', sortOrder: 0 },
+      { name: 'iOs', sortOrder: 0 },
+      { name: 'CrossPlatform', sortOrder: 0 },
+    ],
+  },
+  {
+    name: 'DataBase',
+    sortOrder: 0,
+    subcategories: [
+      { name: 'rdbms', sortOrder: 0 },
+      { name: 'nosql', sortOrder: 0 },
+      { name: 'Graph', sortOrder: 0 },
+      { name: 'Messge Queues', sortOrder: 0 },
+    ],
+  },
+];
+
+interface SkillSeed {
+  name: string;
+  icon: string;
+  description: string;
+  level: number;
+  sortOrder: number;
+  categoryName: string;
+  subcategoryName: string | null;
+}
+
+const DEFAULT_SKILLS: SkillSeed[] = [
+  { name: 'Java', icon: 'java', description: '', level: 90, sortOrder: 1, categoryName: 'Mobile App', subcategoryName: 'Android' },
+  { name: 'React', icon: 'react', description: 'Hooks, Redux, Context API', level: 85, sortOrder: 2, categoryName: 'Frontend', subcategoryName: 'Frameworks' },
+  { name: 'Node.js', icon: 'node', description: 'Express, NestJS', level: 80, sortOrder: 3, categoryName: 'Backend', subcategoryName: 'Technology' },
+  { name: 'Python', icon: 'python', description: 'Django, Flask', level: 75, sortOrder: 4, categoryName: 'Backend', subcategoryName: 'Technology' },
+  { name: 'MySQL', icon: 'mysql', description: 'PostgreSQL, MySQL, SQLite', level: 70, sortOrder: 5, categoryName: 'Backend', subcategoryName: 'Technology' },
+  { name: 'Docker', icon: 'docker', description: 'Containerization', level: 65, sortOrder: 6, categoryName: 'DevOps', subcategoryName: 'Virtualization' },
+  { name: 'OrbStack', icon: 'docker', description: 'OrbStack', level: 50, sortOrder: 0, categoryName: 'DevOps', subcategoryName: null },
+  { name: 'C++', icon: 'c++', description: '', level: 50, sortOrder: 0, categoryName: 'Backend', subcategoryName: 'Technology' },
+  { name: 'PHP', icon: 'php', description: '', level: 50, sortOrder: 0, categoryName: 'Backend', subcategoryName: 'Technology' },
+  { name: 'WEBPACK', icon: 'webpack', description: '', level: 50, sortOrder: 0, categoryName: 'Frontend', subcategoryName: 'Frameworks' },
+  { name: 'BOOTSTRAP', icon: 'bootstrap', description: '', level: 50, sortOrder: 0, categoryName: 'Frontend', subcategoryName: 'Styles' },
+  { name: 'Java', icon: 'java', description: '', level: 50, sortOrder: 0, categoryName: 'Frontend', subcategoryName: 'Basics' },
+  { name: 'HTML', icon: 'html', description: '', level: 50, sortOrder: 0, categoryName: 'Frontend', subcategoryName: 'Basics' },
+  { name: 'CSS', icon: 'css', description: '', level: 50, sortOrder: 0, categoryName: 'Frontend', subcategoryName: 'Basics' },
+  { name: 'Unity', icon: 'unity', description: '', level: 50, sortOrder: 0, categoryName: 'Mobile App', subcategoryName: 'CrossPlatform' },
+  { name: 'xamarin', icon: 'xamarin', description: '', level: 50, sortOrder: 0, categoryName: 'Mobile App', subcategoryName: 'CrossPlatform' },
+  { name: 'pwa', icon: 'pwa', description: '', level: 50, sortOrder: 0, categoryName: 'Mobile App', subcategoryName: 'CrossPlatform' },
+  { name: 'ionic', icon: 'ionic', description: '', level: 50, sortOrder: 0, categoryName: 'Mobile App', subcategoryName: 'CrossPlatform' },
+  { name: 'react native', icon: 'reactnative', description: '', level: 50, sortOrder: 0, categoryName: 'Mobile App', subcategoryName: 'CrossPlatform' },
+  { name: 'swift', icon: 'swift', description: '', level: 50, sortOrder: 0, categoryName: 'Mobile App', subcategoryName: 'iOs' },
+  { name: 'Objective C', icon: 'objective c', description: '', level: 50, sortOrder: 0, categoryName: 'Mobile App', subcategoryName: 'iOs' },
+  { name: 'SDK', icon: 'sdk', description: '', level: 50, sortOrder: 0, categoryName: 'Mobile App', subcategoryName: 'Android' },
+  { name: 'NGINX', icon: 'nginx', description: '', level: 50, sortOrder: 0, categoryName: 'DevOps', subcategoryName: 'Infrastructure' },
+  { name: 'AWS', icon: 'aws', description: '', level: 50, sortOrder: 0, categoryName: 'DevOps', subcategoryName: 'Infrastructure' },
+  { name: 'Azure', icon: 'azure', description: '', level: 50, sortOrder: 0, categoryName: 'DevOps', subcategoryName: 'Infrastructure' },
+  { name: 'ELK', icon: 'elk', description: '', level: 50, sortOrder: 0, categoryName: 'DevOps', subcategoryName: 'Infrastructure' },
+  { name: 'Ansible', icon: 'ansible', description: '', level: 50, sortOrder: 0, categoryName: 'DevOps', subcategoryName: 'Automation' },
+  { name: 'Chef', icon: 'chef', description: '', level: 50, sortOrder: 0, categoryName: 'DevOps', subcategoryName: 'Automation' },
+  { name: 'Jenkins', icon: 'jenkins', description: '', level: 50, sortOrder: 0, categoryName: 'DevOps', subcategoryName: 'Automation' },
+  { name: 'Kubernetes', icon: 'kubernetes', description: '', level: 50, sortOrder: 0, categoryName: 'DevOps', subcategoryName: 'Virtualization' },
+  { name: 'Vagrant', icon: 'vagrant', description: '', level: 50, sortOrder: 0, categoryName: 'DevOps', subcategoryName: 'Virtualization' },
+  { name: 'VMWare', icon: 'vmware', description: '', level: 50, sortOrder: 0, categoryName: 'DevOps', subcategoryName: 'Virtualization' },
+  { name: 'Postgres', icon: 'postgres', description: '', level: 50, sortOrder: 0, categoryName: 'DataBase', subcategoryName: 'rdbms' },
+  { name: 'MSSQL', icon: 'mssql', description: '', level: 50, sortOrder: 0, categoryName: 'DataBase', subcategoryName: 'rdbms' },
+  { name: 'Mongo', icon: 'mongo', description: '', level: 50, sortOrder: 0, categoryName: 'DataBase', subcategoryName: 'nosql' },
+  { name: 'Redis', icon: 'redis', description: '', level: 50, sortOrder: 0, categoryName: 'Backend', subcategoryName: 'Technology' },
+  { name: 'ASP.NET', icon: 'asp.net', description: '', level: 50, sortOrder: 0, categoryName: 'Backend', subcategoryName: 'Technology' },
+  { name: 'Java (Spring)', icon: 'java (spring)', description: '', level: 50, sortOrder: 0, categoryName: 'Backend', subcategoryName: 'Technology' },
+  { name: 'Ruby on Rails', icon: 'ruby on rails', description: '', level: 50, sortOrder: 0, categoryName: 'Backend', subcategoryName: 'Technology' },
+  { name: 'Node', icon: 'node', description: '', level: 50, sortOrder: 0, categoryName: 'Backend', subcategoryName: 'Technology' },
+  { name: 'Material UI', icon: 'material ui', description: '', level: 50, sortOrder: 0, categoryName: 'Frontend', subcategoryName: 'Styles' },
+  { name: 'Vue', icon: 'vue', description: '', level: 50, sortOrder: 0, categoryName: 'Frontend', subcategoryName: 'Frameworks' },
+  { name: 'Angular', icon: 'angular', description: '', level: 50, sortOrder: 0, categoryName: 'Frontend', subcategoryName: 'Frameworks' },
+  { name: 'Cassandra', icon: 'cassandra', description: '', level: 50, sortOrder: 0, categoryName: 'DataBase', subcategoryName: 'nosql' },
+  { name: 'CouchDB', icon: 'couchdb', description: '', level: 50, sortOrder: 0, categoryName: 'DataBase', subcategoryName: 'nosql' },
+  { name: 'Elasticsearch', icon: 'elasticsearch', description: '', level: 50, sortOrder: 0, categoryName: 'DataBase', subcategoryName: 'nosql' },
+  { name: 'Neo4j', icon: 'neo4j', description: '', level: 50, sortOrder: 0, categoryName: 'DataBase', subcategoryName: 'Graph' },
+  { name: 'ArangoDB', icon: 'arangodb', description: '', level: 50, sortOrder: 0, categoryName: 'DataBase', subcategoryName: 'Graph' },
+  { name: 'Kafka', icon: 'kafka', description: '', level: 50, sortOrder: 0, categoryName: 'DataBase', subcategoryName: 'Messge Queues' },
+  { name: 'SQS', icon: 'sqs', description: '', level: 50, sortOrder: 0, categoryName: 'DataBase', subcategoryName: 'Messge Queues' },
+  { name: 'ZeroMQ', icon: 'zeromq', description: '', level: 50, sortOrder: 0, categoryName: 'DataBase', subcategoryName: 'Messge Queues' },
+  { name: 'RabbitMQ', icon: 'rabbitmq', description: '', level: 50, sortOrder: 0, categoryName: 'DataBase', subcategoryName: 'Messge Queues' },
+];
 
 async function seed() {
   const dataSource = new DataSource({
@@ -62,73 +145,80 @@ async function seed() {
   const skillCategoryRepo = dataSource.getRepository(SkillCategory);
   const skillRepo = dataSource.getRepository(Skill);
 
-  const existingCategories = await skillCategoryRepo.count();
-  let allCategories: SkillCategory[] = [];
-
-  if (existingCategories === 0) {
-    console.log('No categories found, creating default categories...');
-    const roots = await skillCategoryRepo.save([
-      skillCategoryRepo.create({ name: 'Frontend', parentId: null, sortOrder: 1 }),
-      skillCategoryRepo.create({ name: 'Backend', parentId: null, sortOrder: 2 }),
-      skillCategoryRepo.create({ name: 'DevOps', parentId: null, sortOrder: 3 }),
-      skillCategoryRepo.create({ name: 'Languages', parentId: null, sortOrder: 4 }),
-    ]);
-    await skillCategoryRepo.save([
-      skillCategoryRepo.create({ name: 'React', parentId: roots[0].id, sortOrder: 1 }),
-      skillCategoryRepo.create({ name: 'Vue', parentId: roots[0].id, sortOrder: 2 }),
-      skillCategoryRepo.create({ name: 'Angular', parentId: roots[0].id, sortOrder: 3 }),
-      skillCategoryRepo.create({ name: 'Node.js', parentId: roots[1].id, sortOrder: 1 }),
-      skillCategoryRepo.create({ name: 'NestJS', parentId: roots[1].id, sortOrder: 2 }),
-      skillCategoryRepo.create({ name: 'Docker', parentId: roots[2].id, sortOrder: 1 }),
-      skillCategoryRepo.create({ name: 'Kubernetes', parentId: roots[2].id, sortOrder: 2 }),
-      skillCategoryRepo.create({ name: 'JavaScript', parentId: roots[3].id, sortOrder: 1 }),
-      skillCategoryRepo.create({ name: 'TypeScript', parentId: roots[3].id, sortOrder: 2 }),
-    ]);
-    allCategories = await skillCategoryRepo.find({ order: { sortOrder: 'ASC' } });
-  } else {
-    console.log('Reading existing categories from database...');
-    allCategories = await skillCategoryRepo.find({ order: { sortOrder: 'ASC' } });
-  }
-
-  console.log(`Found ${allCategories.length} categories in database.`);
-  for (const cat of allCategories) {
-    console.log(`  - Category ${cat.id}: ${cat.name} (parentId: ${cat.parentId})`);
-  }
-
-  await skillRepo.clear();
+  // 1. Очистка старых данных (сначала навыки, затем категории)
+  await skillRepo.createQueryBuilder().delete().execute();
   console.log('Cleared existing skills.');
 
-  const skillsToCreate: Array<{ name: string; icon: string; description: string; level: number; sortOrder: number; categoryId: number; subcategoryId: number | null }> = [];
+  await skillCategoryRepo.createQueryBuilder().delete().execute();
+  console.log('Cleared existing categories.');
 
-  for (const category of allCategories) {
-    const skillsForCategory = DEFAULT_SKILLS_BY_NAME[category.name];
-    if (skillsForCategory) {
-      for (const skillData of skillsForCategory) {
-        if (category.parentId) {
-          skillsToCreate.push({
-            ...skillData,
-            categoryId: category.parentId,
-            subcategoryId: category.id,
-          });
-        } else {
-          skillsToCreate.push({
-            ...skillData,
-            categoryId: category.id,
-            subcategoryId: null,
-          });
-        }
-      }
+  // 2. Сидинг категорий и создание структуры дерева
+  console.log('Creating skill categories tree...');
+  const rootCategoriesMap: Record<string, SkillCategory> = {};
+  const subcategoriesMap: Record<string, SkillCategory> = {};
+
+  for (const rootCatData of CATEGORY_TREE) {
+    const rootCat = await skillCategoryRepo.save(
+      skillCategoryRepo.create({
+        name: rootCatData.name,
+        sortOrder: rootCatData.sortOrder,
+        parentId: null,
+      })
+    );
+    rootCategoriesMap[rootCat.name] = rootCat;
+    console.log(`  - Root Category created: ${rootCat.name} (id: ${rootCat.id})`);
+
+    for (const subCatData of rootCatData.subcategories) {
+      const subCat = await skillCategoryRepo.save(
+        skillCategoryRepo.create({
+          name: subCatData.name,
+          sortOrder: subCatData.sortOrder,
+          parentId: rootCat.id,
+        })
+      );
+      // Ключ в мапе: "ИмяРодителя:ИмяПодкатегории" для однозначного определения
+      const mapKey = `${rootCatData.name}:${subCatData.name}`;
+      subcategoriesMap[mapKey] = subCat;
+      console.log(`    * Subcategory created: ${subCat.name} (id: ${subCat.id}, parentId: ${rootCat.id})`);
     }
   }
 
-  await skillRepo.save(skillsToCreate.map(data => skillRepo.create(data)));
-  console.log(`Seeded ${skillsToCreate.length} skills.`);
+  // 3. Сидинг навыков с привязкой к созданным категориям
+  console.log('Seeding skills...');
+  const skillsToCreate = DEFAULT_SKILLS.map((skillData) => {
+    const parentCategory = rootCategoriesMap[skillData.categoryName];
+    if (!parentCategory) {
+      throw new Error(`Category "${skillData.categoryName}" not found in CATEGORY_TREE.`);
+    }
+
+    let subcategory: SkillCategory | null = null;
+    if (skillData.subcategoryName) {
+      const mapKey = `${skillData.categoryName}:${skillData.subcategoryName}`;
+      subcategory = subcategoriesMap[mapKey];
+      if (!subcategory) {
+        throw new Error(`Subcategory "${skillData.subcategoryName}" under category "${skillData.categoryName}" not found in CATEGORY_TREE.`);
+      }
+    }
+
+    return skillRepo.create({
+      name: skillData.name,
+      icon: skillData.icon,
+      description: skillData.description,
+      level: skillData.level,
+      sortOrder: skillData.sortOrder,
+      categoryId: parentCategory.id,
+      subcategoryId: subcategory ? subcategory.id : null,
+    });
+  });
+
+  await skillRepo.save(skillsToCreate);
+  console.log(`Seeded ${skillsToCreate.length} skills successfully.`);
 
   await dataSource.destroy();
   console.log('Seed completed.');
 }
 
-seed().catch(err => {
+seed().catch((err) => {
   console.error('Error seeding database:', err);
   process.exit(1);
 });

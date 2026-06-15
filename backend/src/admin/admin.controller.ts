@@ -21,19 +21,21 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
-import { CreateSkillDto } from './dto/create-skill.dto';
-import { CreateProjectDto } from './dto/create-project.dto';
-import { CreateContactMessageDto } from './dto/create-contact-message.dto';
-import { CreateHeroDto } from './dto/create-hero.dto';
-import { CreateSocialLinkDto } from './dto/create-social-link.dto';
-import { UpdateSkillDto } from './dto/update-skill.dto';
-import { UpdateProjectDto } from './dto/update-project.dto';
-import { UpdateHeroDto } from './dto/update-hero.dto';
-import { UpdateSocialLinkDto } from './dto/update-social-link.dto';
-import { UpdateSettingsDto } from './dto/update-settings.dto';
+import {
+  CreateSkillDto,
+  CreateProjectDto,
+  CreateContactMessageDto,
+  CreateHeroDto,
+  CreateSocialLinkDto,
+  UpdateSkillDto,
+  UpdateProjectDto,
+  UpdateHeroDto,
+  UpdateSocialLinkDto,
+  UpdateSettingsDto,
+} from '../shared/dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { AuditLogInterceptor } from './audit-log.interceptor';
-import { Skill, Project, ContactMessage, Hero, SocialLink, Settings } from './entities';
+import { Skill, Project, ContactMessage, Hero, SocialLink, Settings } from '../shared/entities';
 
 /**
  * Админ-контроллер - ВСЕ эндпоинты защищены JwtAuthGuard.

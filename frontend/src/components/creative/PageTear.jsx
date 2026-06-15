@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { soundSynth } from '../../utils/audioSynth';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const WIN_PATTERNS = [
   [0, 1, 2],
@@ -14,13 +15,14 @@ const WIN_PATTERNS = [
 ];
 
 export default function PageTear() {
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [board, setBoard] = useState(Array(9).fill(null));
   const [turn, setTurn] = useState('user'); // 'user' or 'doodly'
   const [winner, setWinner] = useState(null); // 'X', 'O', 'draw' or null
 
   const checkGameWinner = (tempBoard) => {
-    for (let pattern of WIN_PATTERNS) {
+    for (const pattern of WIN_PATTERNS) {
       const [a, b, c] = pattern;
       if (
         tempBoard[a] &&
@@ -37,7 +39,7 @@ export default function PageTear() {
   };
 
   const handleCellClick = (index) => {
-    if (board[index] || turn !== 'user' || winner) return;
+    if (board[index] || turn !== 'user' || winner) {return;}
 
     soundSynth.playTap();
     const newBoard = [...board];
@@ -55,7 +57,7 @@ export default function PageTear() {
 
   // Doodly AI / heuristic turn
   useEffect(() => {
-    if (turn !== 'doodly' || winner) return;
+    if (turn !== 'doodly' || winner) {return;}
 
     const timer = setTimeout(() => {
       // Find Doodly's move
@@ -81,29 +83,29 @@ export default function PageTear() {
 
   const getDoodlyMove = (tempBoard) => {
     // 1. Can Doodly win?
-    for (let pattern of WIN_PATTERNS) {
+    for (const pattern of WIN_PATTERNS) {
       const [a, b, c] = pattern;
       if (tempBoard[a] === 'O' && tempBoard[b] === 'O' && tempBoard[c] === null)
-        return c;
+        {return c;}
       if (tempBoard[a] === 'O' && tempBoard[c] === 'O' && tempBoard[b] === null)
-        return b;
+        {return b;}
       if (tempBoard[b] === 'O' && tempBoard[c] === 'O' && tempBoard[a] === null)
-        return a;
+        {return a;}
     }
 
     // 2. Block user
-    for (let pattern of WIN_PATTERNS) {
+    for (const pattern of WIN_PATTERNS) {
       const [a, b, c] = pattern;
       if (tempBoard[a] === 'X' && tempBoard[b] === 'X' && tempBoard[c] === null)
-        return c;
+        {return c;}
       if (tempBoard[a] === 'X' && tempBoard[c] === 'X' && tempBoard[b] === null)
-        return b;
+        {return b;}
       if (tempBoard[b] === 'X' && tempBoard[c] === 'X' && tempBoard[a] === null)
-        return a;
+        {return a;}
     }
 
     // 3. Take center
-    if (tempBoard[4] === null) return 4;
+    if (tempBoard[4] === null) {return 4;}
 
     // 4. Take corners
     const corners = [0, 2, 6, 8].filter((idx) => tempBoard[idx] === null);
@@ -149,7 +151,7 @@ export default function PageTear() {
             exit={{ opacity: 0, scale: 0.8 }}
             role="button"
             tabIndex={0}
-            aria-label="Secret folded paper corner. Click to tear and open game."
+            aria-label={t("Секретный загнутый уголок бумаги. Нажмите, чтобы оторвать и открыть игру. / Secret folded paper corner. Click to tear and open game.")}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
@@ -263,7 +265,7 @@ export default function PageTear() {
               }}
             >
               <span style={{ fontSize: '13px', fontWeight: 'bold' }}>
-                Крестики-Нолики ✏️
+                {t("Крестики-Нолики ✏️ / Tic-Tac-Toe ✏️")}
               </span>
               <button
                 onClick={() => {
@@ -349,7 +351,7 @@ export default function PageTear() {
                     key={idx}
                     role="button"
                     tabIndex={isClickable ? 0 : -1}
-                    aria-label={`Cell ${idx + 1}, ${cell || 'empty'}`}
+                    aria-label={t(`Ячейка ${idx + 1}, ${cell ? cell : 'пусто'} / Cell ${idx + 1}, ${cell || 'empty'}`)}
                     onKeyDown={(e) => {
                       if (isClickable && (e.key === 'Enter' || e.key === ' ')) {
                         e.preventDefault();
@@ -407,12 +409,12 @@ export default function PageTear() {
                   }}
                 >
                   {winner === 'draw' ? (
-                    <span>Ничья! 🤝</span>
+                    <span>{t("Ничья! 🤝 / Draw! 🤝")}</span>
                   ) : winner === 'X' ? (
-                    <span style={{ color: 'var(--primary)' }}>Победа! 🎉</span>
+                    <span style={{ color: 'var(--primary)' }}>{t("Победа! 🎉 / You win! 🎉")}</span>
                   ) : (
                     <span style={{ color: 'var(--secondary)' }}>
-                      Дудли выиграл! 🦉
+                      {t("Дудли выиграл! 🦉 / Doodly wins! 🦉")}
                     </span>
                   )}
                 </div>
@@ -428,7 +430,7 @@ export default function PageTear() {
                   width: '100%',
                 }}
               >
-                {winner ? 'Сыграть ещё' : 'Сбросить'}
+                {winner ? t("Сыграть ещё / Play again") : t("Сбросить / Reset")}
               </button>
             </div>
           </motion.div>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { soundSynth } from '../../utils/audioSynth';
 import { usePortfolioSettings } from '../../contexts/SettingsContext';
 import { useTemplate } from '../../contexts/TemplateContext';
@@ -14,7 +14,7 @@ export default function CoffeeCup() {
   const filterStyle = enableWobbleFilters ? { filter: 'url(#wobblyFilter)' } : {};
 
   const handleClick = () => {
-    if (!settings?.enableCoffeeSpill) return;
+    if (!settings?.enableCoffeeSpill) {return;}
 
     if (isSpilled) {
       // Reset cup

@@ -1,7 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { SkillCategory } from './entities/skill-category.entity';
-import { Skill } from './entities/skill.entity';
+import { SkillCategory, Skill } from '../shared/entities';
 import { SkillCategoryService } from './skill-category.service';
 import { SkillCategoryController } from './skill-category.controller';
 

@@ -2,22 +2,18 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not, IsNull, In } from 'typeorm';
 
-import { Skill } from './entities/skill.entity';
-import { Project } from './entities/project.entity';
-import { ContactMessage } from './entities/contact-message.entity';
-import { Hero } from './entities/hero.entity';
-import { SocialLink } from './entities/social-link.entity';
-import { Settings } from './entities/settings.entity';
-import { SkillCategory } from './entities/skill-category.entity';
-import { CreateSkillDto } from './dto/create-skill.dto';
-import { CreateProjectDto } from './dto/create-project.dto';
-import { CreateContactMessageDto } from './dto/create-contact-message.dto';
-import { CreateHeroDto } from './dto/create-hero.dto';
-import { CreateSocialLinkDto } from './dto/create-social-link.dto';
-import { UpdateSkillDto } from './dto/update-skill.dto';
-import { UpdateProjectDto } from './dto/update-project.dto';
-import { UpdateHeroDto } from './dto/update-hero.dto';
-import { UpdateSocialLinkDto } from './dto/update-social-link.dto';
+import { Skill, Project, ContactMessage, Hero, SocialLink, Settings, SkillCategory } from '../shared/entities';
+import {
+  CreateSkillDto,
+  CreateProjectDto,
+  CreateContactMessageDto,
+  CreateHeroDto,
+  CreateSocialLinkDto,
+  UpdateSkillDto,
+  UpdateProjectDto,
+  UpdateHeroDto,
+  UpdateSocialLinkDto,
+} from '../shared/dto';
 
 @Injectable()
 export class AdminService {

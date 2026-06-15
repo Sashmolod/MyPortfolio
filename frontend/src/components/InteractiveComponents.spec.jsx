@@ -1,13 +1,13 @@
 import {
-  describe,
-  it,
-  expect,
-  vi,
-  beforeEach,
-  beforeAll,
   afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
 } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 
@@ -17,26 +17,26 @@ import PageCrumpler from './creative/PageCrumpler';
 import PageTear from './creative/PageTear';
 import SketchyBug from './creative/SketchyBug';
 import {
-  DeveloperIllustration,
-  TechIcon,
-  ReactIcon,
-  NodeIcon,
-  PythonIcon,
-  DatabaseIcon,
-  DockerIcon,
-  SqlIcon,
-  RocketIcon,
-  MailIcon,
-  ProjectIcon,
-  StarIcon,
-  CodeIcon,
   BackgroundParticles,
   CheckIcon,
+  CodeIcon,
+  DatabaseIcon,
+  DeveloperIllustration,
+  DockerIcon,
   LightningIcon,
+  MailIcon,
+  NodeIcon,
+  ProjectIcon,
+  PythonIcon,
+  ReactIcon,
+  RocketIcon,
   SketchLockIcon,
-  SketchSunIcon,
   SketchMoonIcon,
   SketchSoundIcon,
+  SketchSunIcon,
+  SqlIcon,
+  StarIcon,
+  TechIcon,
 } from './SvgIllustrations';
 
 // Import mocked modules for asserting/spying

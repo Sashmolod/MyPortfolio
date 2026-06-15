@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
-import { AuditLog } from './entities/audit-log.entity';
+import { AuditLog } from '../shared/entities';
 
 describe('AdminController', () => {
   let controller: AdminController;
@@ -237,7 +237,7 @@ describe('AdminController', () => {
     });
 
     it('should create message', async () => {
-      const dto = { name: 'Bob', email: 'bob@gmail.com', subject: 'Topic', message: 'Hello there' };
+      const dto = { name: 'Bob', email: 'bob@gmail.com', subject: 'Topic', message: 'Hello there', captchaAnswer: '12', captchaToken: 'dummy' };
       await controller.createMessage(dto);
       expect(mockAdminService.createMessage).toHaveBeenCalledWith(dto);
     });

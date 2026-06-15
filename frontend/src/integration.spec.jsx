@@ -1,18 +1,18 @@
 import {
-  describe,
-  it,
-  expect,
-  vi,
-  beforeEach,
   afterEach,
   beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
 } from 'vitest';
 import {
+  act,
+  fireEvent,
   render,
   screen,
-  fireEvent,
   waitFor,
-  act,
 } from '@testing-library/react';
 import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -26,7 +26,7 @@ import CoffeeCup from './components/creative/CoffeeCup';
 import SketchyBug from './components/creative/SketchyBug';
 import PageTear from './components/creative/PageTear';
 import * as authApi from './api/authApi';
-import api from './api';
+import api from './api/client';
 
 // Mock contexts and apis
 vi.mock('./utils/audioSynth', () => ({
@@ -46,7 +46,7 @@ vi.mock('./utils/audioSynth', () => ({
   },
 }));
 
-vi.mock('./api', () => ({
+vi.mock('./api/client', () => ({
   default: {
     get: vi.fn().mockResolvedValue({ data: [] }),
     put: vi.fn(),

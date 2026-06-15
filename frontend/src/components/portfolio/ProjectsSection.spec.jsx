@@ -1,11 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import Projects from './ProjectsSection';
-import api from '../../api';
+import api from '../../api/client';
 
 // Mock API
-vi.mock('../../api', () => ({
+vi.mock('../../api/client', () => ({
   default: {
     post: vi.fn().mockResolvedValue({}),
   },
@@ -16,12 +16,12 @@ vi.mock('../../contexts/LanguageContext', () => ({
   useLanguage: () => ({
     language: 'en',
     t: (keyOrBilingual) => {
-      if (typeof keyOrBilingual !== 'string') return keyOrBilingual;
+      if (typeof keyOrBilingual !== 'string') {return keyOrBilingual;}
       const dict = {
         projects: 'Projects',
         viewProject: 'View Project',
       };
-      if (dict[keyOrBilingual]) return dict[keyOrBilingual];
+      if (dict[keyOrBilingual]) {return dict[keyOrBilingual];}
       if (keyOrBilingual.includes(' / ')) {
         return keyOrBilingual.split(' / ')[1].trim();
       }

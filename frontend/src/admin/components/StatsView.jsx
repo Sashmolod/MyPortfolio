@@ -46,11 +46,11 @@ export default function StatsView({
   );
 
   if (statsLoading && !statsOverview)
-    return (
+    {return (
       <div className="card">
         <p>Загрузка...</p>
       </div>
-    );
+    );}
 
   return (
     <div>

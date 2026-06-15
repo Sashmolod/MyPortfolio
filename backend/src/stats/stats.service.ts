@@ -1,9 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThanOrEqual, LessThan } from 'typeorm';
-import { VisitStat } from '../admin/entities/visit-stat.entity';
-import { Project } from '../admin/entities/project.entity';
+import { VisitStat, Project, AuditLog } from '../shared/entities';
 import { Request } from 'express';
+import { ConfigService } from '@nestjs/config';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 export interface StatsOverview {
   totalVisits: number;
@@ -25,25 +26,100 @@ export interface DailyVisit {
 }
 
 @Injectable()
-export class StatsService {
+export class StatsService implements OnModuleDestroy {
   private readonly logger = new Logger(StatsService.name);
+  private visitBuffer: Partial<VisitStat>[] = [];
+  private flushTimeout: NodeJS.Timeout | null = null;
+  private readonly bufferLimit = 20;
+  private readonly flushIntervalMs = 5000;
 
   constructor(
     @InjectRepository(VisitStat)
     private visitStatRepo: Repository<VisitStat>,
     @InjectRepository(Project)
     private projectRepo: Repository<Project>,
+    @InjectRepository(AuditLog)
+    private auditLogRepo: Repository<AuditLog>,
+    private configService: ConfigService,
   ) {}
 
   /**
-   * Записать визит
+   * Ежедневная очистка статистики и логов аудита старше 90 дней
+   */
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async cleanupOldData() {
+    this.logger.log('Starting daily cleanup of old statistics and audit logs...');
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - 90);
+
+    try {
+      // 1. Удаление логов посещений старше 90 дней
+      const statsResult = await this.visitStatRepo
+        .createQueryBuilder()
+        .delete()
+        .where('visitedAt < :cutoffDate', { cutoffDate })
+        .execute();
+
+      // 2. Удаление логов аудита старше 90 дней
+      const logsResult = await this.auditLogRepo
+        .createQueryBuilder()
+        .delete()
+        .where('timestamp < :cutoffDate', { cutoffDate })
+        .execute();
+
+      this.logger.log(
+        `Cleanup finished. Removed ${statsResult.affected ?? 0} visit records and ${logsResult.affected ?? 0} audit logs older than 90 days.`,
+      );
+    } catch (error: any) {
+      this.logger.error(`Cleanup task failed: ${error.message}`, error.stack);
+    }
+  }
+
+  private isEnabled(): boolean {
+    return this.configService.get<string>('ENABLE_STATS_MODULE') !== 'false';
+  }
+
+  async onModuleDestroy() {
+    this.logger.log('Stats module is destroying. Flushing visits buffer...');
+    await this.flushBuffer();
+  }
+
+  /**
+   * Записать визит (буферизованная запись в БД)
    */
   async recordVisit(visitData: Partial<VisitStat>): Promise<void> {
+    if (!this.isEnabled()) return;
+    this.visitBuffer.push(visitData);
+
+    if (this.visitBuffer.length >= this.bufferLimit) {
+      await this.flushBuffer();
+    } else if (!this.flushTimeout) {
+      this.flushTimeout = setTimeout(() => {
+        this.flushBuffer().catch(err => this.logger.error(`Timeout flush failed: ${err.message}`));
+      }, this.flushIntervalMs);
+    }
+  }
+
+  /**
+   * Сбросить накопленный буфер визитов в БД
+   */
+  async flushBuffer(): Promise<void> {
+    if (this.flushTimeout) {
+      clearTimeout(this.flushTimeout);
+      this.flushTimeout = null;
+    }
+
+    if (this.visitBuffer.length === 0) return;
+
+    const batch = [...this.visitBuffer];
+    this.visitBuffer = [];
+
     try {
-      const visit = this.visitStatRepo.create(visitData);
-      await this.visitStatRepo.save(visit);
+      const visits = this.visitStatRepo.create(batch);
+      await this.visitStatRepo.save(visits);
+      this.logger.debug(`Buffered visits saved: ${batch.length} records`);
     } catch (error: any) {
-      this.logger.error(`Failed to record visit: ${error.message}`, error.stack);
+      this.logger.error(`Failed to save buffered visits: ${error.message}`, error.stack);
     }
   }
 
@@ -51,6 +127,7 @@ export class StatsService {
    * Увеличить счётчик просмотров проекта
    */
   async incrementProjectView(projectId: number): Promise<void> {
+    if (!this.isEnabled()) return;
     try {
       await this.projectRepo.increment({ id: projectId }, 'viewCount', 1);
     } catch (error: any) {
@@ -253,6 +330,7 @@ export class StatsService {
    * Записать визит на основе HTTP запроса
    */
   async recordVisitFromRequest(req: Request, path: string, referrer?: string): Promise<void> {
+    if (!this.isEnabled()) return;
     try {
       const userAgentStr = req.headers['user-agent'] || '';
       const deviceType = this.detectDeviceType(userAgentStr);

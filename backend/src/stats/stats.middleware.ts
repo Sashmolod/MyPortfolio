@@ -1,14 +1,23 @@
-import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { StatsService } from './stats.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class StatsMiddleware {
   private readonly logger = new Logger(StatsMiddleware.name);
 
-  constructor(private readonly statsService: StatsService) {}
+  constructor(
+    private readonly statsService: StatsService,
+    private readonly configService: ConfigService,
+  ) {}
 
   async use(req: Request, res: Response, next: Function) {
+    // Если модуль статистики выключен — пропускаем запись визита
+    if (this.configService.get<string>('ENABLE_STATS_MODULE') === 'false') {
+      next();
+      return;
+    }
     // Пропускаем CORS preflight запросы
     if (req.method === 'OPTIONS') {
       next();

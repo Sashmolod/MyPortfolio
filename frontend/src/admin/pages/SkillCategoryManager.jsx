@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import api from '../../api';
+import api from '../../api/client';
 
 export default function SkillCategoryManager() {
   const [roots, setRoots] = useState([]);
@@ -72,7 +72,7 @@ export default function SkillCategoryManager() {
   };
 
   const getAvailableParents = useCallback((excludeId) => {
-    if (!excludeId) return allCategories;
+    if (!excludeId) {return allCategories;}
 
     const getDescendants = (categoryId, categories) => {
       const children = categories.filter(c => c.parentId === categoryId);

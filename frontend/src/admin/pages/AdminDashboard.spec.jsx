@@ -1,11 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import AdminDashboard from './AdminDashboard';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePortfolioSettings } from '../../contexts/SettingsContext';
 import { LanguageProvider } from '../../contexts/LanguageContext';
-import api from '../../api';
+import api from '../../api/client';
 
 // Mock contexts
 vi.mock('../../contexts/AuthContext', () => ({
@@ -17,7 +17,7 @@ vi.mock('../../contexts/SettingsContext', () => ({
 }));
 
 // Mock API
-vi.mock('../../api', () => ({
+vi.mock('../../api/client', () => ({
   default: {
     get: vi.fn(),
     post: vi.fn(),

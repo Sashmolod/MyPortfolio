@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import api from '../../api';
+import { useEffect, useState } from 'react';
+import api from '../../api/client';
 import { useLanguage } from '../../contexts/LanguageContext';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -9,7 +9,7 @@ import TextArea from '../../components/ui/TextArea';
 function pick(obj, keys) {
   const result = {};
   for (const k of keys) {
-    if (obj && obj[k] !== undefined) result[k] = obj[k];
+    if (obj && obj[k] !== undefined) {result[k] = obj[k];}
   }
   return result;
 }
@@ -18,9 +18,9 @@ export default function ProjectForm({ item, onSaveData, onCancel }) {
   const { t } = useLanguage();
   const [form, setForm] = useState(() => {
     if (item)
-      return pick(item, [
+      {return pick(item, [
         'title', 'description', 'image', 'link', 'sortOrder',
-      ]);
+      ]);}
     return { title: '', description: '', image: '', link: '', sortOrder: 0 };
   });
   const [saving, setSaving] = useState(false);
@@ -29,7 +29,7 @@ export default function ProjectForm({ item, onSaveData, onCancel }) {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [skills, setSkills] = useState([]);
   const [selectedSkillIds, setSelectedSkillIds] = useState(() => {
-    if (item && item.skills) return item.skills.map((s) => s.id);
+    if (item && item.skills) {return item.skills.map((s) => s.id);}
     return [];
   });
 
@@ -62,7 +62,7 @@ export default function ProjectForm({ item, onSaveData, onCancel }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate()) {return;}
     setSaving(true);
     await onSaveData(pick(form, ['title', 'description', 'image', 'link', 'sortOrder']), selectedSkillIds);
     setSaving(false);
@@ -70,7 +70,7 @@ export default function ProjectForm({ item, onSaveData, onCancel }) {
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file) {return;}
     const formData = new FormData();
     formData.append('file', file);
     setUploading(true);

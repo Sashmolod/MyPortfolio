@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { soundSynth } from '../../utils/audioSynth';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -207,7 +207,7 @@ export default function DoodlyHelper() {
 
   const handleChatSubmit = async (e) => {
     e.preventDefault();
-    if (!inputValue.trim() || isLoading) return;
+    if (!inputValue.trim() || isLoading) {return;}
 
     const userMsg = inputValue.trim();
     setInputValue('');
@@ -223,7 +223,7 @@ export default function DoodlyHelper() {
         body: JSON.stringify({ message: userMsg, lang: language }),
       });
 
-      if (!response.ok) throw new Error('API error');
+      if (!response.ok) {throw new Error('API error');}
       const data = await response.json();
       setCurrentQuote(data.response);
       soundSynth.playPop();
